@@ -1,0 +1,13 @@
+{
+ "TASK_RELATION_LABEL": {
+  "owner": "Mine",
+  "covering": "Covering",
+  "backup": "Backup",
+  "reviewer": "Reviewer",
+  "concerned_manager": "Concerned manager",
+  "project_manager": "Project manager",
+  "assigned_by": "Assigned by me",
+  "watcher": "Watching",
+  "tagged": "Tagged me"
+ }
+}

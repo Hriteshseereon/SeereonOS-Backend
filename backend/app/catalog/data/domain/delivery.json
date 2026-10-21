@@ -1,0 +1,234 @@
+{
+ "PROJECT_PRIORITY": [
+  {
+   "value": 1,
+   "label": "1 — Critical: revenue or reputation at stake"
+  },
+  {
+   "value": 2,
+   "label": "2 — Strategic client or product"
+  },
+  {
+   "value": 3,
+   "label": "3 — Client project"
+  },
+  {
+   "value": 4,
+   "label": "4 — Internal"
+  },
+  {
+   "value": 5,
+   "label": "5 — Backlog / when free"
+  }
+ ],
+ "STAGE": {
+  "new": {
+   "key": "new",
+   "label": "New",
+   "short": "New",
+   "status": "todo",
+   "minProgress": 0,
+   "tone": "neutral",
+   "group": "not_started"
+  },
+  "selected": {
+   "key": "selected",
+   "label": "Selected for development",
+   "short": "Selected",
+   "status": "todo",
+   "minProgress": 0,
+   "tone": "neutral",
+   "group": "not_started"
+  },
+  "in_development": {
+   "key": "in_development",
+   "label": "In development",
+   "short": "In dev",
+   "status": "in_progress",
+   "minProgress": 0,
+   "tone": "info",
+   "group": "active"
+  },
+  "unit_testing": {
+   "key": "unit_testing",
+   "label": "Unit testing",
+   "short": "Unit test",
+   "status": "in_progress",
+   "minProgress": 60,
+   "tone": "info",
+   "group": "testing"
+  },
+  "functional_testing": {
+   "key": "functional_testing",
+   "label": "Functional testing",
+   "short": "Func. test",
+   "status": "in_progress",
+   "minProgress": 75,
+   "tone": "info",
+   "group": "testing"
+  },
+  "uat": {
+   "key": "uat",
+   "label": "UAT",
+   "short": "UAT",
+   "status": "in_progress",
+   "minProgress": 90,
+   "tone": "accent",
+   "group": "testing"
+  },
+  "waiting_feedback": {
+   "key": "waiting_feedback",
+   "label": "Waiting for feedback",
+   "short": "Waiting",
+   "status": "blocked",
+   "minProgress": 0,
+   "tone": "warning",
+   "group": "waiting"
+  },
+  "on_hold": {
+   "key": "on_hold",
+   "label": "On hold",
+   "short": "On hold",
+   "status": "blocked",
+   "minProgress": 0,
+   "tone": "warning",
+   "group": "waiting"
+  },
+  "blocked": {
+   "key": "blocked",
+   "label": "Blocked",
+   "short": "Blocked",
+   "status": "blocked",
+   "minProgress": 0,
+   "tone": "danger",
+   "group": "waiting"
+  },
+  "completed": {
+   "key": "completed",
+   "label": "Completed",
+   "short": "Done",
+   "status": "done",
+   "minProgress": 100,
+   "tone": "success",
+   "group": "done"
+  }
+ },
+ "TASK_STAGES": [
+  {
+   "key": "new",
+   "label": "New",
+   "short": "New",
+   "status": "todo",
+   "minProgress": 0,
+   "tone": "neutral",
+   "group": "not_started"
+  },
+  {
+   "key": "selected",
+   "label": "Selected for development",
+   "short": "Selected",
+   "status": "todo",
+   "minProgress": 0,
+   "tone": "neutral",
+   "group": "not_started"
+  },
+  {
+   "key": "in_development",
+   "label": "In development",
+   "short": "In dev",
+   "status": "in_progress",
+   "minProgress": 0,
+   "tone": "info",
+   "group": "active"
+  },
+  {
+   "key": "unit_testing",
+   "label": "Unit testing",
+   "short": "Unit test",
+   "status": "in_progress",
+   "minProgress": 60,
+   "tone": "info",
+   "group": "testing"
+  },
+  {
+   "key": "functional_testing",
+   "label": "Functional testing",
+   "short": "Func. test",
+   "status": "in_progress",
+   "minProgress": 75,
+   "tone": "info",
+   "group": "testing"
+  },
+  {
+   "key": "uat",
+   "label": "UAT",
+   "short": "UAT",
+   "status": "in_progress",
+   "minProgress": 90,
+   "tone": "accent",
+   "group": "testing"
+  },
+  {
+   "key": "waiting_feedback",
+   "label": "Waiting for feedback",
+   "short": "Waiting",
+   "status": "blocked",
+   "minProgress": 0,
+   "tone": "warning",
+   "group": "waiting"
+  },
+  {
+   "key": "on_hold",
+   "label": "On hold",
+   "short": "On hold",
+   "status": "blocked",
+   "minProgress": 0,
+   "tone": "warning",
+   "group": "waiting"
+  },
+  {
+   "key": "blocked",
+   "label": "Blocked",
+   "short": "Blocked",
+   "status": "blocked",
+   "minProgress": 0,
+   "tone": "danger",
+   "group": "waiting"
+  },
+  {
+   "key": "completed",
+   "label": "Completed",
+   "short": "Done",
+   "status": "done",
+   "minProgress": 100,
+   "tone": "success",
+   "group": "done"
+  }
+ ],
+ "TASK_TAG": {
+  "feature": {
+   "label": "Feature",
+   "tone": "neutral"
+  },
+  "bug": {
+   "label": "Bug",
+   "tone": "danger"
+  },
+  "improvement": {
+   "label": "Improvement",
+   "tone": "info"
+  },
+  "documentation": {
+   "label": "Documentation",
+   "tone": "neutral"
+  },
+  "support": {
+   "label": "Support",
+   "tone": "warning"
+  },
+  "meeting": {
+   "label": "Meeting",
+   "tone": "neutral"
+  }
+ }
+}

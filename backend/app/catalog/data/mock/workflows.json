@@ -1,0 +1,146 @@
+{
+ "AMOUNT_PROCESSES": [
+  "expense",
+  "purchase_order",
+  "vendor_bill"
+ ],
+ "APPROVER_LABEL": {
+  "reports_to": "Reporting manager",
+  "skip_level": "Manager’s manager",
+  "role": "Anyone with a role",
+  "user": "A specific person",
+  "project_pm": "Project manager of the project",
+  "project_pm_or_manager": "Project manager, else reporting manager",
+  "department_head": "Head of the requester’s department",
+  "task_reviewer": "Task reviewer (set on the task)"
+ },
+ "DEFAULT_WORKFLOWS": [
+  {
+   "process": "leave",
+   "name": "Leave approval",
+   "description": "The reporting manager (or their delegate) decides leave.",
+   "active": true,
+   "require_reason_on_reject": true,
+   "notify_requester": true,
+   "steps": [
+    {
+     "id": "s1",
+     "name": "Manager approval",
+     "approver": "reports_to",
+     "sla_days": 2
+    }
+   ]
+  },
+  {
+   "process": "expense",
+   "name": "Expense claim approval",
+   "description": "Project manager (or reporting manager) approves; claims above ₹25,000 also need the CEO.",
+   "active": true,
+   "require_reason_on_reject": true,
+   "notify_requester": true,
+   "steps": [
+    {
+     "id": "s1",
+     "name": "Manager / PM approval",
+     "approver": "project_pm_or_manager",
+     "sla_days": 2
+    },
+    {
+     "id": "s2",
+     "name": "CEO approval above ₹25,000",
+     "approver": "role",
+     "sla_days": 2,
+     "role_id": "ceo",
+     "min_amount_paise": 2500000
+    }
+   ]
+  },
+  {
+   "process": "purchase_order",
+   "name": "Purchase order approval",
+   "description": "Every purchase order is approved by the CEO before it is issued.",
+   "active": true,
+   "require_reason_on_reject": true,
+   "notify_requester": true,
+   "steps": [
+    {
+     "id": "s1",
+     "name": "CEO approval",
+     "approver": "role",
+     "sla_days": 2,
+     "role_id": "ceo"
+    }
+   ]
+  },
+  {
+   "process": "vendor_bill",
+   "name": "Vendor bill approval",
+   "description": "The CEO approves vendor bills for payment.",
+   "active": true,
+   "require_reason_on_reject": true,
+   "notify_requester": false,
+   "steps": [
+    {
+     "id": "s1",
+     "name": "CEO approval",
+     "approver": "role",
+     "sla_days": 2,
+     "role_id": "ceo"
+    }
+   ]
+  },
+  {
+   "process": "timesheet",
+   "name": "Timesheet approval",
+   "description": "Weekly timesheets are approved by the reporting manager.",
+   "active": true,
+   "require_reason_on_reject": true,
+   "notify_requester": true,
+   "steps": [
+    {
+     "id": "s1",
+     "name": "Manager approval",
+     "approver": "reports_to",
+     "sla_days": 2
+    }
+   ]
+  },
+  {
+   "process": "task_review",
+   "name": "Task review",
+   "description": "Submitted tasks are reviewed by the task reviewer (PM, or the assigning manager).",
+   "active": true,
+   "require_reason_on_reject": true,
+   "notify_requester": true,
+   "steps": [
+    {
+     "id": "s1",
+     "name": "Reviewer approval",
+     "approver": "task_reviewer",
+     "sla_days": 2
+    }
+   ]
+  }
+ ],
+ "PROCESS_LABEL": {
+  "leave": "Leave requests",
+  "expense": "Expense claims",
+  "purchase_order": "Purchase orders",
+  "vendor_bill": "Vendor bills",
+  "timesheet": "Weekly timesheets",
+  "task_review": "Task completion review"
+ },
+ "PROCESS_ORDER": [
+  "leave",
+  "expense",
+  "purchase_order",
+  "vendor_bill",
+  "timesheet",
+  "task_review"
+ ],
+ "PROJECT_PROCESSES": [
+  "expense",
+  "purchase_order",
+  "task_review"
+ ]
+}

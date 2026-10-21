@@ -1,0 +1,74 @@
+{
+ "DEFAULT_DOC_TEMPLATES": [
+  {
+   "key": "offer_letter",
+   "name": "Offer letter",
+   "category": "offer_letter",
+   "description": "Offer of employment with CTC, joining date, probation and notice period.",
+   "body": ":::right\nRef: {{ref_no}}\nDate: {{today}}\n:::\n\n**{{employee_name}}**\n{{employee_email}}\n\n## Offer of employment — {{offer_designation}}\n\nDear {{employee_first_name}},\n\nWe are pleased to offer you the position of **{{offer_designation}}** in the {{department}} team at {{company}}. This letter sets out the main terms of our offer.\n\n| Term | Detail |\n|---|---|\n| Designation | {{offer_designation}} |\n| Department | {{department}} |\n| Reporting to | {{manager_name}} |\n| Work location | {{location}} |\n| Proposed joining date | {{proposed_joining_date}} |\n| Annual cost to company (CTC) | {{ctc_annual}} |\n| Monthly CTC | {{ctc_monthly}} |\n| Probation | {{probation_months}} months |\n| Notice period | {{notice_period_days}} days |\n\n### Conditions of this offer\n- The offer is subject to satisfactory verification of your educational and employment documents.\n- On your joining day, bring your PAN, Aadhaar, educational certificates, the relieving letter from your last employer and your last three payslips.\n- Your detailed terms of employment, including leave and confidentiality obligations, are set out in your appointment letter.\n\nPlease confirm your acceptance by acknowledging this letter in SeereonOS on or before **{{offer_valid_until}}**, after which this offer lapses.\n\nWe look forward to welcoming you to {{company_brand}}.\n\nYours sincerely,\n\n**{{signatory_name}}**\n{{signatory_designation}}\nFor {{company}}"
+  },
+  {
+   "key": "joining_letter",
+   "name": "Joining letter",
+   "category": "joining_letter",
+   "description": "Welcome letter confirming the joining date, reporting details and first-day checklist.",
+   "body": ":::right\nRef: {{ref_no}}\nDate: {{today}}\n:::\n\n**{{employee_name}}**\nEmployee code: {{employee_code}}\n\n## Joining letter\n\nDear {{employee_first_name}},\n\nWelcome to {{company_brand}}. We confirm that you have joined {{company}} on **{{joining_date}}** as **{{designation}}** in the {{department}} department.\n\n| Detail | |\n|---|---|\n| Employee code | {{employee_code}} |\n| Designation | {{designation}} |\n| Department | {{department}} |\n| Reporting manager | {{manager_name}} |\n| Work location | {{location}} |\n| Employment type | {{employment_type}} |\n| Annual CTC | {{ctc_annual}} |\n| Working hours | {{working_hours}} |\n| Reporting time on day one | {{reporting_time}} |\n\n### Your first week\n1. Sign in to SeereonOS with the login details sent to {{employee_email}} and set your own password.\n2. Upload your PAN, Aadhaar, education certificates, bank details and a photograph under Documents → My documents.\n3. Read and acknowledge the company policies marked \"Read required\".\n4. Submit your first weekly timesheet by Friday evening.\n\nYou will be on probation for {{probation_months}} months from your joining date. The notice period during and after probation is {{notice_period_days}} days.\n\nWe are glad to have you with us.\n\nYours sincerely,\n\n**{{signatory_name}}**\n{{signatory_designation}}\nFor {{company}}"
+  },
+  {
+   "key": "appointment_letter",
+   "name": "Appointment letter",
+   "category": "joining_letter",
+   "description": "Formal terms of employment: compensation, probation, leave, confidentiality and termination.",
+   "body": ":::right\nRef: {{ref_no}}\nDate: {{today}}\n:::\n\n**{{employee_name}}**\nEmployee code: {{employee_code}}\n\n## Letter of appointment\n\nDear {{employee_first_name}},\n\nWith reference to your acceptance of our offer, we are pleased to appoint you as **{{designation}}** at {{company}} with effect from **{{joining_date}}**, on the following terms and conditions.\n\n### 1. Compensation\nYour annual cost to company is **{{ctc_annual}}** ({{ctc_monthly}} per month), paid monthly in arrears to your registered bank account. Salary is paid for days covered by approved timesheets, in line with the company payroll policy.\n\n### 2. Probation and confirmation\nYou will be on probation for {{probation_months}} months. On satisfactory completion you will be confirmed in writing. The company may extend probation once by up to three months.\n\n### 3. Working hours and location\nYour working hours are {{working_hours}}. Your place of work is {{location}}. You may be deputed to client sites or other locations as business requires.\n\n### 4. Leave\nYou are entitled to leave as per the company leave policy in force, available under Documents → Policies.\n\n### 5. Confidentiality and intellectual property\nYou will keep confidential all information about the company, its clients and its products, during and after your employment. All work you produce in the course of employment belongs to the company.\n\n### 6. Notice period\nEither party may end this appointment with {{notice_period_days}} days' written notice, or salary in lieu of notice.\n\n### 7. Conduct\nYou will follow the company's code of conduct, policies and lawful instructions as amended from time to time.\n\nPlease acknowledge this letter in SeereonOS as your acceptance of these terms.\n\nYours sincerely,\n\n**{{signatory_name}}**\n{{signatory_designation}}\nFor {{company}}"
+  },
+  {
+   "key": "appraisal_letter",
+   "name": "Appraisal letter",
+   "category": "appraisal_letter",
+   "description": "Revised compensation after the appraisal cycle: rating, old and new CTC, hike and effective date.",
+   "body": ":::right\nRef: {{ref_no}}\nDate: {{today}}\n:::\n\n**{{employee_name}}**\nEmployee code: {{employee_code}} · {{department}}\n\n## Annual appraisal — {{appraisal_period}}\n\nDear {{employee_first_name}},\n\nThank you for your contribution during {{appraisal_period}}. Based on your performance review, your overall rating is **{{rating}}**.\n\nWe are pleased to revise your compensation as follows, effective **{{effective_from}}**:\n\n| Component | Amount |\n|---|---|\n| Current annual CTC | {{old_ctc}} |\n| Revised annual CTC | {{new_ctc}} |\n| Increase | {{hike_pct}}% |\n| Designation | {{new_designation}} |\n\nAll other terms of your appointment remain unchanged. The revised salary will be reflected in the payroll from the effective date.\n\nWe look forward to your continued contribution.\n\nYours sincerely,\n\n**{{signatory_name}}**\n{{signatory_designation}}\nFor {{company}}"
+  },
+  {
+   "key": "confirmation_letter",
+   "name": "Probation confirmation",
+   "category": "confirmation_letter",
+   "description": "Confirms the employee after successful completion of probation.",
+   "body": ":::right\nRef: {{ref_no}}\nDate: {{today}}\n:::\n\n**{{employee_name}}**\nEmployee code: {{employee_code}}\n\n## Confirmation of employment\n\nDear {{employee_first_name}},\n\nWe are pleased to inform you that you have successfully completed your probation period, which ended on **{{probation_end_date}}**. You are confirmed as **{{designation}}** with effect from **{{confirmation_date}}**.\n\nFrom the date of confirmation, the notice period applicable to you is {{notice_period_days}} days. All other terms of your appointment letter remain unchanged.\n\nCongratulations, and thank you for your work so far.\n\nYours sincerely,\n\n**{{signatory_name}}**\n{{signatory_designation}}\nFor {{company}}"
+  },
+  {
+   "key": "relieving_letter",
+   "name": "Relieving letter",
+   "category": "relieving_letter",
+   "description": "Confirms acceptance of resignation and release from duties on the last working day.",
+   "body": ":::right\nRef: {{ref_no}}\nDate: {{today}}\n:::\n\n**{{employee_name}}**\nEmployee code: {{employee_code}}\n\n## Relieving letter\n\nDear {{employee_first_name}},\n\nThis is with reference to your resignation dated {{resignation_date}}. We confirm that your resignation has been accepted and that you are relieved from your duties as **{{designation}}** at the close of business on **{{last_working_day}}**.\n\nWe confirm that you have handed over your responsibilities and company assets, and that your full and final settlement will be processed as per company policy.\n\nYour obligations of confidentiality towards the company and its clients continue after you leave.\n\nWe thank you for your contribution and wish you success in the future.\n\nYours sincerely,\n\n**{{signatory_name}}**\n{{signatory_designation}}\nFor {{company}}"
+  },
+  {
+   "key": "experience_letter",
+   "name": "Experience certificate",
+   "category": "experience_letter",
+   "description": "To-whom-it-may-concern certificate of service, dates and designation.",
+   "body": ":::right\nRef: {{ref_no}}\nDate: {{today}}\n:::\n\n:::center\n## To whom it may concern\n:::\n\nThis is to certify that **{{employee_name}}** (employee code {{employee_code}}) was employed with {{company}} from **{{joining_date}}** to **{{last_working_day}}**.\n\nAt the time of leaving, {{employee_first_name}} held the position of **{{last_designation}}** in the {{department}} department, and worked on {{key_work}}.\n\nDuring this period we found {{employee_first_name}} sincere, hardworking and professional. We wish {{employee_first_name}} every success in future endeavours.\n\nYours sincerely,\n\n**{{signatory_name}}**\n{{signatory_designation}}\nFor {{company}}"
+  },
+  {
+   "key": "warning_letter",
+   "name": "Warning letter",
+   "category": "warning_letter",
+   "description": "Formal written warning with the incident, expected correction and review date.",
+   "body": ":::right\nRef: {{ref_no}}\nDate: {{today}}\n:::\n\n**{{employee_name}}**\nEmployee code: {{employee_code}} · {{department}}\n\n## Written warning\n\nDear {{employee_first_name}},\n\nThis letter is a formal warning regarding the following, observed on {{incident_date}}: {{issue_description}}.\n\nThis is not in line with the standards expected of you as {{designation}}. We expect you to {{expected_correction}}. Your manager, {{manager_name}}, will review your progress on **{{review_date}}**.\n\nPlease treat this matter seriously. A repeat may lead to further disciplinary action as per company policy. If you would like to discuss this letter, speak to HR or your manager.\n\nYours sincerely,\n\n**{{signatory_name}}**\n{{signatory_designation}}\nFor {{company}}"
+  },
+  {
+   "key": "nda",
+   "name": "Non-disclosure agreement",
+   "category": "nda",
+   "description": "Employee confidentiality and non-disclosure agreement for client work.",
+   "body": ":::right\nRef: {{ref_no}}\nDate: {{today}}\n:::\n\n## Non-disclosure agreement\n\nThis agreement is made on **{{effective_date}}** between **{{company}}**, {{company_address}} (the \"Company\"), and **{{employee_name}}**, employee code {{employee_code}}, {{designation}} (the \"Employee\").\n\n### 1. Confidential information\n\"Confidential information\" means any non-public information about the Company, its clients, products, source code, designs, pricing, plans and personal data, whether written, electronic or oral.\n\n### 2. Obligations\nThe Employee will:\n- use confidential information only to perform their duties;\n- not disclose it to anyone outside the Company without written permission;\n- not copy client code or data to personal devices or accounts;\n- return or delete all confidential information when their employment ends.\n\n### 3. Term\nThese obligations apply during employment and for **{{term_years}} years** after it ends.\n\n### 4. Governing law\nThis agreement is governed by the laws of India. Courts in {{governing_city}} have exclusive jurisdiction.\n\n| For the Company | Employee |\n|---|---|\n| {{signatory_name}} | {{employee_name}} |\n| {{signatory_designation}} | {{designation}} |\n| Date: {{today}} | Acknowledged in SeereonOS |"
+  },
+  {
+   "key": "payslip",
+   "name": "Payslip",
+   "category": "payslip",
+   "description": "Monthly payslip generated from the finalised payroll run.",
+   "body": "## Payslip for {{month_label}}\n\n| Employee | {{employee_name}} | Employee code | {{employee_code}} |\n| Designation | {{designation}} | Department | {{department}} |\n| Pay period | {{pay_period}} | Pay date | {{pay_date}} |\n| Working days | {{working_days}} | Paid days | {{paid_days}} |\n| Leave without pay | {{lwp_days}} days | Unapproved days | {{unapproved_days}} days |\n| Bank | {{bank_name}} | Monthly CTC | {{monthly_ctc}} |\n\n| Earnings | Amount |\n|---|---|\n{{earnings_rows}}\n| **Gross earnings** | **{{gross_earnings}}** |\n\n| Deductions | Amount |\n|---|---|\n{{deductions_rows}}\n| **Total deductions** | **{{total_deductions}}** |\n\n| Net pay | Amount |\n|---|---|\n| **Net pay for {{month_label}}** | **{{net_pay}}** |\n\n*{{net_pay_words}}*\n\nDays are paid only when the week's timesheet is approved. Questions about this payslip go to HR at {{company_email}}.\n\n:::center\n*This is a system-generated payslip and does not need a signature.*\n:::"
+  }
+ ]
+}

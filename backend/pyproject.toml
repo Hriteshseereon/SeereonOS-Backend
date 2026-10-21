@@ -1,0 +1,44 @@
+[project]
+name = "seereonos-api"
+version = "1.0.0"
+description = "SeereonOS API (FastAPI) — Python port of the TypeScript reference API"
+requires-python = ">=3.11"
+# pinned runtime dependencies (requirements.txt is the same list, used by the Docker image)
+dependencies = [
+  "fastapi==0.143.1",
+  "starlette==1.0.0",
+  "uvicorn[standard]==0.46.0",
+  "gunicorn==26.2.0",
+  "psycopg[binary,pool]==3.3.6",
+  "psycopg-pool==3.3.3",
+  "orjson==3.13.0",
+  "pydantic==2.13.3",
+  "cryptography==46.0.7",
+  "httpx==0.28.1",
+  "sentry-sdk==2.19.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "ruff==0.17.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -p no:cacheprovider"
+
+[tool.ruff]
+line-length = 160
+target-version = "py311"
+extend-exclude = ["var", "devtools-ts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501", "E731", "B008", "B905", "UP031", "E741"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "tests"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B023"]

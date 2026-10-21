@@ -1,0 +1,60 @@
+{
+ "SUGGESTIONS": {
+  "admin": [
+   "Revenue by stream this FY",
+   "Cash collected vs billed by month last 6 months",
+   "Spend vs budget by category",
+   "Lost revenue by kind this FY",
+   "On-time delivery by project",
+   "Why are tasks delayed?",
+   "Which projects are below 25% margin?",
+   "Top 5 clients by billing this FY",
+   "Who has the most overdue tasks?",
+   "Win rate by source this quarter",
+   "Payroll cost by department this FY",
+   "Who hasn’t submitted last week’s timesheet?"
+  ],
+  "pm": [
+   "On-time delivery by person this FY",
+   "Tasks sent back by reviewer",
+   "Average quality rating by person",
+   "Why are tasks delayed?",
+   "Overdue tasks by owner",
+   "Hours by person last month",
+   "Pending leave requests",
+   "Milestones due in the next 30 days",
+   "Who is over-allocated?",
+   "Who hasn’t submitted last week’s timesheet?"
+  ],
+  "sales": [
+   "My open pipeline by stage",
+   "Win rate by source this quarter",
+   "Stale deals",
+   "Deals won this FY by month",
+   "My activities last 30 days by type",
+   "Deals closing this month",
+   "OKR progress"
+  ],
+  "ops": [
+   "Pending leave requests",
+   "Unpaid reimbursements",
+   "Bills due this month",
+   "POs pending approval",
+   "Candidates by stage",
+   "Documents not acknowledged",
+   "Compliance items due",
+   "Who hasn’t submitted last week’s timesheet?",
+   "Expenses by category this FY",
+   "Headcount by department"
+  ],
+  "employee": [
+   "My hours by project last month",
+   "My overdue tasks",
+   "My on-time delivery this FY",
+   "My expense claims by category",
+   "Documents not acknowledged",
+   "My hours by week last 8 weeks",
+   "My tasks due this week"
+  ]
+ }
+}

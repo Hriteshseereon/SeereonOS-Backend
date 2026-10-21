@@ -1,0 +1,16 @@
+{
+ "ROLE_LABEL": {
+  "admin": "Admin (CEO)",
+  "pm": "Project manager",
+  "sales": "Sales",
+  "ops": "HR & operations",
+  "employee": "Employee"
+ },
+ "ROLE_SHORT": {
+  "admin": "CEO",
+  "pm": "PM",
+  "sales": "Sales",
+  "ops": "HR & Ops",
+  "employee": "Employee"
+ }
+}

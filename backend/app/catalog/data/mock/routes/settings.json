@@ -1,0 +1,218 @@
+{
+ "SETTING_RULES": {
+  "company.fy_start_month": {
+   "kind": "num",
+   "min": 1,
+   "max": 12,
+   "label": "Financial year start"
+  },
+  "company.currency": {
+   "kind": "fixed",
+   "label": "Currency"
+  },
+  "calendar.weekly_off": {
+   "kind": "days",
+   "label": "Weekly off days"
+  },
+  "calendar.saturday_rule": {
+   "kind": "enum",
+   "values": [
+    "all_on",
+    "all_off",
+    "some_off"
+   ],
+   "label": "Saturday rule"
+  },
+  "calendar.saturday_off_weeks": {
+   "kind": "weeks",
+   "label": "Saturdays off"
+  },
+  "calendar.min_hours_per_day": {
+   "kind": "num",
+   "min": 1,
+   "max": 12,
+   "step": 0.5,
+   "label": "Minimum hours per day"
+  },
+  "calendar.max_hours_per_day": {
+   "kind": "num",
+   "min": 8,
+   "max": 24,
+   "step": 0.5,
+   "label": "Maximum hours per day"
+  },
+  "calendar.breaks_count": {
+   "kind": "bool",
+   "label": "Breaks count as work"
+  },
+  "timesheet.hours_step": {
+   "kind": "enum",
+   "values": [
+    0.25,
+    0.5,
+    1
+   ],
+   "label": "Hours step"
+  },
+  "timesheet.allow_future_entries": {
+   "kind": "bool",
+   "label": "Allow future entries"
+  },
+  "timesheet.internal_note_required": {
+   "kind": "bool",
+   "label": "Note required on internal time"
+  },
+  "timesheet.weekly_lock": {
+   "kind": "bool",
+   "label": "Weekly lock"
+  },
+  "timesheet.unlock_max_days": {
+   "kind": "num",
+   "min": 1,
+   "max": 14,
+   "label": "Unlock window"
+  },
+  "approval.sla_working_days": {
+   "kind": "num",
+   "min": 1,
+   "max": 10,
+   "label": "Approval SLA"
+  },
+  "approval.bulk_approve": {
+   "kind": "bool",
+   "label": "Bulk approve"
+  },
+  "pay.deduct_unapproved_days": {
+   "kind": "bool",
+   "label": "Deduct unapproved days"
+  },
+  "pay.variable_default_pct": {
+   "kind": "num",
+   "min": 0,
+   "max": 50,
+   "label": "Default variable pay"
+  },
+  "pay.target_default": {
+   "kind": "enum",
+   "values": [
+    "ctc",
+    "manual"
+   ],
+   "label": "Default sales target"
+  },
+  "pay.variable_threshold_pct": {
+   "kind": "num",
+   "min": 80,
+   "max": 120,
+   "label": "Variable pay threshold"
+  },
+  "projects.code_prefix": {
+   "kind": "text",
+   "max": 6,
+   "label": "Project code prefix"
+  },
+  "projects.empty_milestone_days": {
+   "kind": "num",
+   "min": 0,
+   "max": 60,
+   "label": "Empty milestone clean-up"
+  },
+  "projects.margin_floor_pct": {
+   "kind": "num",
+   "min": 0,
+   "max": 90,
+   "label": "Margin floor"
+  },
+  "projects.effort_ratio_alert": {
+   "kind": "num",
+   "min": 1,
+   "max": 3,
+   "step": 0.05,
+   "label": "Effort ratio alert"
+  },
+  "allocation.max_pct_per_person": {
+   "kind": "num",
+   "min": 50,
+   "max": 150,
+   "label": "Max allocation per person"
+  },
+  "allocation.block_over": {
+   "kind": "bool",
+   "label": "Block over-allocation"
+  },
+  "daily.proof_required": {
+   "kind": "bool",
+   "label": "Proof link required"
+  },
+  "sales.stale_deal_days": {
+   "kind": "num",
+   "min": 3,
+   "max": 90,
+   "label": "Stale deal after"
+  },
+  "notify.friday_nudge_time": {
+   "kind": "time",
+   "label": "Friday nudge time"
+  },
+  "notify.sla_digest_time": {
+   "kind": "time",
+   "label": "SLA digest time"
+  },
+  "security.password_min_length": {
+   "kind": "num",
+   "min": 8,
+   "max": 64,
+   "label": "Minimum password length"
+  },
+  "security.lockout_attempts": {
+   "kind": "num",
+   "min": 3,
+   "max": 10,
+   "label": "Lockout attempts"
+  },
+  "security.lockout_minutes": {
+   "kind": "num",
+   "min": 5,
+   "max": 120,
+   "label": "Lockout duration"
+  },
+  "security.session_idle_minutes": {
+   "kind": "num",
+   "min": 15,
+   "max": 720,
+   "label": "Idle sign-out"
+  },
+  "security.require_2fa_admins": {
+   "kind": "bool",
+   "label": "Require 2-step for admins"
+  },
+  "ai.enabled": {
+   "kind": "bool",
+   "label": "AI assistant"
+  },
+  "finance.opening_cash_paise": {
+   "kind": "num",
+   "min": 0,
+   "max": 10000000000000,
+   "label": "Opening cash"
+  },
+  "finance.monthly_overheads_paise": {
+   "kind": "num",
+   "min": 0,
+   "max": 1000000000000,
+   "label": "Monthly overheads"
+  },
+  "finance.cost_loading_pct": {
+   "kind": "num",
+   "min": 0,
+   "max": 200,
+   "label": "Cost loading"
+  },
+  "team.default_productive_hours": {
+   "kind": "num",
+   "min": 1,
+   "max": 12,
+   "label": "Default productive hours a day"
+  }
+ }
+}

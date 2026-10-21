@@ -1,0 +1,74 @@
+{
+ "SCORE_THRESHOLDS": {
+  "green": 90,
+  "amber": 75
+ },
+ "SCORE_WEIGHTS": {
+  "delivery": {
+   "label": "On-time delivery",
+   "weight": 30,
+   "kind": "delivery",
+   "rule": "Tasks due this week finished on or before their target end ÷ tasks due this week."
+  },
+  "effort_accuracy": {
+   "label": "Effort accuracy",
+   "weight": 15,
+   "kind": "delivery",
+   "rule": "Tasks closed this week: 100 − |1 − effort ratio| × 100, where effort ratio = actual ÷ estimated hours (×1.00 scores 100; ×1.25 or ×0.75 scores 75)."
+  },
+  "updates": {
+   "label": "Daily updates",
+   "weight": 15,
+   "kind": "all",
+   "rule": "End-of-day updates posted ÷ working days so far (proof link required when the company setting says so)."
+  },
+  "demo": {
+   "label": "Friday demo",
+   "weight": 10,
+   "kind": "delivery",
+   "rule": "Friday demo of working software shown this week (100) or not (0)."
+  },
+  "timesheet": {
+   "label": "Timesheet",
+   "weight": 20,
+   "kind": "all",
+   "rule": "Hours logged ÷ (working days × minimum hours a day); leave rows count."
+  },
+  "early_warning": {
+   "label": "Early warning",
+   "weight": 10,
+   "kind": "delivery",
+   "rule": "Of the tasks that slipped (or are forecast to), the share whose slip was flagged before the due date."
+  },
+  "approvals": {
+   "label": "Approval KPI",
+   "weight": 10,
+   "kind": "managers",
+   "rule": "The approval KPI (Approvals page): decisions on time ÷ (on time + lapses), where a lapse is a week decided after the deadline or still waiting past it; credited to whoever decided, including a delegate. The running week uses the last 30 days, like the Approvals page."
+  },
+  "activities": {
+   "label": "Activities",
+   "weight": 35,
+   "kind": "sales",
+   "rule": "Sales activities logged ÷ 15 a week."
+  },
+  "followups": {
+   "label": "Follow-ups",
+   "weight": 20,
+   "kind": "sales",
+   "rule": "100 minus 25 for each overdue next step."
+  },
+  "leads": {
+   "label": "New leads",
+   "weight": 10,
+   "kind": "sales",
+   "rule": "New leads created ÷ 2 a week."
+  },
+  "ops": {
+   "label": "Duties on time",
+   "weight": 35,
+   "kind": "ops",
+   "rule": "Recurring duties done by their due date ÷ duties due this week."
+  }
+ }
+}

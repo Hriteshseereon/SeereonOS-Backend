@@ -1,0 +1,138 @@
+{
+ "MASTER_TABLES": {
+  "locations": "locations",
+  "departments": "departments",
+  "designations": "designations",
+  "grades": "grades",
+  "cost-centres": "cost_centres",
+  "shifts": "shifts"
+ },
+ "ORG_FIELD_LABEL": {
+  "legal_name": "legal name",
+  "brand_name": "brand name",
+  "cin": "CIN",
+  "gstin": "GSTIN",
+  "pan": "PAN",
+  "tan": "TAN",
+  "registered_address": "registered address",
+  "corporate_address": "corporate address",
+  "city": "city",
+  "state": "state",
+  "pincode": "pincode",
+  "country": "country",
+  "phone": "phone",
+  "email": "email",
+  "website": "website",
+  "incorporated_on": "incorporation date",
+  "employee_code_prefix": "employee code prefix",
+  "employee_code_next": "next employee number",
+  "bank_name": "bank name",
+  "bank_account_masked": "bank account",
+  "ifsc": "IFSC"
+ },
+ "PLACEHOLDER_LABEL": {
+  "employee_name": "Employee name",
+  "company": "Company",
+  "username": "Username",
+  "temp_password": "Temporary password",
+  "login_url": "Login link",
+  "role_name": "Role",
+  "manager_name": "Manager",
+  "joining_date": "Joining date",
+  "employee_code": "Employee code",
+  "designation": "Designation",
+  "department": "Department",
+  "decision": "Decision",
+  "from_date": "From date",
+  "to_date": "To date",
+  "reason": "Reason",
+  "amount": "Amount",
+  "description": "Description",
+  "approver_name": "Approver",
+  "task_title": "Task title",
+  "due_date": "Due date",
+  "month": "Month",
+  "net_pay": "Net pay",
+  "cycle_name": "Cycle",
+  "rating": "Rating"
+ },
+ "TEMPLATE_PLACEHOLDERS": {
+  "welcome": [
+   "employee_name",
+   "company",
+   "username",
+   "temp_password",
+   "login_url",
+   "role_name",
+   "manager_name",
+   "joining_date",
+   "employee_code",
+   "designation",
+   "department"
+  ],
+  "password_reset": [
+   "employee_name",
+   "company",
+   "username",
+   "temp_password",
+   "login_url"
+  ],
+  "leave_decision": [
+   "employee_name",
+   "company",
+   "manager_name",
+   "decision",
+   "from_date",
+   "to_date",
+   "reason",
+   "login_url"
+  ],
+  "expense_decision": [
+   "employee_name",
+   "company",
+   "amount",
+   "description",
+   "decision",
+   "approver_name",
+   "reason",
+   "login_url"
+  ],
+  "task_assigned": [
+   "employee_name",
+   "company",
+   "manager_name",
+   "task_title",
+   "due_date",
+   "login_url"
+  ],
+  "payslip": [
+   "employee_name",
+   "company",
+   "month",
+   "net_pay",
+   "login_url"
+  ],
+  "appraisal_completed": [
+   "employee_name",
+   "company",
+   "cycle_name",
+   "rating",
+   "login_url"
+  ],
+  "appraisal_letter": [
+   "employee_name",
+   "company",
+   "appraisal_period",
+   "rating",
+   "hike_pct",
+   "new_ctc",
+   "effective_from",
+   "login_url"
+  ],
+  "custom": [
+   "employee_name",
+   "company",
+   "login_url"
+  ]
+ }
+}

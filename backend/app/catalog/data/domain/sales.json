@@ -1,0 +1,22 @@
+{
+ "SALES_LOG_KIND": {
+  "email": "Email",
+  "whatsapp": "WhatsApp",
+  "call": "Call",
+  "meeting": "Meeting",
+  "demo": "Demo",
+  "proposal": "Proposal",
+  "follow_up": "Follow-up",
+  "stage": "Stage",
+  "new_lead": "New lead"
+ },
+ "STAGE_LONG": {
+  "lead": "Lead",
+  "qualified": "Qualified",
+  "demo": "Demo",
+  "proposal": "Proposal",
+  "negotiation": "Negotiation",
+  "won": "Won",
+  "lost": "Lost"
+ }
+}

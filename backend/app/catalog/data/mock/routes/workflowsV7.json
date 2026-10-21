@@ -1,0 +1,13 @@
+{
+ "PROCESS_LABEL": {
+  "appraisal": "Appraisal",
+  "onboarding": "Onboarding",
+  "exit": "Exit",
+  "confirmation": "Confirmation",
+  "promotion": "Promotion",
+  "expense": "Expense",
+  "leave": "Leave",
+  "document_approval": "Document approval",
+  "general": "General"
+ }
+}

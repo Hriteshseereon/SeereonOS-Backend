@@ -1,0 +1,8 @@
+# build context = repository root; send only what the API image needs (BuildKit reads <Dockerfile>.dockerignore)
+*
+!backend/app
+!backend/requirements.txt
+!backend/gunicorn.conf.py
+!database/migrations
+**/__pycache__
+**/*.pyc

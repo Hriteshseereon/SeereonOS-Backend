@@ -1,0 +1,9176 @@
+{
+ "AGG_LABEL": {
+  "sum": "Total",
+  "avg": "Average",
+  "count": "Count",
+  "min": "Lowest",
+  "max": "Highest",
+  "count_distinct": "Distinct"
+ },
+ "CHART_LABEL": {
+  "table": "Table",
+  "bar": "Bar",
+  "hbar": "Horizontal bar",
+  "line": "Line",
+  "area": "Area",
+  "pie": "Donut",
+  "stacked": "Stacked bar",
+  "kpi": "Number"
+ },
+ "DATASETS": [
+  {
+   "id": "projects",
+   "label": "Projects",
+   "noun": "projects",
+   "description": "Every project with delivery and money metrics (progress, SPI, effort ratio, margin).",
+   "dateField": "start_on",
+   "perms": [
+    "projects.view_all",
+    "projects.edit"
+   ],
+   "aliases": [
+    "project",
+    "projects",
+    "portfolio",
+    "engagement",
+    "margin",
+    "margins",
+    "health",
+    "contract"
+   ],
+   "defaultColumns": [
+    "code",
+    "name",
+    "client",
+    "status",
+    "health",
+    "progress",
+    "contract_value"
+   ],
+   "fields": [
+    {
+     "key": "code",
+     "label": "Code",
+     "type": "string"
+    },
+    {
+     "key": "name",
+     "label": "Project",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "project"
+     ]
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "client",
+      "customer",
+      "account"
+     ]
+    },
+    {
+     "key": "type",
+     "label": "Project type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "product",
+       "label": "Product"
+      },
+      {
+       "value": "service",
+       "label": "Service"
+      },
+      {
+       "value": "saas",
+       "label": "SaaS"
+      },
+      {
+       "value": "ams",
+       "label": "AMS"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "type"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "initiated",
+       "label": "Initiated"
+      },
+      {
+       "value": "active",
+       "label": "Active"
+      },
+      {
+       "value": "on_hold",
+       "label": "On hold"
+      },
+      {
+       "value": "npa",
+       "label": "NPA"
+      },
+      {
+       "value": "completed",
+       "label": "Completed"
+      },
+      {
+       "value": "closed",
+       "label": "Closed"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "stream",
+     "label": "Revenue stream",
+     "type": "enum",
+     "options": [
+      {
+       "value": "sap_consulting",
+       "label": "SAP consulting"
+      },
+      {
+       "value": "products",
+       "label": "Products"
+      },
+      {
+       "value": "services",
+       "label": "Services"
+      },
+      {
+       "value": "saas",
+       "label": "Subscriptions"
+      },
+      {
+       "value": "ams",
+       "label": "AMS"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "stream",
+      "business line"
+     ]
+    },
+    {
+     "key": "billing_model",
+     "label": "Billing model",
+     "type": "enum",
+     "options": [
+      {
+       "value": "fixed",
+       "label": "Fixed price"
+      },
+      {
+       "value": "tm",
+       "label": "Time & material"
+      },
+      {
+       "value": "subscription",
+       "label": "Subscription"
+      },
+      {
+       "value": "ams_retainer",
+       "label": "AMS retainer"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "billing model",
+      "commercial model"
+     ]
+    },
+    {
+     "key": "pm",
+     "label": "Project manager",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "pm",
+      "project manager",
+      "manager"
+     ]
+    },
+    {
+     "key": "priority",
+     "label": "Priority",
+     "type": "number"
+    },
+    {
+     "key": "start_on",
+     "label": "Start date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "end_on",
+     "label": "Planned end",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "contract_value",
+     "label": "Contract value",
+     "type": "money",
+     "aliases": [
+      "contract",
+      "deal value",
+      "value"
+     ]
+    },
+    {
+     "key": "invoiced",
+     "label": "Invoiced",
+     "type": "money",
+     "adminOnly": true,
+     "aliases": [
+      "invoiced",
+      "billed"
+     ]
+    },
+    {
+     "key": "collected",
+     "label": "Collected",
+     "type": "money",
+     "adminOnly": true
+    },
+    {
+     "key": "outstanding",
+     "label": "Outstanding",
+     "type": "money",
+     "adminOnly": true,
+     "aliases": [
+      "receivable",
+      "outstanding"
+     ]
+    },
+    {
+     "key": "uninvoiced",
+     "label": "Not yet invoiced",
+     "type": "money",
+     "adminOnly": true,
+     "aliases": [
+      "uninvoiced",
+      "unbilled"
+     ]
+    },
+    {
+     "key": "est_hours",
+     "label": "Estimated hours",
+     "type": "number",
+     "unit": "hours"
+    },
+    {
+     "key": "actual_hours",
+     "label": "Logged hours",
+     "type": "number",
+     "unit": "hours"
+    },
+    {
+     "key": "remaining_hours",
+     "label": "Remaining hours",
+     "type": "number",
+     "unit": "hours"
+    },
+    {
+     "key": "progress",
+     "label": "Progress",
+     "type": "percent",
+     "aliases": [
+      "progress",
+      "complete"
+     ]
+    },
+    {
+     "key": "effort_ratio",
+     "label": "Effort ratio",
+     "type": "number",
+     "description": "Actual ÷ estimated hours; above 1.2 is flagged.",
+     "aliases": [
+      "effort ratio",
+      "effort"
+     ]
+    },
+    {
+     "key": "spi",
+     "label": "SPI",
+     "type": "number",
+     "description": "Schedule performance index: earned ÷ planned by today.",
+     "aliases": [
+      "spi",
+      "schedule performance"
+     ]
+    },
+    {
+     "key": "planned_cost",
+     "label": "Planned cost",
+     "type": "money",
+     "grant": "margins"
+    },
+    {
+     "key": "projected_cost",
+     "label": "Projected cost",
+     "type": "money",
+     "grant": "margins",
+     "aliases": [
+      "cost"
+     ]
+    },
+    {
+     "key": "actual_cost",
+     "label": "Actual cost (approved)",
+     "type": "money",
+     "grant": "margins"
+    },
+    {
+     "key": "projected_margin",
+     "label": "Projected margin",
+     "type": "percent",
+     "grant": "margins",
+     "aliases": [
+      "margin",
+      "margins",
+      "profitability"
+     ]
+    },
+    {
+     "key": "actual_margin",
+     "label": "Actual margin",
+     "type": "percent",
+     "grant": "margins"
+    },
+    {
+     "key": "projected_markup",
+     "label": "Projected markup",
+     "type": "percent",
+     "grant": "margins",
+     "aliases": [
+      "markup"
+     ]
+    },
+    {
+     "key": "health",
+     "label": "Health",
+     "type": "enum",
+     "options": [
+      {
+       "value": "on_track",
+       "label": "On track"
+      },
+      {
+       "value": "at_risk",
+       "label": "At risk"
+      },
+      {
+       "value": "off_track",
+       "label": "Off track"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "open_tasks",
+     "label": "Open tasks",
+     "type": "number"
+    },
+    {
+     "key": "overdue_tasks",
+     "label": "Overdue tasks",
+     "type": "number"
+    },
+    {
+     "key": "blocked_tasks",
+     "label": "Blocked tasks",
+     "type": "number"
+    },
+    {
+     "key": "overdue_milestones",
+     "label": "Overdue milestones",
+     "type": "number"
+    }
+   ]
+  },
+  {
+   "id": "milestones",
+   "label": "Milestones",
+   "noun": "milestones",
+   "description": "Milestones with delivery state, slip and billing.",
+   "dateField": "planned_end",
+   "perms": [
+    "projects.view_all",
+    "projects.edit"
+   ],
+   "aliases": [
+    "milestone",
+    "milestones",
+    "deliverable",
+    "deliverables"
+   ],
+   "defaultColumns": [
+    "label",
+    "project",
+    "planned_end",
+    "state",
+    "progress",
+    "billing_amount",
+    "billing_status"
+   ],
+   "fields": [
+    {
+     "key": "label",
+     "label": "Milestone",
+     "type": "string"
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "no",
+     "label": "Number",
+     "type": "number"
+    },
+    {
+     "key": "pm",
+     "label": "Project manager",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "planned_start",
+     "label": "Planned start",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "planned_end",
+     "label": "Deadline",
+     "type": "date",
+     "groupable": true,
+     "aliases": [
+      "deadline",
+      "due"
+     ]
+    },
+    {
+     "key": "baseline_end",
+     "label": "Baseline end",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "slip_days",
+     "label": "Slip (days)",
+     "type": "number",
+     "unit": "days",
+     "aliases": [
+      "slip"
+     ]
+    },
+    {
+     "key": "billing_amount",
+     "label": "Billing value",
+     "type": "money",
+     "aliases": [
+      "billing",
+      "value"
+     ]
+    },
+    {
+     "key": "billing_status",
+     "label": "Billing status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "none",
+       "label": "Not invoiced"
+      },
+      {
+       "value": "invoiced",
+       "label": "Invoiced"
+      },
+      {
+       "value": "paid",
+       "label": "Paid"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "state",
+     "label": "Delivery state",
+     "type": "enum",
+     "options": [
+      {
+       "value": "achieved_on_time",
+       "label": "Achieved on time"
+      },
+      {
+       "value": "achieved_late",
+       "label": "Achieved late"
+      },
+      {
+       "value": "on_track",
+       "label": "On track"
+      },
+      {
+       "value": "at_risk",
+       "label": "At risk"
+      },
+      {
+       "value": "overdue",
+       "label": "Overdue"
+      },
+      {
+       "value": "not_started",
+       "label": "Not started"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "progress",
+     "label": "Progress",
+     "type": "percent"
+    },
+    {
+     "key": "achieved_on",
+     "label": "Achieved on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "is_overdue",
+     "label": "Overdue",
+     "type": "boolean"
+    },
+    {
+     "key": "is_open",
+     "label": "Open",
+     "type": "boolean"
+    },
+    {
+     "key": "days_to_due",
+     "label": "Days to deadline",
+     "type": "number",
+     "unit": "days"
+    }
+   ]
+  },
+  {
+   "id": "tasks",
+   "label": "Tasks",
+   "noun": "tasks",
+   "description": "Project and general tasks with owner, reviewer, dates, estimate vs actual, timeliness (early/on time/late), delay reason, quality rating and review rounds.",
+   "dateField": "due_on",
+   "perms": [],
+   "aliases": [
+    "task",
+    "tasks",
+    "work item",
+    "work items",
+    "wbs",
+    "todo",
+    "to-do",
+    "delivery",
+    "on-time",
+    "on time"
+   ],
+   "defaultColumns": [
+    "code",
+    "title",
+    "project",
+    "owner",
+    "status",
+    "due_on",
+    "days_overdue"
+   ],
+   "fields": [
+    {
+     "key": "code",
+     "label": "WBS",
+     "type": "string"
+    },
+    {
+     "key": "title",
+     "label": "Task",
+     "type": "string"
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "milestone",
+     "label": "Milestone",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Owner",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "owner",
+      "assignee",
+      "person",
+      "people",
+      "employee",
+      "developer",
+      "who"
+     ]
+    },
+    {
+     "key": "backup",
+     "label": "Backup",
+     "type": "string"
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "todo",
+       "label": "To do"
+      },
+      {
+       "value": "in_progress",
+       "label": "In progress"
+      },
+      {
+       "value": "blocked",
+       "label": "Blocked"
+      },
+      {
+       "value": "in_review",
+       "label": "In review"
+      },
+      {
+       "value": "done",
+       "label": "Done"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "complexity",
+     "label": "Complexity",
+     "type": "enum",
+     "options": [
+      {
+       "value": "low",
+       "label": "Low"
+      },
+      {
+       "value": "medium",
+       "label": "Medium"
+      },
+      {
+       "value": "high",
+       "label": "High"
+      },
+      {
+       "value": "very_high",
+       "label": "Very high"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "start_on",
+     "label": "Start",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "due_on",
+     "label": "Due date",
+     "type": "date",
+     "groupable": true,
+     "aliases": [
+      "due"
+     ]
+    },
+    {
+     "key": "done_on",
+     "label": "Done on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "days_overdue",
+     "label": "Days overdue",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "is_overdue",
+     "label": "Overdue",
+     "type": "boolean"
+    },
+    {
+     "key": "is_blocked",
+     "label": "Blocked",
+     "type": "boolean"
+    },
+    {
+     "key": "is_open",
+     "label": "Open",
+     "type": "boolean"
+    },
+    {
+     "key": "on_time",
+     "label": "Done on time",
+     "type": "boolean"
+    },
+    {
+     "key": "est",
+     "label": "Estimated hours",
+     "type": "number",
+     "unit": "hours",
+     "aliases": [
+      "estimate",
+      "estimated"
+     ]
+    },
+    {
+     "key": "actual",
+     "label": "Actual hours",
+     "type": "number",
+     "unit": "hours",
+     "aliases": [
+      "actual",
+      "logged"
+     ]
+    },
+    {
+     "key": "effort_ratio",
+     "label": "Effort ratio",
+     "type": "number",
+     "aliases": [
+      "effort ratio",
+      "effort"
+     ]
+    },
+    {
+     "key": "kind",
+     "label": "Task kind",
+     "type": "enum",
+     "options": [
+      {
+       "value": "project",
+       "label": "Project task"
+      },
+      {
+       "value": "general",
+       "label": "General task"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "general task",
+      "project task"
+     ]
+    },
+    {
+     "key": "assigned_by",
+     "label": "Assigned by",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "assigned by",
+      "assigner"
+     ]
+    },
+    {
+     "key": "reviewer",
+     "label": "Reviewer",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "reviewer",
+      "approver"
+     ]
+    },
+    {
+     "key": "priority",
+     "label": "Priority",
+     "type": "enum",
+     "options": [
+      {
+       "value": "low",
+       "label": "Low"
+      },
+      {
+       "value": "normal",
+       "label": "Normal"
+      },
+      {
+       "value": "high",
+       "label": "High"
+      },
+      {
+       "value": "urgent",
+       "label": "Urgent"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "submitted_on",
+     "label": "Submitted for review",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "approved_on",
+     "label": "Approved on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "timeliness",
+     "label": "Timeliness",
+     "type": "enum",
+     "options": [
+      {
+       "value": "early",
+       "label": "Early"
+      },
+      {
+       "value": "on_time",
+       "label": "On time"
+      },
+      {
+       "value": "late",
+       "label": "Late"
+      }
+     ],
+     "groupable": true,
+     "description": "Completed tasks only: early (≥1 working day before due), on time, or late.",
+     "aliases": [
+      "timeliness",
+      "early",
+      "on time"
+     ]
+    },
+    {
+     "key": "variance_days",
+     "label": "Variance (working days)",
+     "type": "number",
+     "unit": "days",
+     "description": "Completed tasks: working days after (+) or before (−) the due date.",
+     "aliases": [
+      "variance",
+      "delay days"
+     ]
+    },
+    {
+     "key": "delay_reason",
+     "label": "Delay reason",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "delay reason",
+      "reason for delay",
+      "why delayed"
+     ]
+    },
+    {
+     "key": "quality_rating",
+     "label": "Quality rating",
+     "type": "number",
+     "description": "Reviewer rating 1–5 given on approval.",
+     "aliases": [
+      "quality",
+      "rating"
+     ]
+    },
+    {
+     "key": "review_rounds",
+     "label": "Review rounds",
+     "type": "number"
+    },
+    {
+     "key": "sent_back_count",
+     "label": "Times sent back",
+     "type": "number",
+     "aliases": [
+      "sent back",
+      "rework"
+     ]
+    },
+    {
+     "key": "on_time_rate",
+     "label": "On-time rate",
+     "type": "percent",
+     "description": "Completed tasks: 100% if early or on time, 0% if late. Average it for on-time delivery %.",
+     "aliases": [
+      "on-time delivery",
+      "on time delivery",
+      "on-time rate"
+     ]
+    },
+    {
+     "key": "is_late",
+     "label": "Completed late",
+     "type": "boolean"
+    },
+    {
+     "key": "is_in_review",
+     "label": "In review",
+     "type": "boolean"
+    }
+   ]
+  },
+  {
+   "id": "hours",
+   "label": "Hours (timesheets)",
+   "noun": "entries",
+   "description": "Every timesheet entry, costed at the rate valid on the day it was worked.",
+   "dateField": "date",
+   "perms": [],
+   "actuals": true,
+   "aliases": [
+    "hour",
+    "hours",
+    "timesheet",
+    "timesheets",
+    "time",
+    "effort logged",
+    "logged",
+    "utilisation",
+    "utilization",
+    "leave",
+    "billable"
+   ],
+   "defaultColumns": [
+    "date",
+    "person",
+    "project",
+    "task",
+    "kind",
+    "hours",
+    "approved"
+   ],
+   "fields": [
+    {
+     "key": "date",
+     "label": "Date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "person",
+     "label": "Person",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "person",
+      "people",
+      "employee",
+      "who",
+      "team member",
+      "resource"
+     ]
+    },
+    {
+     "key": "department",
+     "label": "Department",
+     "type": "enum",
+     "options": [
+      {
+       "value": "management",
+       "label": "Management"
+      },
+      {
+       "value": "delivery",
+       "label": "Delivery"
+      },
+      {
+       "value": "sales",
+       "label": "Sales"
+      },
+      {
+       "value": "operations",
+       "label": "Operations"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "task",
+     "label": "Task",
+     "type": "string"
+    },
+    {
+     "key": "kind",
+     "label": "Entry type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "task",
+       "label": "Project task"
+      },
+      {
+       "value": "leave",
+       "label": "Leave"
+      },
+      {
+       "value": "internal",
+       "label": "Internal"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "type",
+      "kind"
+     ]
+    },
+    {
+     "key": "internal_code",
+     "label": "Internal activity",
+     "type": "enum",
+     "options": [
+      {
+       "value": "meeting",
+       "label": "Internal meeting"
+      },
+      {
+       "value": "learning",
+       "label": "Learning"
+      },
+      {
+       "value": "presales",
+       "label": "Pre-sales"
+      },
+      {
+       "value": "admin",
+       "label": "Admin"
+      },
+      {
+       "value": "interview",
+       "label": "Interviewing"
+      },
+      {
+       "value": "bench",
+       "label": "Bench"
+      },
+      {
+       "value": "breaks",
+       "label": "Lunch, tea and stand-up"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "leave_type",
+     "label": "Leave type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "casual",
+       "label": "Casual"
+      },
+      {
+       "value": "sick",
+       "label": "Sick"
+      },
+      {
+       "value": "earned",
+       "label": "Earned"
+      },
+      {
+       "value": "compensatory",
+       "label": "Comp-off"
+      },
+      {
+       "value": "lwp",
+       "label": "Leave without pay"
+      },
+      {
+       "value": "optional_holiday",
+       "label": "Optional holiday"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "hours",
+     "label": "Hours",
+     "type": "number",
+     "unit": "hours"
+    },
+    {
+     "key": "approved",
+     "label": "Approved",
+     "type": "boolean"
+    },
+    {
+     "key": "week_status",
+     "label": "Week status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "open",
+       "label": "Draft"
+      },
+      {
+       "value": "submitted",
+       "label": "Submitted"
+      },
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "rejected",
+       "label": "Rejected"
+      },
+      {
+       "value": "locked",
+       "label": "Locked"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "cost",
+     "label": "Cost",
+     "type": "money",
+     "grant": "salaries",
+     "aliases": [
+      "cost",
+      "labour cost",
+      "labor cost"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "allocations",
+   "label": "Allocations",
+   "noun": "allocations",
+   "description": "Planned allocation of people to project milestones (percent of the day).",
+   "dateField": "from_on",
+   "perms": [
+    "projects.view_all",
+    "projects.edit",
+    "allocation.edit"
+   ],
+   "aliases": [
+    "allocation",
+    "allocations",
+    "staffing",
+    "assignment"
+   ],
+   "defaultColumns": [
+    "person",
+    "project",
+    "milestone",
+    "pct",
+    "from_on",
+    "to_on"
+   ],
+   "fields": [
+    {
+     "key": "person",
+     "label": "Person",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "milestone",
+     "label": "Milestone",
+     "type": "string"
+    },
+    {
+     "key": "pct",
+     "label": "Allocation",
+     "type": "percent"
+    },
+    {
+     "key": "from_on",
+     "label": "From",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "to_on",
+     "label": "To",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "working_days",
+     "label": "Working days",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "planned_hours",
+     "label": "Planned hours",
+     "type": "number",
+     "unit": "hours"
+    },
+    {
+     "key": "is_active",
+     "label": "Active today",
+     "type": "boolean"
+    }
+   ]
+  },
+  {
+   "id": "invoices",
+   "label": "Invoices",
+   "noun": "invoices",
+   "description": "Milestone invoices with payments and receivables ageing.",
+   "dateField": "invoiced_on",
+   "perms": [
+    "finance.view"
+   ],
+   "actuals": true,
+   "aliases": [
+    "invoice",
+    "invoices",
+    "billing",
+    "receivable",
+    "receivables",
+    "collection",
+    "collections",
+    "dso"
+   ],
+   "defaultColumns": [
+    "number",
+    "client",
+    "project",
+    "invoiced_on",
+    "amount",
+    "paid",
+    "outstanding",
+    "status"
+   ],
+   "fields": [
+    {
+     "key": "number",
+     "label": "Invoice no.",
+     "type": "string"
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "milestone",
+     "label": "Milestone",
+     "type": "string"
+    },
+    {
+     "key": "stream",
+     "label": "Revenue stream",
+     "type": "enum",
+     "options": [
+      {
+       "value": "sap_consulting",
+       "label": "SAP consulting"
+      },
+      {
+       "value": "products",
+       "label": "Products"
+      },
+      {
+       "value": "services",
+       "label": "Services"
+      },
+      {
+       "value": "saas",
+       "label": "Subscriptions"
+      },
+      {
+       "value": "ams",
+       "label": "AMS"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "invoiced_on",
+     "label": "Invoice date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "due_on",
+     "label": "Due date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "paid_on",
+     "label": "Paid on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "amount",
+     "label": "Invoice amount",
+     "type": "money",
+     "aliases": [
+      "billing",
+      "billed",
+      "amount",
+      "invoiced"
+     ]
+    },
+    {
+     "key": "paid",
+     "label": "Paid",
+     "type": "money"
+    },
+    {
+     "key": "outstanding",
+     "label": "Outstanding",
+     "type": "money",
+     "aliases": [
+      "outstanding",
+      "receivable",
+      "unpaid"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "unpaid",
+       "label": "Unpaid"
+      },
+      {
+       "value": "partial",
+       "label": "Part paid"
+      },
+      {
+       "value": "paid",
+       "label": "Paid"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "days_overdue",
+     "label": "Days overdue",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "is_overdue",
+     "label": "Overdue",
+     "type": "boolean"
+    },
+    {
+     "key": "age_days",
+     "label": "Age (days)",
+     "type": "number",
+     "unit": "days"
+    }
+   ]
+  },
+  {
+   "id": "ledger",
+   "label": "Ledger (income & costs)",
+   "noun": "entries",
+   "description": "Income and expense entries (recurring expanded monthly) plus payments received — the source of billed, collected and costs.",
+   "dateField": "date",
+   "perms": [
+    "ledger.view",
+    "finance.view"
+   ],
+   "actuals": true,
+   "aliases": [
+    "revenue",
+    "income",
+    "expense",
+    "expenses",
+    "cost",
+    "costs",
+    "spend",
+    "ledger",
+    "cash",
+    "profit",
+    "earnings",
+    "p&l",
+    "pnl",
+    "billed",
+    "collected",
+    "net"
+   ],
+   "defaultColumns": [
+    "date",
+    "kind",
+    "category",
+    "description",
+    "stream",
+    "amount",
+    "status"
+   ],
+   "fields": [
+    {
+     "key": "date",
+     "label": "Date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "kind",
+     "label": "Type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "income",
+       "label": "Income"
+      },
+      {
+       "value": "expense",
+       "label": "Expense"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "category",
+     "label": "Category",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "category",
+      "head"
+     ]
+    },
+    {
+     "key": "description",
+     "label": "Description",
+     "type": "string"
+    },
+    {
+     "key": "stream",
+     "label": "Revenue stream",
+     "type": "enum",
+     "options": [
+      {
+       "value": "sap_consulting",
+       "label": "SAP consulting"
+      },
+      {
+       "value": "products",
+       "label": "Products"
+      },
+      {
+       "value": "services",
+       "label": "Services"
+      },
+      {
+       "value": "saas",
+       "label": "Subscriptions"
+      },
+      {
+       "value": "ams",
+       "label": "AMS"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "stream",
+      "business line",
+      "source of revenue"
+     ]
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "amount",
+     "label": "Amount",
+     "type": "money"
+    },
+    {
+     "key": "billed",
+     "label": "Revenue billed",
+     "type": "money",
+     "aliases": [
+      "revenue",
+      "billed",
+      "income",
+      "sales",
+      "turnover"
+     ]
+    },
+    {
+     "key": "collected",
+     "label": "Cash collected",
+     "type": "money",
+     "aliases": [
+      "collected",
+      "collection",
+      "cash in",
+      "received"
+     ]
+    },
+    {
+     "key": "spent",
+     "label": "Costs",
+     "type": "money",
+     "aliases": [
+      "cost",
+      "costs",
+      "expense",
+      "expenses",
+      "spend"
+     ]
+    },
+    {
+     "key": "net",
+     "label": "Net (billed − costs)",
+     "type": "money",
+     "aliases": [
+      "net",
+      "profit",
+      "earnings"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "expected",
+       "label": "Expected"
+      },
+      {
+       "value": "received",
+       "label": "Received"
+      },
+      {
+       "value": "paid",
+       "label": "Paid"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "entry",
+     "label": "Row type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "entry",
+       "label": "Ledger entry"
+      },
+      {
+       "value": "payment",
+       "label": "Payment received"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "recurring",
+     "label": "Recurring",
+     "type": "boolean"
+    }
+   ]
+  },
+  {
+   "id": "deals",
+   "label": "Deals (pipeline)",
+   "noun": "deals",
+   "description": "Sales opportunities with stage, value, weighted value and cycle.",
+   "dateField": "created_on",
+   "perms": [
+    "deals.edit_own",
+    "deals.view_all"
+   ],
+   "aliases": [
+    "deal",
+    "deals",
+    "pipeline",
+    "lead",
+    "leads",
+    "opportunity",
+    "opportunities",
+    "sales",
+    "win rate",
+    "won",
+    "lost",
+    "funnel",
+    "crm"
+   ],
+   "defaultColumns": [
+    "title",
+    "client",
+    "stage",
+    "owner",
+    "value",
+    "expected_close",
+    "days_idle"
+   ],
+   "fields": [
+    {
+     "key": "title",
+     "label": "Deal",
+     "type": "string"
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "product",
+     "label": "Product",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "product"
+     ]
+    },
+    {
+     "key": "source",
+     "label": "Lead source",
+     "type": "enum",
+     "options": [
+      {
+       "value": "referral",
+       "label": "Referral"
+      },
+      {
+       "value": "bni",
+       "label": "BNI"
+      },
+      {
+       "value": "website",
+       "label": "Website"
+      },
+      {
+       "value": "cold_call",
+       "label": "Cold call"
+      },
+      {
+       "value": "event",
+       "label": "Event"
+      },
+      {
+       "value": "partner",
+       "label": "Partner"
+      },
+      {
+       "value": "existing_client",
+       "label": "Existing client"
+      },
+      {
+       "value": "other",
+       "label": "Other"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "source",
+      "channel"
+     ]
+    },
+    {
+     "key": "stage",
+     "label": "Stage",
+     "type": "enum",
+     "options": [
+      {
+       "value": "lead",
+       "label": "Lead"
+      },
+      {
+       "value": "qualified",
+       "label": "Qualified"
+      },
+      {
+       "value": "demo",
+       "label": "Demo"
+      },
+      {
+       "value": "proposal",
+       "label": "Proposal"
+      },
+      {
+       "value": "negotiation",
+       "label": "Negotiation"
+      },
+      {
+       "value": "won",
+       "label": "Won"
+      },
+      {
+       "value": "lost",
+       "label": "Lost"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Owner",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "owner",
+      "salesperson",
+      "rep",
+      "person",
+      "who"
+     ]
+    },
+    {
+     "key": "is_open",
+     "label": "Open",
+     "type": "boolean"
+    },
+    {
+     "key": "is_won",
+     "label": "Won",
+     "type": "boolean"
+    },
+    {
+     "key": "is_lost",
+     "label": "Lost",
+     "type": "boolean"
+    },
+    {
+     "key": "value",
+     "label": "Deal value",
+     "type": "money",
+     "aliases": [
+      "value",
+      "amount",
+      "pipeline"
+     ]
+    },
+    {
+     "key": "mrr",
+     "label": "Recurring (per month)",
+     "type": "money",
+     "aliases": [
+      "mrr",
+      "recurring"
+     ]
+    },
+    {
+     "key": "weighted",
+     "label": "Weighted value",
+     "type": "money",
+     "aliases": [
+      "weighted"
+     ]
+    },
+    {
+     "key": "chance",
+     "label": "Stage probability",
+     "type": "percent"
+    },
+    {
+     "key": "win",
+     "label": "Win rate",
+     "type": "percent",
+     "description": "Won = 100%, lost = 0%, open deals excluded. Average it to get win rate.",
+     "aliases": [
+      "win rate",
+      "conversion"
+     ]
+    },
+    {
+     "key": "created_on",
+     "label": "Created",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "expected_close",
+     "label": "Expected close",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "won_on",
+     "label": "Won on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "lost_on",
+     "label": "Lost on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "closed_on",
+     "label": "Closed on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "last_activity_on",
+     "label": "Last activity",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "days_idle",
+     "label": "Days since activity",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "is_stale",
+     "label": "Stale",
+     "type": "boolean"
+    },
+    {
+     "key": "cycle_days",
+     "label": "Sales cycle (days)",
+     "type": "number",
+     "unit": "days",
+     "aliases": [
+      "cycle",
+      "days to close",
+      "sales cycle"
+     ]
+    },
+    {
+     "key": "lost_reason",
+     "label": "Lost reason",
+     "type": "string",
+     "groupable": true
+    }
+   ]
+  },
+  {
+   "id": "deal_activities",
+   "label": "Sales activities",
+   "noun": "activities",
+   "description": "Calls, meetings, demos and follow-ups logged against deals.",
+   "dateField": "date",
+   "perms": [
+    "deals.edit_own",
+    "deals.view_all"
+   ],
+   "actuals": true,
+   "aliases": [
+    "activity",
+    "activities",
+    "call",
+    "calls",
+    "meeting",
+    "meetings",
+    "demos",
+    "follow-up",
+    "follow-ups"
+   ],
+   "defaultColumns": [
+    "date",
+    "owner",
+    "type",
+    "deal",
+    "client",
+    "note"
+   ],
+   "fields": [
+    {
+     "key": "date",
+     "label": "Date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "type",
+     "label": "Activity",
+     "type": "enum",
+     "options": [
+      {
+       "value": "call",
+       "label": "Call"
+      },
+      {
+       "value": "meeting",
+       "label": "Meeting"
+      },
+      {
+       "value": "demo",
+       "label": "Demo"
+      },
+      {
+       "value": "email",
+       "label": "Email"
+      },
+      {
+       "value": "proposal",
+       "label": "Proposal"
+      },
+      {
+       "value": "follow_up",
+       "label": "Follow-up"
+      },
+      {
+       "value": "whatsapp",
+       "label": "WhatsApp"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "type"
+     ]
+    },
+    {
+     "key": "deal",
+     "label": "Deal",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "stage",
+     "label": "Deal stage",
+     "type": "enum",
+     "options": [
+      {
+       "value": "lead",
+       "label": "Lead"
+      },
+      {
+       "value": "qualified",
+       "label": "Qualified"
+      },
+      {
+       "value": "demo",
+       "label": "Demo"
+      },
+      {
+       "value": "proposal",
+       "label": "Proposal"
+      },
+      {
+       "value": "negotiation",
+       "label": "Negotiation"
+      },
+      {
+       "value": "won",
+       "label": "Won"
+      },
+      {
+       "value": "lost",
+       "label": "Lost"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Logged by",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "owner",
+      "person",
+      "salesperson",
+      "who"
+     ]
+    },
+    {
+     "key": "note",
+     "label": "Note",
+     "type": "string"
+    }
+   ]
+  },
+  {
+   "id": "payroll",
+   "label": "Payroll",
+   "noun": "payslips",
+   "description": "Monthly pay per person: base, deductions for unapproved/LWP days, variable, net. Months without a run are estimated from CTC.",
+   "dateField": "month",
+   "perms": [
+    "payroll.run",
+    "payroll.finalise"
+   ],
+   "actuals": true,
+   "aliases": [
+    "payroll",
+    "salary",
+    "salaries",
+    "pay",
+    "ctc",
+    "payslip",
+    "compensation",
+    "wage",
+    "wages"
+   ],
+   "defaultColumns": [
+    "month",
+    "person",
+    "department",
+    "ctc",
+    "deduction",
+    "variable",
+    "net",
+    "status"
+   ],
+   "fields": [
+    {
+     "key": "month",
+     "label": "Month",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "person",
+     "label": "Person",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "department",
+     "label": "Department",
+     "type": "enum",
+     "options": [
+      {
+       "value": "management",
+       "label": "Management"
+      },
+      {
+       "value": "delivery",
+       "label": "Delivery"
+      },
+      {
+       "value": "sales",
+       "label": "Sales"
+      },
+      {
+       "value": "operations",
+       "label": "Operations"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "department",
+      "team",
+      "function"
+     ]
+    },
+    {
+     "key": "role",
+     "label": "Role",
+     "type": "enum",
+     "options": [
+      {
+       "value": "admin",
+       "label": "Admin (CEO)"
+      },
+      {
+       "value": "pm",
+       "label": "Project manager"
+      },
+      {
+       "value": "sales",
+       "label": "Sales"
+      },
+      {
+       "value": "ops",
+       "label": "Operations"
+      },
+      {
+       "value": "employee",
+       "label": "Employee"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "ctc",
+     "label": "Monthly CTC",
+     "type": "money",
+     "aliases": [
+      "cost",
+      "ctc",
+      "payroll cost",
+      "salary cost"
+     ]
+    },
+    {
+     "key": "base",
+     "label": "Base pay",
+     "type": "money"
+    },
+    {
+     "key": "deduction",
+     "label": "Deductions",
+     "type": "money",
+     "aliases": [
+      "deduction",
+      "deductions"
+     ]
+    },
+    {
+     "key": "variable",
+     "label": "Variable earned",
+     "type": "money",
+     "aliases": [
+      "variable",
+      "incentive",
+      "bonus"
+     ]
+    },
+    {
+     "key": "net",
+     "label": "Net pay",
+     "type": "money",
+     "aliases": [
+      "net pay",
+      "take home"
+     ]
+    },
+    {
+     "key": "working_days",
+     "label": "Working days",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "unapproved_days",
+     "label": "Unapproved days",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "lwp_days",
+     "label": "LWP days",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "status",
+     "label": "Run status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "final",
+       "label": "Final"
+      },
+      {
+       "value": "draft",
+       "label": "Draft"
+      },
+      {
+       "value": "estimate",
+       "label": "Estimate (no run yet)"
+      }
+     ],
+     "groupable": true
+    }
+   ]
+  },
+  {
+   "id": "people",
+   "label": "People",
+   "noun": "people",
+   "description": "Team members with role, manager, load, delivery record and timesheet discipline.",
+   "dateField": "joined_on",
+   "perms": [
+    "people.view_all",
+    "team.view"
+   ],
+   "aliases": [
+    "people",
+    "person",
+    "team",
+    "staff",
+    "employees",
+    "headcount",
+    "resource",
+    "resources",
+    "bench"
+   ],
+   "defaultColumns": [
+    "name",
+    "title",
+    "role",
+    "manager",
+    "allocation_next_10d",
+    "open_tasks",
+    "last_week_status"
+   ],
+   "fields": [
+    {
+     "key": "name",
+     "label": "Person",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "title",
+     "label": "Title",
+     "type": "string"
+    },
+    {
+     "key": "role",
+     "label": "Role",
+     "type": "enum",
+     "options": [
+      {
+       "value": "admin",
+       "label": "Admin (CEO)"
+      },
+      {
+       "value": "pm",
+       "label": "Project manager"
+      },
+      {
+       "value": "sales",
+       "label": "Sales"
+      },
+      {
+       "value": "ops",
+       "label": "Operations"
+      },
+      {
+       "value": "employee",
+       "label": "Employee"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "department",
+     "label": "Department",
+     "type": "enum",
+     "options": [
+      {
+       "value": "management",
+       "label": "Management"
+      },
+      {
+       "value": "delivery",
+       "label": "Delivery"
+      },
+      {
+       "value": "sales",
+       "label": "Sales"
+      },
+      {
+       "value": "operations",
+       "label": "Operations"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "department",
+      "team",
+      "function"
+     ]
+    },
+    {
+     "key": "manager",
+     "label": "Reports to",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "manager",
+      "reports to"
+     ]
+    },
+    {
+     "key": "joined_on",
+     "label": "Joined",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "ctc",
+     "label": "Monthly CTC",
+     "type": "money",
+     "grant": "salaries"
+    },
+    {
+     "key": "cost_per_hour",
+     "label": "Cost per hour",
+     "type": "money",
+     "grant": "salaries"
+    },
+    {
+     "key": "allocation_today",
+     "label": "Allocation today",
+     "type": "percent"
+    },
+    {
+     "key": "allocation_next_10d",
+     "label": "Allocation, next 10 working days",
+     "type": "percent",
+     "aliases": [
+      "allocation",
+      "utilisation",
+      "utilization",
+      "load"
+     ]
+    },
+    {
+     "key": "open_tasks",
+     "label": "Open tasks",
+     "type": "number"
+    },
+    {
+     "key": "overdue_tasks",
+     "label": "Overdue tasks",
+     "type": "number"
+    },
+    {
+     "key": "effort_ratio",
+     "label": "Effort ratio",
+     "type": "number"
+    },
+    {
+     "key": "on_time",
+     "label": "On-time delivery",
+     "type": "percent"
+    },
+    {
+     "key": "hours_30d",
+     "label": "Hours, last 30 days",
+     "type": "number",
+     "unit": "hours"
+    },
+    {
+     "key": "last_week_status",
+     "label": "Last week’s timesheet",
+     "type": "enum",
+     "options": [
+      {
+       "value": "open",
+       "label": "Draft"
+      },
+      {
+       "value": "submitted",
+       "label": "Submitted"
+      },
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "rejected",
+       "label": "Rejected"
+      },
+      {
+       "value": "locked",
+       "label": "Locked"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "timesheet status"
+     ]
+    },
+    {
+     "key": "unsubmitted_weeks_8w",
+     "label": "Weeks not submitted (8 wks)",
+     "type": "number"
+    },
+    {
+     "key": "ts_compliance_8w",
+     "label": "Timesheet compliance (8 wks)",
+     "type": "percent"
+    }
+   ]
+  },
+  {
+   "id": "ops",
+   "label": "Operations register",
+   "noun": "items",
+   "description": "Recurring duties: payroll, statutory filings, finance and admin with due dates.",
+   "dateField": "due_on",
+   "perms": [
+    "ops.manage"
+   ],
+   "aliases": [
+    "ops",
+    "operations",
+    "compliance",
+    "filing",
+    "filings",
+    "statutory",
+    "duty",
+    "duties"
+   ],
+   "defaultColumns": [
+    "item",
+    "category",
+    "owner",
+    "due_on",
+    "recurring",
+    "status",
+    "days_overdue"
+   ],
+   "fields": [
+    {
+     "key": "item",
+     "label": "Item",
+     "type": "string"
+    },
+    {
+     "key": "category",
+     "label": "Category",
+     "type": "enum",
+     "options": [
+      {
+       "value": "payroll",
+       "label": "Payroll"
+      },
+      {
+       "value": "compliance",
+       "label": "Compliance"
+      },
+      {
+       "value": "finance",
+       "label": "Finance"
+      },
+      {
+       "value": "admin",
+       "label": "Admin"
+      },
+      {
+       "value": "hr",
+       "label": "HR"
+      },
+      {
+       "value": "it",
+       "label": "IT"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Owner",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "due_on",
+     "label": "Due",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "recurring",
+     "label": "Repeats",
+     "type": "enum",
+     "options": [
+      {
+       "value": "none",
+       "label": "One-off"
+      },
+      {
+       "value": "weekly",
+       "label": "Weekly"
+      },
+      {
+       "value": "monthly",
+       "label": "Monthly"
+      },
+      {
+       "value": "quarterly",
+       "label": "Quarterly"
+      },
+      {
+       "value": "yearly",
+       "label": "Yearly"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "open",
+       "label": "Open"
+      },
+      {
+       "value": "done",
+       "label": "Done"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "is_overdue",
+     "label": "Overdue",
+     "type": "boolean"
+    },
+    {
+     "key": "days_overdue",
+     "label": "Days overdue",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "last_done_on",
+     "label": "Last done",
+     "type": "date",
+     "groupable": true
+    }
+   ]
+  },
+  {
+   "id": "task_reviews",
+   "label": "Task reviews",
+   "noun": "review rounds",
+   "description": "Every submission of a task for review: reviewer, decision (approved / sent back), reason, quality rating and whether it was submitted after the due date.",
+   "dateField": "submitted_at",
+   "perms": [],
+   "actuals": true,
+   "aliases": [
+    "review",
+    "reviews",
+    "review round",
+    "review rounds",
+    "sent back",
+    "send back",
+    "rework",
+    "submission",
+    "submissions"
+   ],
+   "defaultColumns": [
+    "submitted_at",
+    "task",
+    "project",
+    "owner",
+    "reviewer",
+    "round",
+    "decision",
+    "decision_reason",
+    "quality_rating"
+   ],
+   "fields": [
+    {
+     "key": "task",
+     "label": "Task",
+     "type": "string"
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "task_kind",
+     "label": "Task kind",
+     "type": "enum",
+     "options": [
+      {
+       "value": "project",
+       "label": "Project task"
+      },
+      {
+       "value": "general",
+       "label": "General task"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Owner",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "owner",
+      "assignee",
+      "person",
+      "who"
+     ]
+    },
+    {
+     "key": "reviewer",
+     "label": "Reviewer",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "reviewer",
+      "approver"
+     ]
+    },
+    {
+     "key": "round",
+     "label": "Round",
+     "type": "number"
+    },
+    {
+     "key": "submitted_at",
+     "label": "Submitted on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "decision",
+     "label": "Decision",
+     "type": "enum",
+     "options": [
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "sent_back",
+       "label": "Sent back"
+      },
+      {
+       "value": "pending",
+       "label": "Awaiting review"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "decided_at",
+     "label": "Decided on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "decision_reason",
+     "label": "Send-back reason",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "quality_rating",
+     "label": "Quality rating",
+     "type": "number",
+     "aliases": [
+      "quality",
+      "rating"
+     ]
+    },
+    {
+     "key": "delay_reason",
+     "label": "Delay reason",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "late_at_submission",
+     "label": "Submitted after due date",
+     "type": "boolean"
+    },
+    {
+     "key": "is_sent_back",
+     "label": "Sent back",
+     "type": "boolean"
+    },
+    {
+     "key": "is_approved",
+     "label": "Approved",
+     "type": "boolean"
+    },
+    {
+     "key": "is_pending",
+     "label": "Awaiting review",
+     "type": "boolean"
+    },
+    {
+     "key": "days_to_decide",
+     "label": "Days to decide",
+     "type": "number",
+     "unit": "days"
+    }
+   ]
+  },
+  {
+   "id": "leave_requests",
+   "label": "Leave requests",
+   "noun": "leave requests",
+   "description": "Leave applications with type, days, status and who decided. Employees see only their own; managers see their reports; HR sees everyone.",
+   "dateField": "from_on",
+   "perms": [],
+   "aliases": [
+    "leave",
+    "leaves",
+    "leave request",
+    "leave requests",
+    "time off",
+    "vacation",
+    "absence",
+    "holiday"
+   ],
+   "defaultColumns": [
+    "person",
+    "type",
+    "from_on",
+    "to_on",
+    "days",
+    "status",
+    "decided_by"
+   ],
+   "fields": [
+    {
+     "key": "person",
+     "label": "Person",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "person",
+      "employee",
+      "who"
+     ]
+    },
+    {
+     "key": "manager",
+     "label": "Manager",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "manager"
+     ]
+    },
+    {
+     "key": "type",
+     "label": "Leave type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "casual",
+       "label": "Casual"
+      },
+      {
+       "value": "sick",
+       "label": "Sick"
+      },
+      {
+       "value": "earned",
+       "label": "Earned"
+      },
+      {
+       "value": "compensatory",
+       "label": "Comp-off"
+      },
+      {
+       "value": "lwp",
+       "label": "Leave without pay"
+      },
+      {
+       "value": "optional_holiday",
+       "label": "Optional holiday"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "leave type",
+      "type"
+     ]
+    },
+    {
+     "key": "from_on",
+     "label": "From",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "to_on",
+     "label": "To",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "days",
+     "label": "Days",
+     "type": "number",
+     "unit": "days",
+     "aliases": [
+      "days",
+      "leave days"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "pending",
+       "label": "Pending"
+      },
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "rejected",
+       "label": "Rejected"
+      },
+      {
+       "value": "cancelled",
+       "label": "Cancelled"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "approver",
+     "label": "Approver",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "decided_by",
+     "label": "Decided by",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "decision_reason",
+     "label": "Decision reason",
+     "type": "string"
+    },
+    {
+     "key": "reason",
+     "label": "Reason",
+     "type": "string"
+    },
+    {
+     "key": "applied_on",
+     "label": "Applied on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "is_pending",
+     "label": "Pending",
+     "type": "boolean"
+    },
+    {
+     "key": "is_approved",
+     "label": "Approved",
+     "type": "boolean"
+    }
+   ]
+  },
+  {
+   "id": "expenses",
+   "label": "Expense claims",
+   "noun": "claims",
+   "description": "Expense claims (reimbursements) with category, amount, status, approver, budget check and payment. Employees see their own; PMs their projects and team; admin and HR everyone.",
+   "dateField": "spent_on",
+   "perms": [],
+   "actuals": true,
+   "aliases": [
+    "expense claim",
+    "expense claims",
+    "claim",
+    "claims",
+    "reimbursement",
+    "reimbursements",
+    "reimburse"
+   ],
+   "defaultColumns": [
+    "spent_on",
+    "person",
+    "category",
+    "description",
+    "project",
+    "amount",
+    "status",
+    "approver"
+   ],
+   "fields": [
+    {
+     "key": "person",
+     "label": "Person",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "person",
+      "employee",
+      "who",
+      "claimant"
+     ]
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "category",
+     "label": "Category",
+     "type": "enum",
+     "options": [
+      {
+       "value": "travel",
+       "label": "Travel"
+      },
+      {
+       "value": "food",
+       "label": "Food & meals"
+      },
+      {
+       "value": "lodging",
+       "label": "Lodging"
+      },
+      {
+       "value": "client_entertainment",
+       "label": "Client entertainment"
+      },
+      {
+       "value": "software",
+       "label": "Software & subscriptions"
+      },
+      {
+       "value": "hardware",
+       "label": "Hardware"
+      },
+      {
+       "value": "internet_phone",
+       "label": "Internet & phone"
+      },
+      {
+       "value": "training",
+       "label": "Training & courses"
+      },
+      {
+       "value": "office",
+       "label": "Office supplies"
+      },
+      {
+       "value": "other",
+       "label": "Other"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "category",
+      "head"
+     ]
+    },
+    {
+     "key": "description",
+     "label": "Description",
+     "type": "string"
+    },
+    {
+     "key": "amount",
+     "label": "Amount",
+     "type": "money",
+     "aliases": [
+      "amount",
+      "spend",
+      "spent",
+      "claimed"
+     ]
+    },
+    {
+     "key": "spent_on",
+     "label": "Spent on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "draft",
+       "label": "Draft"
+      },
+      {
+       "value": "submitted",
+       "label": "Submitted"
+      },
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "rejected",
+       "label": "Rejected"
+      },
+      {
+       "value": "paid",
+       "label": "Paid"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "approver",
+     "label": "Approver",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "in_budget",
+     "label": "Within budget",
+     "type": "boolean"
+    },
+    {
+     "key": "billable",
+     "label": "Billable to client",
+     "type": "boolean"
+    },
+    {
+     "key": "paid_on",
+     "label": "Paid on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "is_unpaid",
+     "label": "Approved, not yet reimbursed",
+     "type": "boolean"
+    },
+    {
+     "key": "is_pending",
+     "label": "Awaiting approval",
+     "type": "boolean"
+    }
+   ]
+  },
+  {
+   "id": "purchases",
+   "label": "Purchase orders",
+   "noun": "purchase orders",
+   "description": "Purchase orders to vendors with budget category, value (incl. GST), status and approval.",
+   "dateField": "raised_on",
+   "perms": [
+    "procurement.manage"
+   ],
+   "aliases": [
+    "po",
+    "pos",
+    "purchase order",
+    "purchase orders",
+    "purchase",
+    "purchases",
+    "procurement"
+   ],
+   "defaultColumns": [
+    "number",
+    "vendor",
+    "category",
+    "project",
+    "amount",
+    "status",
+    "requested_by",
+    "raised_on"
+   ],
+   "fields": [
+    {
+     "key": "number",
+     "label": "PO number",
+     "type": "string"
+    },
+    {
+     "key": "title",
+     "label": "Description",
+     "type": "string"
+    },
+    {
+     "key": "vendor",
+     "label": "Vendor",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "vendor",
+      "supplier"
+     ]
+    },
+    {
+     "key": "category",
+     "label": "Budget category",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "category"
+     ]
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "amount",
+     "label": "PO value (incl. GST)",
+     "type": "money",
+     "aliases": [
+      "value",
+      "amount"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "draft",
+       "label": "Draft"
+      },
+      {
+       "value": "pending",
+       "label": "Pending approval"
+      },
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "rejected",
+       "label": "Rejected"
+      },
+      {
+       "value": "closed",
+       "label": "Closed"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "requested_by",
+     "label": "Requested by",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "approver",
+     "label": "Approver",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "approved",
+     "label": "Approved",
+     "type": "boolean"
+    },
+    {
+     "key": "is_pending",
+     "label": "Pending approval",
+     "type": "boolean"
+    },
+    {
+     "key": "over_budget",
+     "label": "Over budget",
+     "type": "boolean"
+    },
+    {
+     "key": "raised_on",
+     "label": "Raised on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "needed_by",
+     "label": "Needed by",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "billed",
+     "label": "Billed against PO",
+     "type": "money"
+    }
+   ]
+  },
+  {
+   "id": "vendor_bills",
+   "label": "Vendor bills",
+   "noun": "bills",
+   "description": "Bills from vendors (payables) with GST, TDS, due date, status and payment.",
+   "dateField": "due_on",
+   "perms": [
+    "procurement.manage"
+   ],
+   "aliases": [
+    "bill",
+    "bills",
+    "vendor bill",
+    "vendor bills",
+    "payable",
+    "payables",
+    "creditors"
+   ],
+   "defaultColumns": [
+    "number",
+    "vendor",
+    "po",
+    "bill_date",
+    "due_on",
+    "total",
+    "status",
+    "days_overdue"
+   ],
+   "fields": [
+    {
+     "key": "number",
+     "label": "Bill no.",
+     "type": "string"
+    },
+    {
+     "key": "vendor",
+     "label": "Vendor",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "vendor",
+      "supplier"
+     ]
+    },
+    {
+     "key": "po",
+     "label": "PO number",
+     "type": "string"
+    },
+    {
+     "key": "category",
+     "label": "Category",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "amount",
+     "label": "Amount (before GST)",
+     "type": "money"
+    },
+    {
+     "key": "gst",
+     "label": "GST",
+     "type": "money"
+    },
+    {
+     "key": "tds",
+     "label": "TDS",
+     "type": "money"
+    },
+    {
+     "key": "total",
+     "label": "Bill total",
+     "type": "money",
+     "aliases": [
+      "total",
+      "amount",
+      "value"
+     ]
+    },
+    {
+     "key": "payable",
+     "label": "Net payable (after TDS)",
+     "type": "money",
+     "aliases": [
+      "payable"
+     ]
+    },
+    {
+     "key": "bill_date",
+     "label": "Bill date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "due_on",
+     "label": "Due date",
+     "type": "date",
+     "groupable": true,
+     "aliases": [
+      "due"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "received",
+       "label": "Received"
+      },
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "paid",
+       "label": "Paid"
+      },
+      {
+       "value": "disputed",
+       "label": "Disputed"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "paid_on",
+     "label": "Paid on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "is_overdue",
+     "label": "Overdue",
+     "type": "boolean"
+    },
+    {
+     "key": "is_unpaid",
+     "label": "Unpaid",
+     "type": "boolean"
+    },
+    {
+     "key": "days_overdue",
+     "label": "Days overdue",
+     "type": "number",
+     "unit": "days"
+    }
+   ]
+  },
+  {
+   "id": "budget_vs_actual",
+   "label": "Budget vs actual",
+   "noun": "budget lines",
+   "description": "Monthly budget against actual for every expense category (actual = ledger costs + approved claims and bills) and every revenue stream. Same numbers as Spend → Budgets.",
+   "dateField": "month",
+   "perms": [
+    "budgets.manage",
+    "finance.view"
+   ],
+   "actuals": true,
+   "aliases": [
+    "budget",
+    "budgets",
+    "budget vs actual",
+    "variance",
+    "over budget",
+    "under budget",
+    "overspend"
+   ],
+   "defaultColumns": [
+    "month",
+    "kind",
+    "category",
+    "budget",
+    "actual",
+    "variance"
+   ],
+   "fields": [
+    {
+     "key": "category",
+     "label": "Category",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "category",
+      "head"
+     ]
+    },
+    {
+     "key": "kind",
+     "label": "Type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "expense",
+       "label": "Expense"
+      },
+      {
+       "value": "revenue",
+       "label": "Revenue"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "month",
+     "label": "Month",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "budget",
+     "label": "Budget",
+     "type": "money",
+     "aliases": [
+      "budget"
+     ]
+    },
+    {
+     "key": "actual",
+     "label": "Actual",
+     "type": "money",
+     "aliases": [
+      "actual",
+      "spend",
+      "spent"
+     ]
+    },
+    {
+     "key": "variance",
+     "label": "Variance",
+     "type": "money",
+     "description": "Expense: budget − actual (negative = over). Revenue: actual − budget.",
+     "aliases": [
+      "variance"
+     ]
+    },
+    {
+     "key": "variance_pct",
+     "label": "Variance %",
+     "type": "percent"
+    },
+    {
+     "key": "is_over",
+     "label": "Over budget this month",
+     "type": "boolean"
+    },
+    {
+     "key": "over_budget_ytd",
+     "label": "Category over budget (FY to date)",
+     "type": "boolean"
+    },
+    {
+     "key": "has_budget",
+     "label": "Has a budget",
+     "type": "boolean"
+    }
+   ]
+  },
+  {
+   "id": "revenue_leakage",
+   "label": "Revenue leakage",
+   "noun": "leakage items",
+   "description": "Revenue lost or at risk: lost deals, unbilled hours, bad-debt risk and rejected change requests (auto) plus discounts, write-offs, credit notes, penalties and churn (manual).",
+   "dateField": "date",
+   "perms": [
+    "leakage.view"
+   ],
+   "aliases": [
+    "leakage",
+    "revenue leakage",
+    "lost revenue",
+    "leak",
+    "write off",
+    "write-off",
+    "discounts",
+    "bad debt",
+    "unbilled"
+   ],
+   "defaultColumns": [
+    "date",
+    "kind",
+    "client",
+    "project",
+    "amount",
+    "recovered",
+    "net",
+    "status"
+   ],
+   "fields": [
+    {
+     "key": "kind",
+     "label": "Type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "lost_deal",
+       "label": "Lost deal"
+      },
+      {
+       "value": "unbilled_hours",
+       "label": "Unbilled hours"
+      },
+      {
+       "value": "bad_debt",
+       "label": "Bad-debt risk"
+      },
+      {
+       "value": "scope_creep",
+       "label": "Scope creep"
+      },
+      {
+       "value": "discount",
+       "label": "Discount"
+      },
+      {
+       "value": "write_off",
+       "label": "Write-off"
+      },
+      {
+       "value": "credit_note",
+       "label": "Credit note"
+      },
+      {
+       "value": "penalty",
+       "label": "Penalty"
+      },
+      {
+       "value": "churn",
+       "label": "Churn"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "kind",
+      "type"
+     ]
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "amount",
+     "label": "Amount",
+     "type": "money",
+     "aliases": [
+      "amount"
+     ]
+    },
+    {
+     "key": "recovered",
+     "label": "Recovered",
+     "type": "money"
+    },
+    {
+     "key": "net",
+     "label": "Net lost",
+     "type": "money",
+     "aliases": [
+      "net",
+      "lost",
+      "lost revenue"
+     ]
+    },
+    {
+     "key": "date",
+     "label": "Date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "open",
+       "label": "Open"
+      },
+      {
+       "value": "recovered",
+       "label": "Recovered"
+      },
+      {
+       "value": "accepted",
+       "label": "Accepted (written off)"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "auto",
+     "label": "System-detected",
+     "type": "boolean"
+    },
+    {
+     "key": "recoverable",
+     "label": "Recoverable",
+     "type": "boolean"
+    },
+    {
+     "key": "reason",
+     "label": "Reason",
+     "type": "string"
+    },
+    {
+     "key": "source",
+     "label": "Source",
+     "type": "string"
+    }
+   ]
+  },
+  {
+   "id": "appraisals",
+   "label": "Appraisals",
+   "noun": "appraisals",
+   "description": "Appraisal reviews per cycle: self, manager and final rating, increment, on-time delivery and the system-suggested score. HR sees everyone; managers see their reports.",
+   "dateField": "period_from",
+   "perms": [
+    "appraisals.manage",
+    "people.view_all",
+    "team.view"
+   ],
+   "aliases": [
+    "appraisal",
+    "appraisals",
+    "performance review",
+    "review cycle",
+    "rating",
+    "ratings",
+    "increment",
+    "increments"
+   ],
+   "defaultColumns": [
+    "cycle",
+    "person",
+    "manager",
+    "status",
+    "self_rating",
+    "manager_rating",
+    "final_rating",
+    "increment_pct"
+   ],
+   "fields": [
+    {
+     "key": "cycle",
+     "label": "Cycle",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "cycle"
+     ]
+    },
+    {
+     "key": "period_from",
+     "label": "Cycle start",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "person",
+     "label": "Person",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "person",
+      "employee",
+      "who"
+     ]
+    },
+    {
+     "key": "manager",
+     "label": "Manager",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "manager"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "not_started",
+       "label": "Not started"
+      },
+      {
+       "value": "self_pending",
+       "label": "Self review pending"
+      },
+      {
+       "value": "manager_pending",
+       "label": "Manager review pending"
+      },
+      {
+       "value": "hr_pending",
+       "label": "HR review pending"
+      },
+      {
+       "value": "completed",
+       "label": "Completed"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "self_rating",
+     "label": "Self rating",
+     "type": "number"
+    },
+    {
+     "key": "manager_rating",
+     "label": "Manager rating",
+     "type": "number"
+    },
+    {
+     "key": "final_rating",
+     "label": "Final rating",
+     "type": "number",
+     "aliases": [
+      "rating",
+      "final rating"
+     ]
+    },
+    {
+     "key": "increment_pct",
+     "label": "Increment",
+     "type": "percent",
+     "aliases": [
+      "increment",
+      "hike",
+      "raise"
+     ]
+    },
+    {
+     "key": "on_time_pct",
+     "label": "On-time delivery",
+     "type": "percent"
+    },
+    {
+     "key": "system_score",
+     "label": "System score",
+     "type": "number",
+     "description": "Suggested rating from goals, task delivery, timesheets and behaviour (1–5)."
+    },
+    {
+     "key": "is_completed",
+     "label": "Completed",
+     "type": "boolean"
+    },
+    {
+     "key": "promotion_to",
+     "label": "Promotion to",
+     "type": "string"
+    }
+   ]
+  },
+  {
+   "id": "candidates",
+   "label": "Candidates",
+   "noun": "candidates",
+   "description": "Recruitment pipeline: candidates per opening with source, stage, experience, expected CTC and days in the pipeline.",
+   "dateField": "applied_on",
+   "perms": [
+    "recruitment.manage"
+   ],
+   "aliases": [
+    "candidate",
+    "candidates",
+    "recruitment",
+    "hiring",
+    "applicant",
+    "applicants",
+    "opening",
+    "openings",
+    "pipeline of candidates"
+   ],
+   "defaultColumns": [
+    "name",
+    "opening",
+    "source",
+    "stage",
+    "experience",
+    "days_in_pipeline"
+   ],
+   "fields": [
+    {
+     "key": "opening",
+     "label": "Opening",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "opening",
+      "role",
+      "position"
+     ]
+    },
+    {
+     "key": "name",
+     "label": "Candidate",
+     "type": "string"
+    },
+    {
+     "key": "source",
+     "label": "Source",
+     "type": "enum",
+     "options": [
+      {
+       "value": "referral",
+       "label": "Referral"
+      },
+      {
+       "value": "job_portal",
+       "label": "Job portal"
+      },
+      {
+       "value": "linkedin",
+       "label": "LinkedIn"
+      },
+      {
+       "value": "campus",
+       "label": "Campus"
+      },
+      {
+       "value": "agency",
+       "label": "Agency"
+      },
+      {
+       "value": "website",
+       "label": "Website"
+      },
+      {
+       "value": "other",
+       "label": "Other"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "source",
+      "channel"
+     ]
+    },
+    {
+     "key": "stage",
+     "label": "Stage",
+     "type": "enum",
+     "options": [
+      {
+       "value": "applied",
+       "label": "Applied"
+      },
+      {
+       "value": "screening",
+       "label": "Screening"
+      },
+      {
+       "value": "interview",
+       "label": "Interview"
+      },
+      {
+       "value": "offer",
+       "label": "Offer"
+      },
+      {
+       "value": "hired",
+       "label": "Hired"
+      },
+      {
+       "value": "rejected",
+       "label": "Rejected"
+      },
+      {
+       "value": "withdrawn",
+       "label": "Withdrawn"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "experience",
+     "label": "Experience (years)",
+     "type": "number",
+     "aliases": [
+      "experience"
+     ]
+    },
+    {
+     "key": "expected_ctc",
+     "label": "Expected CTC",
+     "type": "money",
+     "grant": "salaries"
+    },
+    {
+     "key": "days_in_pipeline",
+     "label": "Days in pipeline",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "applied_on",
+     "label": "Applied on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "rating",
+     "label": "Rating",
+     "type": "number"
+    },
+    {
+     "key": "is_active",
+     "label": "In process",
+     "type": "boolean"
+    },
+    {
+     "key": "is_hired",
+     "label": "Hired",
+     "type": "boolean"
+    }
+   ]
+  },
+  {
+   "id": "documents",
+   "label": "Documents",
+   "noun": "documents",
+   "description": "Project and company documents you can see: category, version, must-read status and acknowledgement counts (counts only where you manage the document).",
+   "dateField": "updated_on",
+   "perms": [],
+   "aliases": [
+    "document",
+    "documents",
+    "doc",
+    "docs",
+    "policy",
+    "policies",
+    "must read",
+    "must-read",
+    "acknowledged",
+    "acknowledgement",
+    "sop"
+   ],
+   "defaultColumns": [
+    "title",
+    "project",
+    "category",
+    "version",
+    "must_read",
+    "acknowledged",
+    "pending"
+   ],
+   "fields": [
+    {
+     "key": "title",
+     "label": "Document",
+     "type": "string"
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "category",
+     "label": "Category",
+     "type": "enum",
+     "options": [
+      {
+       "value": "requirements",
+       "label": "Requirements"
+      },
+      {
+       "value": "design",
+       "label": "Design"
+      },
+      {
+       "value": "technical",
+       "label": "Technical"
+      },
+      {
+       "value": "test",
+       "label": "Testing"
+      },
+      {
+       "value": "contract",
+       "label": "Contract"
+      },
+      {
+       "value": "meeting_notes",
+       "label": "Meeting notes"
+      },
+      {
+       "value": "process",
+       "label": "Process"
+      },
+      {
+       "value": "policy",
+       "label": "Policy"
+      },
+      {
+       "value": "training",
+       "label": "Training"
+      },
+      {
+       "value": "other",
+       "label": "Other"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "category"
+     ]
+    },
+    {
+     "key": "visibility",
+     "label": "Visibility",
+     "type": "enum",
+     "options": [
+      {
+       "value": "project",
+       "label": "Project team"
+      },
+      {
+       "value": "company",
+       "label": "Everyone"
+      },
+      {
+       "value": "managers",
+       "label": "Managers only"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "version",
+     "label": "Version",
+     "type": "number"
+    },
+    {
+     "key": "must_read",
+     "label": "Must read",
+     "type": "boolean"
+    },
+    {
+     "key": "acknowledged",
+     "label": "Acknowledged",
+     "type": "number"
+    },
+    {
+     "key": "pending",
+     "label": "Not yet acknowledged",
+     "type": "number",
+     "aliases": [
+      "pending"
+     ]
+    },
+    {
+     "key": "audience",
+     "label": "Required readers",
+     "type": "number"
+    },
+    {
+     "key": "ack_pct",
+     "label": "Acknowledged %",
+     "type": "percent"
+    },
+    {
+     "key": "my_ack",
+     "label": "My acknowledgement",
+     "type": "enum",
+     "options": [
+      {
+       "value": "acknowledged",
+       "label": "Acknowledged"
+      },
+      {
+       "value": "pending",
+       "label": "Pending"
+      },
+      {
+       "value": "not_required",
+       "label": "Not required"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Owner",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "updated_on",
+     "label": "Last updated",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "archived",
+     "label": "Archived",
+     "type": "boolean"
+    }
+   ]
+  },
+  {
+   "id": "okr_key_results",
+   "label": "OKR key results",
+   "noun": "key results",
+   "description": "Key results under company, team and personal objectives with current vs target, progress and status. Auto metrics are computed live; finance metrics are hidden without finance access.",
+   "dateField": "period_from",
+   "perms": [],
+   "aliases": [
+    "okr",
+    "okrs",
+    "objective",
+    "objectives",
+    "key result",
+    "key results",
+    "goal",
+    "goals",
+    "kr",
+    "krs"
+   ],
+   "defaultColumns": [
+    "objective",
+    "key_result",
+    "owner",
+    "current",
+    "target",
+    "progress_pct",
+    "status"
+   ],
+   "fields": [
+    {
+     "key": "objective",
+     "label": "Objective",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "key_result",
+     "label": "Key result",
+     "type": "string"
+    },
+    {
+     "key": "level",
+     "label": "Level",
+     "type": "enum",
+     "options": [
+      {
+       "value": "company",
+       "label": "Company"
+      },
+      {
+       "value": "team",
+       "label": "Team"
+      },
+      {
+       "value": "person",
+       "label": "Personal"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Owner",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "owner",
+      "person",
+      "who"
+     ]
+    },
+    {
+     "key": "objective_owner",
+     "label": "Objective owner",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "period",
+     "label": "Period",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "period_from",
+     "label": "Period start",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "metric",
+     "label": "Metric",
+     "type": "enum",
+     "options": [
+      {
+       "value": "manual",
+       "label": "Manual check-ins"
+      },
+      {
+       "value": "revenue_billed",
+       "label": "Revenue billed"
+      },
+      {
+       "value": "revenue_collected",
+       "label": "Revenue collected"
+      },
+      {
+       "value": "deals_won_value",
+       "label": "Value of deals won"
+      },
+      {
+       "value": "on_time_task_pct",
+       "label": "Tasks finished on time"
+      },
+      {
+       "value": "timesheet_compliance",
+       "label": "Timesheet compliance"
+      },
+      {
+       "value": "margin_pct",
+       "label": "Net margin"
+      },
+      {
+       "value": "headcount",
+       "label": "Active headcount"
+      },
+      {
+       "value": "leakage",
+       "label": "Revenue leakage"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "current",
+     "label": "Current",
+     "type": "number"
+    },
+    {
+     "key": "target",
+     "label": "Target",
+     "type": "number"
+    },
+    {
+     "key": "unit",
+     "label": "Unit",
+     "type": "string"
+    },
+    {
+     "key": "progress_pct",
+     "label": "Progress",
+     "type": "percent",
+     "aliases": [
+      "progress"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "on_track",
+       "label": "On track"
+      },
+      {
+       "value": "at_risk",
+       "label": "At risk"
+      },
+      {
+       "value": "off_track",
+       "label": "Off track"
+      },
+      {
+       "value": "done",
+       "label": "Done"
+      },
+      {
+       "value": "not_started",
+       "label": "Not started"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "objective_status",
+     "label": "Objective status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "on_track",
+       "label": "On track"
+      },
+      {
+       "value": "at_risk",
+       "label": "At risk"
+      },
+      {
+       "value": "off_track",
+       "label": "Off track"
+      },
+      {
+       "value": "done",
+       "label": "Done"
+      },
+      {
+       "value": "not_started",
+       "label": "Not started"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "auto",
+     "label": "Auto-tracked",
+     "type": "boolean"
+    }
+   ]
+  }
+ ],
+ "DATASET_MAP": {
+  "projects": {
+   "id": "projects",
+   "label": "Projects",
+   "noun": "projects",
+   "description": "Every project with delivery and money metrics (progress, SPI, effort ratio, margin).",
+   "dateField": "start_on",
+   "perms": [
+    "projects.view_all",
+    "projects.edit"
+   ],
+   "aliases": [
+    "project",
+    "projects",
+    "portfolio",
+    "engagement",
+    "margin",
+    "margins",
+    "health",
+    "contract"
+   ],
+   "defaultColumns": [
+    "code",
+    "name",
+    "client",
+    "status",
+    "health",
+    "progress",
+    "contract_value"
+   ],
+   "fields": [
+    {
+     "key": "code",
+     "label": "Code",
+     "type": "string"
+    },
+    {
+     "key": "name",
+     "label": "Project",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "project"
+     ]
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "client",
+      "customer",
+      "account"
+     ]
+    },
+    {
+     "key": "type",
+     "label": "Project type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "product",
+       "label": "Product"
+      },
+      {
+       "value": "service",
+       "label": "Service"
+      },
+      {
+       "value": "saas",
+       "label": "SaaS"
+      },
+      {
+       "value": "ams",
+       "label": "AMS"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "type"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "initiated",
+       "label": "Initiated"
+      },
+      {
+       "value": "active",
+       "label": "Active"
+      },
+      {
+       "value": "on_hold",
+       "label": "On hold"
+      },
+      {
+       "value": "npa",
+       "label": "NPA"
+      },
+      {
+       "value": "completed",
+       "label": "Completed"
+      },
+      {
+       "value": "closed",
+       "label": "Closed"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "stream",
+     "label": "Revenue stream",
+     "type": "enum",
+     "options": [
+      {
+       "value": "sap_consulting",
+       "label": "SAP consulting"
+      },
+      {
+       "value": "products",
+       "label": "Products"
+      },
+      {
+       "value": "services",
+       "label": "Services"
+      },
+      {
+       "value": "saas",
+       "label": "Subscriptions"
+      },
+      {
+       "value": "ams",
+       "label": "AMS"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "stream",
+      "business line"
+     ]
+    },
+    {
+     "key": "billing_model",
+     "label": "Billing model",
+     "type": "enum",
+     "options": [
+      {
+       "value": "fixed",
+       "label": "Fixed price"
+      },
+      {
+       "value": "tm",
+       "label": "Time & material"
+      },
+      {
+       "value": "subscription",
+       "label": "Subscription"
+      },
+      {
+       "value": "ams_retainer",
+       "label": "AMS retainer"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "billing model",
+      "commercial model"
+     ]
+    },
+    {
+     "key": "pm",
+     "label": "Project manager",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "pm",
+      "project manager",
+      "manager"
+     ]
+    },
+    {
+     "key": "priority",
+     "label": "Priority",
+     "type": "number"
+    },
+    {
+     "key": "start_on",
+     "label": "Start date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "end_on",
+     "label": "Planned end",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "contract_value",
+     "label": "Contract value",
+     "type": "money",
+     "aliases": [
+      "contract",
+      "deal value",
+      "value"
+     ]
+    },
+    {
+     "key": "invoiced",
+     "label": "Invoiced",
+     "type": "money",
+     "adminOnly": true,
+     "aliases": [
+      "invoiced",
+      "billed"
+     ]
+    },
+    {
+     "key": "collected",
+     "label": "Collected",
+     "type": "money",
+     "adminOnly": true
+    },
+    {
+     "key": "outstanding",
+     "label": "Outstanding",
+     "type": "money",
+     "adminOnly": true,
+     "aliases": [
+      "receivable",
+      "outstanding"
+     ]
+    },
+    {
+     "key": "uninvoiced",
+     "label": "Not yet invoiced",
+     "type": "money",
+     "adminOnly": true,
+     "aliases": [
+      "uninvoiced",
+      "unbilled"
+     ]
+    },
+    {
+     "key": "est_hours",
+     "label": "Estimated hours",
+     "type": "number",
+     "unit": "hours"
+    },
+    {
+     "key": "actual_hours",
+     "label": "Logged hours",
+     "type": "number",
+     "unit": "hours"
+    },
+    {
+     "key": "remaining_hours",
+     "label": "Remaining hours",
+     "type": "number",
+     "unit": "hours"
+    },
+    {
+     "key": "progress",
+     "label": "Progress",
+     "type": "percent",
+     "aliases": [
+      "progress",
+      "complete"
+     ]
+    },
+    {
+     "key": "effort_ratio",
+     "label": "Effort ratio",
+     "type": "number",
+     "description": "Actual ÷ estimated hours; above 1.2 is flagged.",
+     "aliases": [
+      "effort ratio",
+      "effort"
+     ]
+    },
+    {
+     "key": "spi",
+     "label": "SPI",
+     "type": "number",
+     "description": "Schedule performance index: earned ÷ planned by today.",
+     "aliases": [
+      "spi",
+      "schedule performance"
+     ]
+    },
+    {
+     "key": "planned_cost",
+     "label": "Planned cost",
+     "type": "money",
+     "grant": "margins"
+    },
+    {
+     "key": "projected_cost",
+     "label": "Projected cost",
+     "type": "money",
+     "grant": "margins",
+     "aliases": [
+      "cost"
+     ]
+    },
+    {
+     "key": "actual_cost",
+     "label": "Actual cost (approved)",
+     "type": "money",
+     "grant": "margins"
+    },
+    {
+     "key": "projected_margin",
+     "label": "Projected margin",
+     "type": "percent",
+     "grant": "margins",
+     "aliases": [
+      "margin",
+      "margins",
+      "profitability"
+     ]
+    },
+    {
+     "key": "actual_margin",
+     "label": "Actual margin",
+     "type": "percent",
+     "grant": "margins"
+    },
+    {
+     "key": "projected_markup",
+     "label": "Projected markup",
+     "type": "percent",
+     "grant": "margins",
+     "aliases": [
+      "markup"
+     ]
+    },
+    {
+     "key": "health",
+     "label": "Health",
+     "type": "enum",
+     "options": [
+      {
+       "value": "on_track",
+       "label": "On track"
+      },
+      {
+       "value": "at_risk",
+       "label": "At risk"
+      },
+      {
+       "value": "off_track",
+       "label": "Off track"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "open_tasks",
+     "label": "Open tasks",
+     "type": "number"
+    },
+    {
+     "key": "overdue_tasks",
+     "label": "Overdue tasks",
+     "type": "number"
+    },
+    {
+     "key": "blocked_tasks",
+     "label": "Blocked tasks",
+     "type": "number"
+    },
+    {
+     "key": "overdue_milestones",
+     "label": "Overdue milestones",
+     "type": "number"
+    }
+   ]
+  },
+  "milestones": {
+   "id": "milestones",
+   "label": "Milestones",
+   "noun": "milestones",
+   "description": "Milestones with delivery state, slip and billing.",
+   "dateField": "planned_end",
+   "perms": [
+    "projects.view_all",
+    "projects.edit"
+   ],
+   "aliases": [
+    "milestone",
+    "milestones",
+    "deliverable",
+    "deliverables"
+   ],
+   "defaultColumns": [
+    "label",
+    "project",
+    "planned_end",
+    "state",
+    "progress",
+    "billing_amount",
+    "billing_status"
+   ],
+   "fields": [
+    {
+     "key": "label",
+     "label": "Milestone",
+     "type": "string"
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "no",
+     "label": "Number",
+     "type": "number"
+    },
+    {
+     "key": "pm",
+     "label": "Project manager",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "planned_start",
+     "label": "Planned start",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "planned_end",
+     "label": "Deadline",
+     "type": "date",
+     "groupable": true,
+     "aliases": [
+      "deadline",
+      "due"
+     ]
+    },
+    {
+     "key": "baseline_end",
+     "label": "Baseline end",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "slip_days",
+     "label": "Slip (days)",
+     "type": "number",
+     "unit": "days",
+     "aliases": [
+      "slip"
+     ]
+    },
+    {
+     "key": "billing_amount",
+     "label": "Billing value",
+     "type": "money",
+     "aliases": [
+      "billing",
+      "value"
+     ]
+    },
+    {
+     "key": "billing_status",
+     "label": "Billing status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "none",
+       "label": "Not invoiced"
+      },
+      {
+       "value": "invoiced",
+       "label": "Invoiced"
+      },
+      {
+       "value": "paid",
+       "label": "Paid"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "state",
+     "label": "Delivery state",
+     "type": "enum",
+     "options": [
+      {
+       "value": "achieved_on_time",
+       "label": "Achieved on time"
+      },
+      {
+       "value": "achieved_late",
+       "label": "Achieved late"
+      },
+      {
+       "value": "on_track",
+       "label": "On track"
+      },
+      {
+       "value": "at_risk",
+       "label": "At risk"
+      },
+      {
+       "value": "overdue",
+       "label": "Overdue"
+      },
+      {
+       "value": "not_started",
+       "label": "Not started"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "progress",
+     "label": "Progress",
+     "type": "percent"
+    },
+    {
+     "key": "achieved_on",
+     "label": "Achieved on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "is_overdue",
+     "label": "Overdue",
+     "type": "boolean"
+    },
+    {
+     "key": "is_open",
+     "label": "Open",
+     "type": "boolean"
+    },
+    {
+     "key": "days_to_due",
+     "label": "Days to deadline",
+     "type": "number",
+     "unit": "days"
+    }
+   ]
+  },
+  "tasks": {
+   "id": "tasks",
+   "label": "Tasks",
+   "noun": "tasks",
+   "description": "Project and general tasks with owner, reviewer, dates, estimate vs actual, timeliness (early/on time/late), delay reason, quality rating and review rounds.",
+   "dateField": "due_on",
+   "perms": [],
+   "aliases": [
+    "task",
+    "tasks",
+    "work item",
+    "work items",
+    "wbs",
+    "todo",
+    "to-do",
+    "delivery",
+    "on-time",
+    "on time"
+   ],
+   "defaultColumns": [
+    "code",
+    "title",
+    "project",
+    "owner",
+    "status",
+    "due_on",
+    "days_overdue"
+   ],
+   "fields": [
+    {
+     "key": "code",
+     "label": "WBS",
+     "type": "string"
+    },
+    {
+     "key": "title",
+     "label": "Task",
+     "type": "string"
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "milestone",
+     "label": "Milestone",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Owner",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "owner",
+      "assignee",
+      "person",
+      "people",
+      "employee",
+      "developer",
+      "who"
+     ]
+    },
+    {
+     "key": "backup",
+     "label": "Backup",
+     "type": "string"
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "todo",
+       "label": "To do"
+      },
+      {
+       "value": "in_progress",
+       "label": "In progress"
+      },
+      {
+       "value": "blocked",
+       "label": "Blocked"
+      },
+      {
+       "value": "in_review",
+       "label": "In review"
+      },
+      {
+       "value": "done",
+       "label": "Done"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "complexity",
+     "label": "Complexity",
+     "type": "enum",
+     "options": [
+      {
+       "value": "low",
+       "label": "Low"
+      },
+      {
+       "value": "medium",
+       "label": "Medium"
+      },
+      {
+       "value": "high",
+       "label": "High"
+      },
+      {
+       "value": "very_high",
+       "label": "Very high"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "start_on",
+     "label": "Start",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "due_on",
+     "label": "Due date",
+     "type": "date",
+     "groupable": true,
+     "aliases": [
+      "due"
+     ]
+    },
+    {
+     "key": "done_on",
+     "label": "Done on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "days_overdue",
+     "label": "Days overdue",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "is_overdue",
+     "label": "Overdue",
+     "type": "boolean"
+    },
+    {
+     "key": "is_blocked",
+     "label": "Blocked",
+     "type": "boolean"
+    },
+    {
+     "key": "is_open",
+     "label": "Open",
+     "type": "boolean"
+    },
+    {
+     "key": "on_time",
+     "label": "Done on time",
+     "type": "boolean"
+    },
+    {
+     "key": "est",
+     "label": "Estimated hours",
+     "type": "number",
+     "unit": "hours",
+     "aliases": [
+      "estimate",
+      "estimated"
+     ]
+    },
+    {
+     "key": "actual",
+     "label": "Actual hours",
+     "type": "number",
+     "unit": "hours",
+     "aliases": [
+      "actual",
+      "logged"
+     ]
+    },
+    {
+     "key": "effort_ratio",
+     "label": "Effort ratio",
+     "type": "number",
+     "aliases": [
+      "effort ratio",
+      "effort"
+     ]
+    },
+    {
+     "key": "kind",
+     "label": "Task kind",
+     "type": "enum",
+     "options": [
+      {
+       "value": "project",
+       "label": "Project task"
+      },
+      {
+       "value": "general",
+       "label": "General task"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "general task",
+      "project task"
+     ]
+    },
+    {
+     "key": "assigned_by",
+     "label": "Assigned by",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "assigned by",
+      "assigner"
+     ]
+    },
+    {
+     "key": "reviewer",
+     "label": "Reviewer",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "reviewer",
+      "approver"
+     ]
+    },
+    {
+     "key": "priority",
+     "label": "Priority",
+     "type": "enum",
+     "options": [
+      {
+       "value": "low",
+       "label": "Low"
+      },
+      {
+       "value": "normal",
+       "label": "Normal"
+      },
+      {
+       "value": "high",
+       "label": "High"
+      },
+      {
+       "value": "urgent",
+       "label": "Urgent"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "submitted_on",
+     "label": "Submitted for review",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "approved_on",
+     "label": "Approved on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "timeliness",
+     "label": "Timeliness",
+     "type": "enum",
+     "options": [
+      {
+       "value": "early",
+       "label": "Early"
+      },
+      {
+       "value": "on_time",
+       "label": "On time"
+      },
+      {
+       "value": "late",
+       "label": "Late"
+      }
+     ],
+     "groupable": true,
+     "description": "Completed tasks only: early (≥1 working day before due), on time, or late.",
+     "aliases": [
+      "timeliness",
+      "early",
+      "on time"
+     ]
+    },
+    {
+     "key": "variance_days",
+     "label": "Variance (working days)",
+     "type": "number",
+     "unit": "days",
+     "description": "Completed tasks: working days after (+) or before (−) the due date.",
+     "aliases": [
+      "variance",
+      "delay days"
+     ]
+    },
+    {
+     "key": "delay_reason",
+     "label": "Delay reason",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "delay reason",
+      "reason for delay",
+      "why delayed"
+     ]
+    },
+    {
+     "key": "quality_rating",
+     "label": "Quality rating",
+     "type": "number",
+     "description": "Reviewer rating 1–5 given on approval.",
+     "aliases": [
+      "quality",
+      "rating"
+     ]
+    },
+    {
+     "key": "review_rounds",
+     "label": "Review rounds",
+     "type": "number"
+    },
+    {
+     "key": "sent_back_count",
+     "label": "Times sent back",
+     "type": "number",
+     "aliases": [
+      "sent back",
+      "rework"
+     ]
+    },
+    {
+     "key": "on_time_rate",
+     "label": "On-time rate",
+     "type": "percent",
+     "description": "Completed tasks: 100% if early or on time, 0% if late. Average it for on-time delivery %.",
+     "aliases": [
+      "on-time delivery",
+      "on time delivery",
+      "on-time rate"
+     ]
+    },
+    {
+     "key": "is_late",
+     "label": "Completed late",
+     "type": "boolean"
+    },
+    {
+     "key": "is_in_review",
+     "label": "In review",
+     "type": "boolean"
+    }
+   ]
+  },
+  "hours": {
+   "id": "hours",
+   "label": "Hours (timesheets)",
+   "noun": "entries",
+   "description": "Every timesheet entry, costed at the rate valid on the day it was worked.",
+   "dateField": "date",
+   "perms": [],
+   "actuals": true,
+   "aliases": [
+    "hour",
+    "hours",
+    "timesheet",
+    "timesheets",
+    "time",
+    "effort logged",
+    "logged",
+    "utilisation",
+    "utilization",
+    "leave",
+    "billable"
+   ],
+   "defaultColumns": [
+    "date",
+    "person",
+    "project",
+    "task",
+    "kind",
+    "hours",
+    "approved"
+   ],
+   "fields": [
+    {
+     "key": "date",
+     "label": "Date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "person",
+     "label": "Person",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "person",
+      "people",
+      "employee",
+      "who",
+      "team member",
+      "resource"
+     ]
+    },
+    {
+     "key": "department",
+     "label": "Department",
+     "type": "enum",
+     "options": [
+      {
+       "value": "management",
+       "label": "Management"
+      },
+      {
+       "value": "delivery",
+       "label": "Delivery"
+      },
+      {
+       "value": "sales",
+       "label": "Sales"
+      },
+      {
+       "value": "operations",
+       "label": "Operations"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "task",
+     "label": "Task",
+     "type": "string"
+    },
+    {
+     "key": "kind",
+     "label": "Entry type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "task",
+       "label": "Project task"
+      },
+      {
+       "value": "leave",
+       "label": "Leave"
+      },
+      {
+       "value": "internal",
+       "label": "Internal"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "type",
+      "kind"
+     ]
+    },
+    {
+     "key": "internal_code",
+     "label": "Internal activity",
+     "type": "enum",
+     "options": [
+      {
+       "value": "meeting",
+       "label": "Internal meeting"
+      },
+      {
+       "value": "learning",
+       "label": "Learning"
+      },
+      {
+       "value": "presales",
+       "label": "Pre-sales"
+      },
+      {
+       "value": "admin",
+       "label": "Admin"
+      },
+      {
+       "value": "interview",
+       "label": "Interviewing"
+      },
+      {
+       "value": "bench",
+       "label": "Bench"
+      },
+      {
+       "value": "breaks",
+       "label": "Lunch, tea and stand-up"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "leave_type",
+     "label": "Leave type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "casual",
+       "label": "Casual"
+      },
+      {
+       "value": "sick",
+       "label": "Sick"
+      },
+      {
+       "value": "earned",
+       "label": "Earned"
+      },
+      {
+       "value": "compensatory",
+       "label": "Comp-off"
+      },
+      {
+       "value": "lwp",
+       "label": "Leave without pay"
+      },
+      {
+       "value": "optional_holiday",
+       "label": "Optional holiday"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "hours",
+     "label": "Hours",
+     "type": "number",
+     "unit": "hours"
+    },
+    {
+     "key": "approved",
+     "label": "Approved",
+     "type": "boolean"
+    },
+    {
+     "key": "week_status",
+     "label": "Week status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "open",
+       "label": "Draft"
+      },
+      {
+       "value": "submitted",
+       "label": "Submitted"
+      },
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "rejected",
+       "label": "Rejected"
+      },
+      {
+       "value": "locked",
+       "label": "Locked"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "cost",
+     "label": "Cost",
+     "type": "money",
+     "grant": "salaries",
+     "aliases": [
+      "cost",
+      "labour cost",
+      "labor cost"
+     ]
+    }
+   ]
+  },
+  "allocations": {
+   "id": "allocations",
+   "label": "Allocations",
+   "noun": "allocations",
+   "description": "Planned allocation of people to project milestones (percent of the day).",
+   "dateField": "from_on",
+   "perms": [
+    "projects.view_all",
+    "projects.edit",
+    "allocation.edit"
+   ],
+   "aliases": [
+    "allocation",
+    "allocations",
+    "staffing",
+    "assignment"
+   ],
+   "defaultColumns": [
+    "person",
+    "project",
+    "milestone",
+    "pct",
+    "from_on",
+    "to_on"
+   ],
+   "fields": [
+    {
+     "key": "person",
+     "label": "Person",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "milestone",
+     "label": "Milestone",
+     "type": "string"
+    },
+    {
+     "key": "pct",
+     "label": "Allocation",
+     "type": "percent"
+    },
+    {
+     "key": "from_on",
+     "label": "From",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "to_on",
+     "label": "To",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "working_days",
+     "label": "Working days",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "planned_hours",
+     "label": "Planned hours",
+     "type": "number",
+     "unit": "hours"
+    },
+    {
+     "key": "is_active",
+     "label": "Active today",
+     "type": "boolean"
+    }
+   ]
+  },
+  "invoices": {
+   "id": "invoices",
+   "label": "Invoices",
+   "noun": "invoices",
+   "description": "Milestone invoices with payments and receivables ageing.",
+   "dateField": "invoiced_on",
+   "perms": [
+    "finance.view"
+   ],
+   "actuals": true,
+   "aliases": [
+    "invoice",
+    "invoices",
+    "billing",
+    "receivable",
+    "receivables",
+    "collection",
+    "collections",
+    "dso"
+   ],
+   "defaultColumns": [
+    "number",
+    "client",
+    "project",
+    "invoiced_on",
+    "amount",
+    "paid",
+    "outstanding",
+    "status"
+   ],
+   "fields": [
+    {
+     "key": "number",
+     "label": "Invoice no.",
+     "type": "string"
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "milestone",
+     "label": "Milestone",
+     "type": "string"
+    },
+    {
+     "key": "stream",
+     "label": "Revenue stream",
+     "type": "enum",
+     "options": [
+      {
+       "value": "sap_consulting",
+       "label": "SAP consulting"
+      },
+      {
+       "value": "products",
+       "label": "Products"
+      },
+      {
+       "value": "services",
+       "label": "Services"
+      },
+      {
+       "value": "saas",
+       "label": "Subscriptions"
+      },
+      {
+       "value": "ams",
+       "label": "AMS"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "invoiced_on",
+     "label": "Invoice date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "due_on",
+     "label": "Due date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "paid_on",
+     "label": "Paid on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "amount",
+     "label": "Invoice amount",
+     "type": "money",
+     "aliases": [
+      "billing",
+      "billed",
+      "amount",
+      "invoiced"
+     ]
+    },
+    {
+     "key": "paid",
+     "label": "Paid",
+     "type": "money"
+    },
+    {
+     "key": "outstanding",
+     "label": "Outstanding",
+     "type": "money",
+     "aliases": [
+      "outstanding",
+      "receivable",
+      "unpaid"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "unpaid",
+       "label": "Unpaid"
+      },
+      {
+       "value": "partial",
+       "label": "Part paid"
+      },
+      {
+       "value": "paid",
+       "label": "Paid"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "days_overdue",
+     "label": "Days overdue",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "is_overdue",
+     "label": "Overdue",
+     "type": "boolean"
+    },
+    {
+     "key": "age_days",
+     "label": "Age (days)",
+     "type": "number",
+     "unit": "days"
+    }
+   ]
+  },
+  "ledger": {
+   "id": "ledger",
+   "label": "Ledger (income & costs)",
+   "noun": "entries",
+   "description": "Income and expense entries (recurring expanded monthly) plus payments received — the source of billed, collected and costs.",
+   "dateField": "date",
+   "perms": [
+    "ledger.view",
+    "finance.view"
+   ],
+   "actuals": true,
+   "aliases": [
+    "revenue",
+    "income",
+    "expense",
+    "expenses",
+    "cost",
+    "costs",
+    "spend",
+    "ledger",
+    "cash",
+    "profit",
+    "earnings",
+    "p&l",
+    "pnl",
+    "billed",
+    "collected",
+    "net"
+   ],
+   "defaultColumns": [
+    "date",
+    "kind",
+    "category",
+    "description",
+    "stream",
+    "amount",
+    "status"
+   ],
+   "fields": [
+    {
+     "key": "date",
+     "label": "Date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "kind",
+     "label": "Type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "income",
+       "label": "Income"
+      },
+      {
+       "value": "expense",
+       "label": "Expense"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "category",
+     "label": "Category",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "category",
+      "head"
+     ]
+    },
+    {
+     "key": "description",
+     "label": "Description",
+     "type": "string"
+    },
+    {
+     "key": "stream",
+     "label": "Revenue stream",
+     "type": "enum",
+     "options": [
+      {
+       "value": "sap_consulting",
+       "label": "SAP consulting"
+      },
+      {
+       "value": "products",
+       "label": "Products"
+      },
+      {
+       "value": "services",
+       "label": "Services"
+      },
+      {
+       "value": "saas",
+       "label": "Subscriptions"
+      },
+      {
+       "value": "ams",
+       "label": "AMS"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "stream",
+      "business line",
+      "source of revenue"
+     ]
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "amount",
+     "label": "Amount",
+     "type": "money"
+    },
+    {
+     "key": "billed",
+     "label": "Revenue billed",
+     "type": "money",
+     "aliases": [
+      "revenue",
+      "billed",
+      "income",
+      "sales",
+      "turnover"
+     ]
+    },
+    {
+     "key": "collected",
+     "label": "Cash collected",
+     "type": "money",
+     "aliases": [
+      "collected",
+      "collection",
+      "cash in",
+      "received"
+     ]
+    },
+    {
+     "key": "spent",
+     "label": "Costs",
+     "type": "money",
+     "aliases": [
+      "cost",
+      "costs",
+      "expense",
+      "expenses",
+      "spend"
+     ]
+    },
+    {
+     "key": "net",
+     "label": "Net (billed − costs)",
+     "type": "money",
+     "aliases": [
+      "net",
+      "profit",
+      "earnings"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "expected",
+       "label": "Expected"
+      },
+      {
+       "value": "received",
+       "label": "Received"
+      },
+      {
+       "value": "paid",
+       "label": "Paid"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "entry",
+     "label": "Row type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "entry",
+       "label": "Ledger entry"
+      },
+      {
+       "value": "payment",
+       "label": "Payment received"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "recurring",
+     "label": "Recurring",
+     "type": "boolean"
+    }
+   ]
+  },
+  "deals": {
+   "id": "deals",
+   "label": "Deals (pipeline)",
+   "noun": "deals",
+   "description": "Sales opportunities with stage, value, weighted value and cycle.",
+   "dateField": "created_on",
+   "perms": [
+    "deals.edit_own",
+    "deals.view_all"
+   ],
+   "aliases": [
+    "deal",
+    "deals",
+    "pipeline",
+    "lead",
+    "leads",
+    "opportunity",
+    "opportunities",
+    "sales",
+    "win rate",
+    "won",
+    "lost",
+    "funnel",
+    "crm"
+   ],
+   "defaultColumns": [
+    "title",
+    "client",
+    "stage",
+    "owner",
+    "value",
+    "expected_close",
+    "days_idle"
+   ],
+   "fields": [
+    {
+     "key": "title",
+     "label": "Deal",
+     "type": "string"
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "product",
+     "label": "Product",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "product"
+     ]
+    },
+    {
+     "key": "source",
+     "label": "Lead source",
+     "type": "enum",
+     "options": [
+      {
+       "value": "referral",
+       "label": "Referral"
+      },
+      {
+       "value": "bni",
+       "label": "BNI"
+      },
+      {
+       "value": "website",
+       "label": "Website"
+      },
+      {
+       "value": "cold_call",
+       "label": "Cold call"
+      },
+      {
+       "value": "event",
+       "label": "Event"
+      },
+      {
+       "value": "partner",
+       "label": "Partner"
+      },
+      {
+       "value": "existing_client",
+       "label": "Existing client"
+      },
+      {
+       "value": "other",
+       "label": "Other"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "source",
+      "channel"
+     ]
+    },
+    {
+     "key": "stage",
+     "label": "Stage",
+     "type": "enum",
+     "options": [
+      {
+       "value": "lead",
+       "label": "Lead"
+      },
+      {
+       "value": "qualified",
+       "label": "Qualified"
+      },
+      {
+       "value": "demo",
+       "label": "Demo"
+      },
+      {
+       "value": "proposal",
+       "label": "Proposal"
+      },
+      {
+       "value": "negotiation",
+       "label": "Negotiation"
+      },
+      {
+       "value": "won",
+       "label": "Won"
+      },
+      {
+       "value": "lost",
+       "label": "Lost"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Owner",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "owner",
+      "salesperson",
+      "rep",
+      "person",
+      "who"
+     ]
+    },
+    {
+     "key": "is_open",
+     "label": "Open",
+     "type": "boolean"
+    },
+    {
+     "key": "is_won",
+     "label": "Won",
+     "type": "boolean"
+    },
+    {
+     "key": "is_lost",
+     "label": "Lost",
+     "type": "boolean"
+    },
+    {
+     "key": "value",
+     "label": "Deal value",
+     "type": "money",
+     "aliases": [
+      "value",
+      "amount",
+      "pipeline"
+     ]
+    },
+    {
+     "key": "mrr",
+     "label": "Recurring (per month)",
+     "type": "money",
+     "aliases": [
+      "mrr",
+      "recurring"
+     ]
+    },
+    {
+     "key": "weighted",
+     "label": "Weighted value",
+     "type": "money",
+     "aliases": [
+      "weighted"
+     ]
+    },
+    {
+     "key": "chance",
+     "label": "Stage probability",
+     "type": "percent"
+    },
+    {
+     "key": "win",
+     "label": "Win rate",
+     "type": "percent",
+     "description": "Won = 100%, lost = 0%, open deals excluded. Average it to get win rate.",
+     "aliases": [
+      "win rate",
+      "conversion"
+     ]
+    },
+    {
+     "key": "created_on",
+     "label": "Created",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "expected_close",
+     "label": "Expected close",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "won_on",
+     "label": "Won on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "lost_on",
+     "label": "Lost on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "closed_on",
+     "label": "Closed on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "last_activity_on",
+     "label": "Last activity",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "days_idle",
+     "label": "Days since activity",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "is_stale",
+     "label": "Stale",
+     "type": "boolean"
+    },
+    {
+     "key": "cycle_days",
+     "label": "Sales cycle (days)",
+     "type": "number",
+     "unit": "days",
+     "aliases": [
+      "cycle",
+      "days to close",
+      "sales cycle"
+     ]
+    },
+    {
+     "key": "lost_reason",
+     "label": "Lost reason",
+     "type": "string",
+     "groupable": true
+    }
+   ]
+  },
+  "deal_activities": {
+   "id": "deal_activities",
+   "label": "Sales activities",
+   "noun": "activities",
+   "description": "Calls, meetings, demos and follow-ups logged against deals.",
+   "dateField": "date",
+   "perms": [
+    "deals.edit_own",
+    "deals.view_all"
+   ],
+   "actuals": true,
+   "aliases": [
+    "activity",
+    "activities",
+    "call",
+    "calls",
+    "meeting",
+    "meetings",
+    "demos",
+    "follow-up",
+    "follow-ups"
+   ],
+   "defaultColumns": [
+    "date",
+    "owner",
+    "type",
+    "deal",
+    "client",
+    "note"
+   ],
+   "fields": [
+    {
+     "key": "date",
+     "label": "Date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "type",
+     "label": "Activity",
+     "type": "enum",
+     "options": [
+      {
+       "value": "call",
+       "label": "Call"
+      },
+      {
+       "value": "meeting",
+       "label": "Meeting"
+      },
+      {
+       "value": "demo",
+       "label": "Demo"
+      },
+      {
+       "value": "email",
+       "label": "Email"
+      },
+      {
+       "value": "proposal",
+       "label": "Proposal"
+      },
+      {
+       "value": "follow_up",
+       "label": "Follow-up"
+      },
+      {
+       "value": "whatsapp",
+       "label": "WhatsApp"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "type"
+     ]
+    },
+    {
+     "key": "deal",
+     "label": "Deal",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "stage",
+     "label": "Deal stage",
+     "type": "enum",
+     "options": [
+      {
+       "value": "lead",
+       "label": "Lead"
+      },
+      {
+       "value": "qualified",
+       "label": "Qualified"
+      },
+      {
+       "value": "demo",
+       "label": "Demo"
+      },
+      {
+       "value": "proposal",
+       "label": "Proposal"
+      },
+      {
+       "value": "negotiation",
+       "label": "Negotiation"
+      },
+      {
+       "value": "won",
+       "label": "Won"
+      },
+      {
+       "value": "lost",
+       "label": "Lost"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Logged by",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "owner",
+      "person",
+      "salesperson",
+      "who"
+     ]
+    },
+    {
+     "key": "note",
+     "label": "Note",
+     "type": "string"
+    }
+   ]
+  },
+  "payroll": {
+   "id": "payroll",
+   "label": "Payroll",
+   "noun": "payslips",
+   "description": "Monthly pay per person: base, deductions for unapproved/LWP days, variable, net. Months without a run are estimated from CTC.",
+   "dateField": "month",
+   "perms": [
+    "payroll.run",
+    "payroll.finalise"
+   ],
+   "actuals": true,
+   "aliases": [
+    "payroll",
+    "salary",
+    "salaries",
+    "pay",
+    "ctc",
+    "payslip",
+    "compensation",
+    "wage",
+    "wages"
+   ],
+   "defaultColumns": [
+    "month",
+    "person",
+    "department",
+    "ctc",
+    "deduction",
+    "variable",
+    "net",
+    "status"
+   ],
+   "fields": [
+    {
+     "key": "month",
+     "label": "Month",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "person",
+     "label": "Person",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "department",
+     "label": "Department",
+     "type": "enum",
+     "options": [
+      {
+       "value": "management",
+       "label": "Management"
+      },
+      {
+       "value": "delivery",
+       "label": "Delivery"
+      },
+      {
+       "value": "sales",
+       "label": "Sales"
+      },
+      {
+       "value": "operations",
+       "label": "Operations"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "department",
+      "team",
+      "function"
+     ]
+    },
+    {
+     "key": "role",
+     "label": "Role",
+     "type": "enum",
+     "options": [
+      {
+       "value": "admin",
+       "label": "Admin (CEO)"
+      },
+      {
+       "value": "pm",
+       "label": "Project manager"
+      },
+      {
+       "value": "sales",
+       "label": "Sales"
+      },
+      {
+       "value": "ops",
+       "label": "Operations"
+      },
+      {
+       "value": "employee",
+       "label": "Employee"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "ctc",
+     "label": "Monthly CTC",
+     "type": "money",
+     "aliases": [
+      "cost",
+      "ctc",
+      "payroll cost",
+      "salary cost"
+     ]
+    },
+    {
+     "key": "base",
+     "label": "Base pay",
+     "type": "money"
+    },
+    {
+     "key": "deduction",
+     "label": "Deductions",
+     "type": "money",
+     "aliases": [
+      "deduction",
+      "deductions"
+     ]
+    },
+    {
+     "key": "variable",
+     "label": "Variable earned",
+     "type": "money",
+     "aliases": [
+      "variable",
+      "incentive",
+      "bonus"
+     ]
+    },
+    {
+     "key": "net",
+     "label": "Net pay",
+     "type": "money",
+     "aliases": [
+      "net pay",
+      "take home"
+     ]
+    },
+    {
+     "key": "working_days",
+     "label": "Working days",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "unapproved_days",
+     "label": "Unapproved days",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "lwp_days",
+     "label": "LWP days",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "status",
+     "label": "Run status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "final",
+       "label": "Final"
+      },
+      {
+       "value": "draft",
+       "label": "Draft"
+      },
+      {
+       "value": "estimate",
+       "label": "Estimate (no run yet)"
+      }
+     ],
+     "groupable": true
+    }
+   ]
+  },
+  "people": {
+   "id": "people",
+   "label": "People",
+   "noun": "people",
+   "description": "Team members with role, manager, load, delivery record and timesheet discipline.",
+   "dateField": "joined_on",
+   "perms": [
+    "people.view_all",
+    "team.view"
+   ],
+   "aliases": [
+    "people",
+    "person",
+    "team",
+    "staff",
+    "employees",
+    "headcount",
+    "resource",
+    "resources",
+    "bench"
+   ],
+   "defaultColumns": [
+    "name",
+    "title",
+    "role",
+    "manager",
+    "allocation_next_10d",
+    "open_tasks",
+    "last_week_status"
+   ],
+   "fields": [
+    {
+     "key": "name",
+     "label": "Person",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "title",
+     "label": "Title",
+     "type": "string"
+    },
+    {
+     "key": "role",
+     "label": "Role",
+     "type": "enum",
+     "options": [
+      {
+       "value": "admin",
+       "label": "Admin (CEO)"
+      },
+      {
+       "value": "pm",
+       "label": "Project manager"
+      },
+      {
+       "value": "sales",
+       "label": "Sales"
+      },
+      {
+       "value": "ops",
+       "label": "Operations"
+      },
+      {
+       "value": "employee",
+       "label": "Employee"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "department",
+     "label": "Department",
+     "type": "enum",
+     "options": [
+      {
+       "value": "management",
+       "label": "Management"
+      },
+      {
+       "value": "delivery",
+       "label": "Delivery"
+      },
+      {
+       "value": "sales",
+       "label": "Sales"
+      },
+      {
+       "value": "operations",
+       "label": "Operations"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "department",
+      "team",
+      "function"
+     ]
+    },
+    {
+     "key": "manager",
+     "label": "Reports to",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "manager",
+      "reports to"
+     ]
+    },
+    {
+     "key": "joined_on",
+     "label": "Joined",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "ctc",
+     "label": "Monthly CTC",
+     "type": "money",
+     "grant": "salaries"
+    },
+    {
+     "key": "cost_per_hour",
+     "label": "Cost per hour",
+     "type": "money",
+     "grant": "salaries"
+    },
+    {
+     "key": "allocation_today",
+     "label": "Allocation today",
+     "type": "percent"
+    },
+    {
+     "key": "allocation_next_10d",
+     "label": "Allocation, next 10 working days",
+     "type": "percent",
+     "aliases": [
+      "allocation",
+      "utilisation",
+      "utilization",
+      "load"
+     ]
+    },
+    {
+     "key": "open_tasks",
+     "label": "Open tasks",
+     "type": "number"
+    },
+    {
+     "key": "overdue_tasks",
+     "label": "Overdue tasks",
+     "type": "number"
+    },
+    {
+     "key": "effort_ratio",
+     "label": "Effort ratio",
+     "type": "number"
+    },
+    {
+     "key": "on_time",
+     "label": "On-time delivery",
+     "type": "percent"
+    },
+    {
+     "key": "hours_30d",
+     "label": "Hours, last 30 days",
+     "type": "number",
+     "unit": "hours"
+    },
+    {
+     "key": "last_week_status",
+     "label": "Last week’s timesheet",
+     "type": "enum",
+     "options": [
+      {
+       "value": "open",
+       "label": "Draft"
+      },
+      {
+       "value": "submitted",
+       "label": "Submitted"
+      },
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "rejected",
+       "label": "Rejected"
+      },
+      {
+       "value": "locked",
+       "label": "Locked"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "timesheet status"
+     ]
+    },
+    {
+     "key": "unsubmitted_weeks_8w",
+     "label": "Weeks not submitted (8 wks)",
+     "type": "number"
+    },
+    {
+     "key": "ts_compliance_8w",
+     "label": "Timesheet compliance (8 wks)",
+     "type": "percent"
+    }
+   ]
+  },
+  "ops": {
+   "id": "ops",
+   "label": "Operations register",
+   "noun": "items",
+   "description": "Recurring duties: payroll, statutory filings, finance and admin with due dates.",
+   "dateField": "due_on",
+   "perms": [
+    "ops.manage"
+   ],
+   "aliases": [
+    "ops",
+    "operations",
+    "compliance",
+    "filing",
+    "filings",
+    "statutory",
+    "duty",
+    "duties"
+   ],
+   "defaultColumns": [
+    "item",
+    "category",
+    "owner",
+    "due_on",
+    "recurring",
+    "status",
+    "days_overdue"
+   ],
+   "fields": [
+    {
+     "key": "item",
+     "label": "Item",
+     "type": "string"
+    },
+    {
+     "key": "category",
+     "label": "Category",
+     "type": "enum",
+     "options": [
+      {
+       "value": "payroll",
+       "label": "Payroll"
+      },
+      {
+       "value": "compliance",
+       "label": "Compliance"
+      },
+      {
+       "value": "finance",
+       "label": "Finance"
+      },
+      {
+       "value": "admin",
+       "label": "Admin"
+      },
+      {
+       "value": "hr",
+       "label": "HR"
+      },
+      {
+       "value": "it",
+       "label": "IT"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Owner",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "due_on",
+     "label": "Due",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "recurring",
+     "label": "Repeats",
+     "type": "enum",
+     "options": [
+      {
+       "value": "none",
+       "label": "One-off"
+      },
+      {
+       "value": "weekly",
+       "label": "Weekly"
+      },
+      {
+       "value": "monthly",
+       "label": "Monthly"
+      },
+      {
+       "value": "quarterly",
+       "label": "Quarterly"
+      },
+      {
+       "value": "yearly",
+       "label": "Yearly"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "open",
+       "label": "Open"
+      },
+      {
+       "value": "done",
+       "label": "Done"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "is_overdue",
+     "label": "Overdue",
+     "type": "boolean"
+    },
+    {
+     "key": "days_overdue",
+     "label": "Days overdue",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "last_done_on",
+     "label": "Last done",
+     "type": "date",
+     "groupable": true
+    }
+   ]
+  },
+  "task_reviews": {
+   "id": "task_reviews",
+   "label": "Task reviews",
+   "noun": "review rounds",
+   "description": "Every submission of a task for review: reviewer, decision (approved / sent back), reason, quality rating and whether it was submitted after the due date.",
+   "dateField": "submitted_at",
+   "perms": [],
+   "actuals": true,
+   "aliases": [
+    "review",
+    "reviews",
+    "review round",
+    "review rounds",
+    "sent back",
+    "send back",
+    "rework",
+    "submission",
+    "submissions"
+   ],
+   "defaultColumns": [
+    "submitted_at",
+    "task",
+    "project",
+    "owner",
+    "reviewer",
+    "round",
+    "decision",
+    "decision_reason",
+    "quality_rating"
+   ],
+   "fields": [
+    {
+     "key": "task",
+     "label": "Task",
+     "type": "string"
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "task_kind",
+     "label": "Task kind",
+     "type": "enum",
+     "options": [
+      {
+       "value": "project",
+       "label": "Project task"
+      },
+      {
+       "value": "general",
+       "label": "General task"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Owner",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "owner",
+      "assignee",
+      "person",
+      "who"
+     ]
+    },
+    {
+     "key": "reviewer",
+     "label": "Reviewer",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "reviewer",
+      "approver"
+     ]
+    },
+    {
+     "key": "round",
+     "label": "Round",
+     "type": "number"
+    },
+    {
+     "key": "submitted_at",
+     "label": "Submitted on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "decision",
+     "label": "Decision",
+     "type": "enum",
+     "options": [
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "sent_back",
+       "label": "Sent back"
+      },
+      {
+       "value": "pending",
+       "label": "Awaiting review"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "decided_at",
+     "label": "Decided on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "decision_reason",
+     "label": "Send-back reason",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "quality_rating",
+     "label": "Quality rating",
+     "type": "number",
+     "aliases": [
+      "quality",
+      "rating"
+     ]
+    },
+    {
+     "key": "delay_reason",
+     "label": "Delay reason",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "late_at_submission",
+     "label": "Submitted after due date",
+     "type": "boolean"
+    },
+    {
+     "key": "is_sent_back",
+     "label": "Sent back",
+     "type": "boolean"
+    },
+    {
+     "key": "is_approved",
+     "label": "Approved",
+     "type": "boolean"
+    },
+    {
+     "key": "is_pending",
+     "label": "Awaiting review",
+     "type": "boolean"
+    },
+    {
+     "key": "days_to_decide",
+     "label": "Days to decide",
+     "type": "number",
+     "unit": "days"
+    }
+   ]
+  },
+  "leave_requests": {
+   "id": "leave_requests",
+   "label": "Leave requests",
+   "noun": "leave requests",
+   "description": "Leave applications with type, days, status and who decided. Employees see only their own; managers see their reports; HR sees everyone.",
+   "dateField": "from_on",
+   "perms": [],
+   "aliases": [
+    "leave",
+    "leaves",
+    "leave request",
+    "leave requests",
+    "time off",
+    "vacation",
+    "absence",
+    "holiday"
+   ],
+   "defaultColumns": [
+    "person",
+    "type",
+    "from_on",
+    "to_on",
+    "days",
+    "status",
+    "decided_by"
+   ],
+   "fields": [
+    {
+     "key": "person",
+     "label": "Person",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "person",
+      "employee",
+      "who"
+     ]
+    },
+    {
+     "key": "manager",
+     "label": "Manager",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "manager"
+     ]
+    },
+    {
+     "key": "type",
+     "label": "Leave type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "casual",
+       "label": "Casual"
+      },
+      {
+       "value": "sick",
+       "label": "Sick"
+      },
+      {
+       "value": "earned",
+       "label": "Earned"
+      },
+      {
+       "value": "compensatory",
+       "label": "Comp-off"
+      },
+      {
+       "value": "lwp",
+       "label": "Leave without pay"
+      },
+      {
+       "value": "optional_holiday",
+       "label": "Optional holiday"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "leave type",
+      "type"
+     ]
+    },
+    {
+     "key": "from_on",
+     "label": "From",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "to_on",
+     "label": "To",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "days",
+     "label": "Days",
+     "type": "number",
+     "unit": "days",
+     "aliases": [
+      "days",
+      "leave days"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "pending",
+       "label": "Pending"
+      },
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "rejected",
+       "label": "Rejected"
+      },
+      {
+       "value": "cancelled",
+       "label": "Cancelled"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "approver",
+     "label": "Approver",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "decided_by",
+     "label": "Decided by",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "decision_reason",
+     "label": "Decision reason",
+     "type": "string"
+    },
+    {
+     "key": "reason",
+     "label": "Reason",
+     "type": "string"
+    },
+    {
+     "key": "applied_on",
+     "label": "Applied on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "is_pending",
+     "label": "Pending",
+     "type": "boolean"
+    },
+    {
+     "key": "is_approved",
+     "label": "Approved",
+     "type": "boolean"
+    }
+   ]
+  },
+  "expenses": {
+   "id": "expenses",
+   "label": "Expense claims",
+   "noun": "claims",
+   "description": "Expense claims (reimbursements) with category, amount, status, approver, budget check and payment. Employees see their own; PMs their projects and team; admin and HR everyone.",
+   "dateField": "spent_on",
+   "perms": [],
+   "actuals": true,
+   "aliases": [
+    "expense claim",
+    "expense claims",
+    "claim",
+    "claims",
+    "reimbursement",
+    "reimbursements",
+    "reimburse"
+   ],
+   "defaultColumns": [
+    "spent_on",
+    "person",
+    "category",
+    "description",
+    "project",
+    "amount",
+    "status",
+    "approver"
+   ],
+   "fields": [
+    {
+     "key": "person",
+     "label": "Person",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "person",
+      "employee",
+      "who",
+      "claimant"
+     ]
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "category",
+     "label": "Category",
+     "type": "enum",
+     "options": [
+      {
+       "value": "travel",
+       "label": "Travel"
+      },
+      {
+       "value": "food",
+       "label": "Food & meals"
+      },
+      {
+       "value": "lodging",
+       "label": "Lodging"
+      },
+      {
+       "value": "client_entertainment",
+       "label": "Client entertainment"
+      },
+      {
+       "value": "software",
+       "label": "Software & subscriptions"
+      },
+      {
+       "value": "hardware",
+       "label": "Hardware"
+      },
+      {
+       "value": "internet_phone",
+       "label": "Internet & phone"
+      },
+      {
+       "value": "training",
+       "label": "Training & courses"
+      },
+      {
+       "value": "office",
+       "label": "Office supplies"
+      },
+      {
+       "value": "other",
+       "label": "Other"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "category",
+      "head"
+     ]
+    },
+    {
+     "key": "description",
+     "label": "Description",
+     "type": "string"
+    },
+    {
+     "key": "amount",
+     "label": "Amount",
+     "type": "money",
+     "aliases": [
+      "amount",
+      "spend",
+      "spent",
+      "claimed"
+     ]
+    },
+    {
+     "key": "spent_on",
+     "label": "Spent on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "draft",
+       "label": "Draft"
+      },
+      {
+       "value": "submitted",
+       "label": "Submitted"
+      },
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "rejected",
+       "label": "Rejected"
+      },
+      {
+       "value": "paid",
+       "label": "Paid"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "approver",
+     "label": "Approver",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "in_budget",
+     "label": "Within budget",
+     "type": "boolean"
+    },
+    {
+     "key": "billable",
+     "label": "Billable to client",
+     "type": "boolean"
+    },
+    {
+     "key": "paid_on",
+     "label": "Paid on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "is_unpaid",
+     "label": "Approved, not yet reimbursed",
+     "type": "boolean"
+    },
+    {
+     "key": "is_pending",
+     "label": "Awaiting approval",
+     "type": "boolean"
+    }
+   ]
+  },
+  "purchases": {
+   "id": "purchases",
+   "label": "Purchase orders",
+   "noun": "purchase orders",
+   "description": "Purchase orders to vendors with budget category, value (incl. GST), status and approval.",
+   "dateField": "raised_on",
+   "perms": [
+    "procurement.manage"
+   ],
+   "aliases": [
+    "po",
+    "pos",
+    "purchase order",
+    "purchase orders",
+    "purchase",
+    "purchases",
+    "procurement"
+   ],
+   "defaultColumns": [
+    "number",
+    "vendor",
+    "category",
+    "project",
+    "amount",
+    "status",
+    "requested_by",
+    "raised_on"
+   ],
+   "fields": [
+    {
+     "key": "number",
+     "label": "PO number",
+     "type": "string"
+    },
+    {
+     "key": "title",
+     "label": "Description",
+     "type": "string"
+    },
+    {
+     "key": "vendor",
+     "label": "Vendor",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "vendor",
+      "supplier"
+     ]
+    },
+    {
+     "key": "category",
+     "label": "Budget category",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "category"
+     ]
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "amount",
+     "label": "PO value (incl. GST)",
+     "type": "money",
+     "aliases": [
+      "value",
+      "amount"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "draft",
+       "label": "Draft"
+      },
+      {
+       "value": "pending",
+       "label": "Pending approval"
+      },
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "rejected",
+       "label": "Rejected"
+      },
+      {
+       "value": "closed",
+       "label": "Closed"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "requested_by",
+     "label": "Requested by",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "approver",
+     "label": "Approver",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "approved",
+     "label": "Approved",
+     "type": "boolean"
+    },
+    {
+     "key": "is_pending",
+     "label": "Pending approval",
+     "type": "boolean"
+    },
+    {
+     "key": "over_budget",
+     "label": "Over budget",
+     "type": "boolean"
+    },
+    {
+     "key": "raised_on",
+     "label": "Raised on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "needed_by",
+     "label": "Needed by",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "billed",
+     "label": "Billed against PO",
+     "type": "money"
+    }
+   ]
+  },
+  "vendor_bills": {
+   "id": "vendor_bills",
+   "label": "Vendor bills",
+   "noun": "bills",
+   "description": "Bills from vendors (payables) with GST, TDS, due date, status and payment.",
+   "dateField": "due_on",
+   "perms": [
+    "procurement.manage"
+   ],
+   "aliases": [
+    "bill",
+    "bills",
+    "vendor bill",
+    "vendor bills",
+    "payable",
+    "payables",
+    "creditors"
+   ],
+   "defaultColumns": [
+    "number",
+    "vendor",
+    "po",
+    "bill_date",
+    "due_on",
+    "total",
+    "status",
+    "days_overdue"
+   ],
+   "fields": [
+    {
+     "key": "number",
+     "label": "Bill no.",
+     "type": "string"
+    },
+    {
+     "key": "vendor",
+     "label": "Vendor",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "vendor",
+      "supplier"
+     ]
+    },
+    {
+     "key": "po",
+     "label": "PO number",
+     "type": "string"
+    },
+    {
+     "key": "category",
+     "label": "Category",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "amount",
+     "label": "Amount (before GST)",
+     "type": "money"
+    },
+    {
+     "key": "gst",
+     "label": "GST",
+     "type": "money"
+    },
+    {
+     "key": "tds",
+     "label": "TDS",
+     "type": "money"
+    },
+    {
+     "key": "total",
+     "label": "Bill total",
+     "type": "money",
+     "aliases": [
+      "total",
+      "amount",
+      "value"
+     ]
+    },
+    {
+     "key": "payable",
+     "label": "Net payable (after TDS)",
+     "type": "money",
+     "aliases": [
+      "payable"
+     ]
+    },
+    {
+     "key": "bill_date",
+     "label": "Bill date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "due_on",
+     "label": "Due date",
+     "type": "date",
+     "groupable": true,
+     "aliases": [
+      "due"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "received",
+       "label": "Received"
+      },
+      {
+       "value": "approved",
+       "label": "Approved"
+      },
+      {
+       "value": "paid",
+       "label": "Paid"
+      },
+      {
+       "value": "disputed",
+       "label": "Disputed"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "paid_on",
+     "label": "Paid on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "is_overdue",
+     "label": "Overdue",
+     "type": "boolean"
+    },
+    {
+     "key": "is_unpaid",
+     "label": "Unpaid",
+     "type": "boolean"
+    },
+    {
+     "key": "days_overdue",
+     "label": "Days overdue",
+     "type": "number",
+     "unit": "days"
+    }
+   ]
+  },
+  "budget_vs_actual": {
+   "id": "budget_vs_actual",
+   "label": "Budget vs actual",
+   "noun": "budget lines",
+   "description": "Monthly budget against actual for every expense category (actual = ledger costs + approved claims and bills) and every revenue stream. Same numbers as Spend → Budgets.",
+   "dateField": "month",
+   "perms": [
+    "budgets.manage",
+    "finance.view"
+   ],
+   "actuals": true,
+   "aliases": [
+    "budget",
+    "budgets",
+    "budget vs actual",
+    "variance",
+    "over budget",
+    "under budget",
+    "overspend"
+   ],
+   "defaultColumns": [
+    "month",
+    "kind",
+    "category",
+    "budget",
+    "actual",
+    "variance"
+   ],
+   "fields": [
+    {
+     "key": "category",
+     "label": "Category",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "category",
+      "head"
+     ]
+    },
+    {
+     "key": "kind",
+     "label": "Type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "expense",
+       "label": "Expense"
+      },
+      {
+       "value": "revenue",
+       "label": "Revenue"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "month",
+     "label": "Month",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "budget",
+     "label": "Budget",
+     "type": "money",
+     "aliases": [
+      "budget"
+     ]
+    },
+    {
+     "key": "actual",
+     "label": "Actual",
+     "type": "money",
+     "aliases": [
+      "actual",
+      "spend",
+      "spent"
+     ]
+    },
+    {
+     "key": "variance",
+     "label": "Variance",
+     "type": "money",
+     "description": "Expense: budget − actual (negative = over). Revenue: actual − budget.",
+     "aliases": [
+      "variance"
+     ]
+    },
+    {
+     "key": "variance_pct",
+     "label": "Variance %",
+     "type": "percent"
+    },
+    {
+     "key": "is_over",
+     "label": "Over budget this month",
+     "type": "boolean"
+    },
+    {
+     "key": "over_budget_ytd",
+     "label": "Category over budget (FY to date)",
+     "type": "boolean"
+    },
+    {
+     "key": "has_budget",
+     "label": "Has a budget",
+     "type": "boolean"
+    }
+   ]
+  },
+  "revenue_leakage": {
+   "id": "revenue_leakage",
+   "label": "Revenue leakage",
+   "noun": "leakage items",
+   "description": "Revenue lost or at risk: lost deals, unbilled hours, bad-debt risk and rejected change requests (auto) plus discounts, write-offs, credit notes, penalties and churn (manual).",
+   "dateField": "date",
+   "perms": [
+    "leakage.view"
+   ],
+   "aliases": [
+    "leakage",
+    "revenue leakage",
+    "lost revenue",
+    "leak",
+    "write off",
+    "write-off",
+    "discounts",
+    "bad debt",
+    "unbilled"
+   ],
+   "defaultColumns": [
+    "date",
+    "kind",
+    "client",
+    "project",
+    "amount",
+    "recovered",
+    "net",
+    "status"
+   ],
+   "fields": [
+    {
+     "key": "kind",
+     "label": "Type",
+     "type": "enum",
+     "options": [
+      {
+       "value": "lost_deal",
+       "label": "Lost deal"
+      },
+      {
+       "value": "unbilled_hours",
+       "label": "Unbilled hours"
+      },
+      {
+       "value": "bad_debt",
+       "label": "Bad-debt risk"
+      },
+      {
+       "value": "scope_creep",
+       "label": "Scope creep"
+      },
+      {
+       "value": "discount",
+       "label": "Discount"
+      },
+      {
+       "value": "write_off",
+       "label": "Write-off"
+      },
+      {
+       "value": "credit_note",
+       "label": "Credit note"
+      },
+      {
+       "value": "penalty",
+       "label": "Penalty"
+      },
+      {
+       "value": "churn",
+       "label": "Churn"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "kind",
+      "type"
+     ]
+    },
+    {
+     "key": "client",
+     "label": "Client",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "amount",
+     "label": "Amount",
+     "type": "money",
+     "aliases": [
+      "amount"
+     ]
+    },
+    {
+     "key": "recovered",
+     "label": "Recovered",
+     "type": "money"
+    },
+    {
+     "key": "net",
+     "label": "Net lost",
+     "type": "money",
+     "aliases": [
+      "net",
+      "lost",
+      "lost revenue"
+     ]
+    },
+    {
+     "key": "date",
+     "label": "Date",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "open",
+       "label": "Open"
+      },
+      {
+       "value": "recovered",
+       "label": "Recovered"
+      },
+      {
+       "value": "accepted",
+       "label": "Accepted (written off)"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "auto",
+     "label": "System-detected",
+     "type": "boolean"
+    },
+    {
+     "key": "recoverable",
+     "label": "Recoverable",
+     "type": "boolean"
+    },
+    {
+     "key": "reason",
+     "label": "Reason",
+     "type": "string"
+    },
+    {
+     "key": "source",
+     "label": "Source",
+     "type": "string"
+    }
+   ]
+  },
+  "appraisals": {
+   "id": "appraisals",
+   "label": "Appraisals",
+   "noun": "appraisals",
+   "description": "Appraisal reviews per cycle: self, manager and final rating, increment, on-time delivery and the system-suggested score. HR sees everyone; managers see their reports.",
+   "dateField": "period_from",
+   "perms": [
+    "appraisals.manage",
+    "people.view_all",
+    "team.view"
+   ],
+   "aliases": [
+    "appraisal",
+    "appraisals",
+    "performance review",
+    "review cycle",
+    "rating",
+    "ratings",
+    "increment",
+    "increments"
+   ],
+   "defaultColumns": [
+    "cycle",
+    "person",
+    "manager",
+    "status",
+    "self_rating",
+    "manager_rating",
+    "final_rating",
+    "increment_pct"
+   ],
+   "fields": [
+    {
+     "key": "cycle",
+     "label": "Cycle",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "cycle"
+     ]
+    },
+    {
+     "key": "period_from",
+     "label": "Cycle start",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "person",
+     "label": "Person",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "person",
+      "employee",
+      "who"
+     ]
+    },
+    {
+     "key": "manager",
+     "label": "Manager",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "manager"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "not_started",
+       "label": "Not started"
+      },
+      {
+       "value": "self_pending",
+       "label": "Self review pending"
+      },
+      {
+       "value": "manager_pending",
+       "label": "Manager review pending"
+      },
+      {
+       "value": "hr_pending",
+       "label": "HR review pending"
+      },
+      {
+       "value": "completed",
+       "label": "Completed"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "self_rating",
+     "label": "Self rating",
+     "type": "number"
+    },
+    {
+     "key": "manager_rating",
+     "label": "Manager rating",
+     "type": "number"
+    },
+    {
+     "key": "final_rating",
+     "label": "Final rating",
+     "type": "number",
+     "aliases": [
+      "rating",
+      "final rating"
+     ]
+    },
+    {
+     "key": "increment_pct",
+     "label": "Increment",
+     "type": "percent",
+     "aliases": [
+      "increment",
+      "hike",
+      "raise"
+     ]
+    },
+    {
+     "key": "on_time_pct",
+     "label": "On-time delivery",
+     "type": "percent"
+    },
+    {
+     "key": "system_score",
+     "label": "System score",
+     "type": "number",
+     "description": "Suggested rating from goals, task delivery, timesheets and behaviour (1–5)."
+    },
+    {
+     "key": "is_completed",
+     "label": "Completed",
+     "type": "boolean"
+    },
+    {
+     "key": "promotion_to",
+     "label": "Promotion to",
+     "type": "string"
+    }
+   ]
+  },
+  "candidates": {
+   "id": "candidates",
+   "label": "Candidates",
+   "noun": "candidates",
+   "description": "Recruitment pipeline: candidates per opening with source, stage, experience, expected CTC and days in the pipeline.",
+   "dateField": "applied_on",
+   "perms": [
+    "recruitment.manage"
+   ],
+   "aliases": [
+    "candidate",
+    "candidates",
+    "recruitment",
+    "hiring",
+    "applicant",
+    "applicants",
+    "opening",
+    "openings",
+    "pipeline of candidates"
+   ],
+   "defaultColumns": [
+    "name",
+    "opening",
+    "source",
+    "stage",
+    "experience",
+    "days_in_pipeline"
+   ],
+   "fields": [
+    {
+     "key": "opening",
+     "label": "Opening",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "opening",
+      "role",
+      "position"
+     ]
+    },
+    {
+     "key": "name",
+     "label": "Candidate",
+     "type": "string"
+    },
+    {
+     "key": "source",
+     "label": "Source",
+     "type": "enum",
+     "options": [
+      {
+       "value": "referral",
+       "label": "Referral"
+      },
+      {
+       "value": "job_portal",
+       "label": "Job portal"
+      },
+      {
+       "value": "linkedin",
+       "label": "LinkedIn"
+      },
+      {
+       "value": "campus",
+       "label": "Campus"
+      },
+      {
+       "value": "agency",
+       "label": "Agency"
+      },
+      {
+       "value": "website",
+       "label": "Website"
+      },
+      {
+       "value": "other",
+       "label": "Other"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "source",
+      "channel"
+     ]
+    },
+    {
+     "key": "stage",
+     "label": "Stage",
+     "type": "enum",
+     "options": [
+      {
+       "value": "applied",
+       "label": "Applied"
+      },
+      {
+       "value": "screening",
+       "label": "Screening"
+      },
+      {
+       "value": "interview",
+       "label": "Interview"
+      },
+      {
+       "value": "offer",
+       "label": "Offer"
+      },
+      {
+       "value": "hired",
+       "label": "Hired"
+      },
+      {
+       "value": "rejected",
+       "label": "Rejected"
+      },
+      {
+       "value": "withdrawn",
+       "label": "Withdrawn"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "experience",
+     "label": "Experience (years)",
+     "type": "number",
+     "aliases": [
+      "experience"
+     ]
+    },
+    {
+     "key": "expected_ctc",
+     "label": "Expected CTC",
+     "type": "money",
+     "grant": "salaries"
+    },
+    {
+     "key": "days_in_pipeline",
+     "label": "Days in pipeline",
+     "type": "number",
+     "unit": "days"
+    },
+    {
+     "key": "applied_on",
+     "label": "Applied on",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "rating",
+     "label": "Rating",
+     "type": "number"
+    },
+    {
+     "key": "is_active",
+     "label": "In process",
+     "type": "boolean"
+    },
+    {
+     "key": "is_hired",
+     "label": "Hired",
+     "type": "boolean"
+    }
+   ]
+  },
+  "documents": {
+   "id": "documents",
+   "label": "Documents",
+   "noun": "documents",
+   "description": "Project and company documents you can see: category, version, must-read status and acknowledgement counts (counts only where you manage the document).",
+   "dateField": "updated_on",
+   "perms": [],
+   "aliases": [
+    "document",
+    "documents",
+    "doc",
+    "docs",
+    "policy",
+    "policies",
+    "must read",
+    "must-read",
+    "acknowledged",
+    "acknowledgement",
+    "sop"
+   ],
+   "defaultColumns": [
+    "title",
+    "project",
+    "category",
+    "version",
+    "must_read",
+    "acknowledged",
+    "pending"
+   ],
+   "fields": [
+    {
+     "key": "title",
+     "label": "Document",
+     "type": "string"
+    },
+    {
+     "key": "project",
+     "label": "Project",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "category",
+     "label": "Category",
+     "type": "enum",
+     "options": [
+      {
+       "value": "requirements",
+       "label": "Requirements"
+      },
+      {
+       "value": "design",
+       "label": "Design"
+      },
+      {
+       "value": "technical",
+       "label": "Technical"
+      },
+      {
+       "value": "test",
+       "label": "Testing"
+      },
+      {
+       "value": "contract",
+       "label": "Contract"
+      },
+      {
+       "value": "meeting_notes",
+       "label": "Meeting notes"
+      },
+      {
+       "value": "process",
+       "label": "Process"
+      },
+      {
+       "value": "policy",
+       "label": "Policy"
+      },
+      {
+       "value": "training",
+       "label": "Training"
+      },
+      {
+       "value": "other",
+       "label": "Other"
+      }
+     ],
+     "groupable": true,
+     "aliases": [
+      "category"
+     ]
+    },
+    {
+     "key": "visibility",
+     "label": "Visibility",
+     "type": "enum",
+     "options": [
+      {
+       "value": "project",
+       "label": "Project team"
+      },
+      {
+       "value": "company",
+       "label": "Everyone"
+      },
+      {
+       "value": "managers",
+       "label": "Managers only"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "version",
+     "label": "Version",
+     "type": "number"
+    },
+    {
+     "key": "must_read",
+     "label": "Must read",
+     "type": "boolean"
+    },
+    {
+     "key": "acknowledged",
+     "label": "Acknowledged",
+     "type": "number"
+    },
+    {
+     "key": "pending",
+     "label": "Not yet acknowledged",
+     "type": "number",
+     "aliases": [
+      "pending"
+     ]
+    },
+    {
+     "key": "audience",
+     "label": "Required readers",
+     "type": "number"
+    },
+    {
+     "key": "ack_pct",
+     "label": "Acknowledged %",
+     "type": "percent"
+    },
+    {
+     "key": "my_ack",
+     "label": "My acknowledgement",
+     "type": "enum",
+     "options": [
+      {
+       "value": "acknowledged",
+       "label": "Acknowledged"
+      },
+      {
+       "value": "pending",
+       "label": "Pending"
+      },
+      {
+       "value": "not_required",
+       "label": "Not required"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Owner",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "updated_on",
+     "label": "Last updated",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "archived",
+     "label": "Archived",
+     "type": "boolean"
+    }
+   ]
+  },
+  "okr_key_results": {
+   "id": "okr_key_results",
+   "label": "OKR key results",
+   "noun": "key results",
+   "description": "Key results under company, team and personal objectives with current vs target, progress and status. Auto metrics are computed live; finance metrics are hidden without finance access.",
+   "dateField": "period_from",
+   "perms": [],
+   "aliases": [
+    "okr",
+    "okrs",
+    "objective",
+    "objectives",
+    "key result",
+    "key results",
+    "goal",
+    "goals",
+    "kr",
+    "krs"
+   ],
+   "defaultColumns": [
+    "objective",
+    "key_result",
+    "owner",
+    "current",
+    "target",
+    "progress_pct",
+    "status"
+   ],
+   "fields": [
+    {
+     "key": "objective",
+     "label": "Objective",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "key_result",
+     "label": "Key result",
+     "type": "string"
+    },
+    {
+     "key": "level",
+     "label": "Level",
+     "type": "enum",
+     "options": [
+      {
+       "value": "company",
+       "label": "Company"
+      },
+      {
+       "value": "team",
+       "label": "Team"
+      },
+      {
+       "value": "person",
+       "label": "Personal"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "owner",
+     "label": "Owner",
+     "type": "string",
+     "groupable": true,
+     "aliases": [
+      "owner",
+      "person",
+      "who"
+     ]
+    },
+    {
+     "key": "objective_owner",
+     "label": "Objective owner",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "period",
+     "label": "Period",
+     "type": "string",
+     "groupable": true
+    },
+    {
+     "key": "period_from",
+     "label": "Period start",
+     "type": "date",
+     "groupable": true
+    },
+    {
+     "key": "metric",
+     "label": "Metric",
+     "type": "enum",
+     "options": [
+      {
+       "value": "manual",
+       "label": "Manual check-ins"
+      },
+      {
+       "value": "revenue_billed",
+       "label": "Revenue billed"
+      },
+      {
+       "value": "revenue_collected",
+       "label": "Revenue collected"
+      },
+      {
+       "value": "deals_won_value",
+       "label": "Value of deals won"
+      },
+      {
+       "value": "on_time_task_pct",
+       "label": "Tasks finished on time"
+      },
+      {
+       "value": "timesheet_compliance",
+       "label": "Timesheet compliance"
+      },
+      {
+       "value": "margin_pct",
+       "label": "Net margin"
+      },
+      {
+       "value": "headcount",
+       "label": "Active headcount"
+      },
+      {
+       "value": "leakage",
+       "label": "Revenue leakage"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "current",
+     "label": "Current",
+     "type": "number"
+    },
+    {
+     "key": "target",
+     "label": "Target",
+     "type": "number"
+    },
+    {
+     "key": "unit",
+     "label": "Unit",
+     "type": "string"
+    },
+    {
+     "key": "progress_pct",
+     "label": "Progress",
+     "type": "percent",
+     "aliases": [
+      "progress"
+     ]
+    },
+    {
+     "key": "status",
+     "label": "Status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "on_track",
+       "label": "On track"
+      },
+      {
+       "value": "at_risk",
+       "label": "At risk"
+      },
+      {
+       "value": "off_track",
+       "label": "Off track"
+      },
+      {
+       "value": "done",
+       "label": "Done"
+      },
+      {
+       "value": "not_started",
+       "label": "Not started"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "objective_status",
+     "label": "Objective status",
+     "type": "enum",
+     "options": [
+      {
+       "value": "on_track",
+       "label": "On track"
+      },
+      {
+       "value": "at_risk",
+       "label": "At risk"
+      },
+      {
+       "value": "off_track",
+       "label": "Off track"
+      },
+      {
+       "value": "done",
+       "label": "Done"
+      },
+      {
+       "value": "not_started",
+       "label": "Not started"
+      }
+     ],
+     "groupable": true
+    },
+    {
+     "key": "auto",
+     "label": "Auto-tracked",
+     "type": "boolean"
+    }
+   ]
+  }
+ },
+ "ENUM_LABELS": {
+  "stream": {
+   "sap_consulting": "SAP consulting",
+   "products": "Products",
+   "services": "Services",
+   "saas": "Subscriptions",
+   "ams": "AMS"
+  },
+  "project_status": {
+   "initiated": "Initiated",
+   "active": "Active",
+   "on_hold": "On hold",
+   "npa": "NPA",
+   "completed": "Completed",
+   "closed": "Closed"
+  },
+  "project_type": {
+   "product": "Product",
+   "service": "Service",
+   "saas": "SaaS",
+   "ams": "AMS"
+  },
+  "billing_model": {
+   "fixed": "Fixed price",
+   "tm": "Time & material",
+   "subscription": "Subscription",
+   "ams_retainer": "AMS retainer"
+  },
+  "health": {
+   "on_track": "On track",
+   "at_risk": "At risk",
+   "off_track": "Off track"
+  },
+  "task_status": {
+   "todo": "To do",
+   "in_progress": "In progress",
+   "blocked": "Blocked",
+   "in_review": "In review",
+   "done": "Done"
+  },
+  "complexity": {
+   "low": "Low",
+   "medium": "Medium",
+   "high": "High",
+   "very_high": "Very high"
+  },
+  "ms_state": {
+   "achieved_on_time": "Achieved on time",
+   "achieved_late": "Achieved late",
+   "on_track": "On track",
+   "at_risk": "At risk",
+   "overdue": "Overdue",
+   "not_started": "Not started"
+  },
+  "billing_status": {
+   "none": "Not invoiced",
+   "invoiced": "Invoiced",
+   "paid": "Paid"
+  },
+  "invoice_status": {
+   "unpaid": "Unpaid",
+   "partial": "Part paid",
+   "paid": "Paid"
+  },
+  "deal_stage": {
+   "lead": "Lead",
+   "qualified": "Qualified",
+   "demo": "Demo",
+   "proposal": "Proposal",
+   "negotiation": "Negotiation",
+   "won": "Won",
+   "lost": "Lost"
+  },
+  "deal_source": {
+   "referral": "Referral",
+   "bni": "BNI",
+   "website": "Website",
+   "cold_call": "Cold call",
+   "event": "Event",
+   "partner": "Partner",
+   "existing_client": "Existing client",
+   "other": "Other"
+  },
+  "activity_type": {
+   "call": "Call",
+   "meeting": "Meeting",
+   "demo": "Demo",
+   "email": "Email",
+   "proposal": "Proposal",
+   "follow_up": "Follow-up",
+   "whatsapp": "WhatsApp"
+  },
+  "week_status": {
+   "open": "Draft",
+   "submitted": "Submitted",
+   "approved": "Approved",
+   "rejected": "Rejected",
+   "locked": "Locked"
+  },
+  "entry_kind": {
+   "task": "Project task",
+   "leave": "Leave",
+   "internal": "Internal"
+  },
+  "internal_code": {
+   "meeting": "Internal meeting",
+   "learning": "Learning",
+   "presales": "Pre-sales",
+   "admin": "Admin",
+   "interview": "Interviewing",
+   "bench": "Bench",
+   "breaks": "Lunch, tea and stand-up"
+  },
+  "leave_type": {
+   "casual": "Casual",
+   "sick": "Sick",
+   "earned": "Earned",
+   "compensatory": "Comp-off",
+   "lwp": "Leave without pay",
+   "optional_holiday": "Optional holiday"
+  },
+  "ledger_kind": {
+   "income": "Income",
+   "expense": "Expense"
+  },
+  "ledger_status": {
+   "expected": "Expected",
+   "received": "Received",
+   "paid": "Paid"
+  },
+  "ledger_entry": {
+   "entry": "Ledger entry",
+   "payment": "Payment received"
+  },
+  "payroll_status": {
+   "final": "Final",
+   "draft": "Draft",
+   "estimate": "Estimate (no run yet)"
+  },
+  "department": {
+   "management": "Management",
+   "delivery": "Delivery",
+   "sales": "Sales",
+   "operations": "Operations"
+  },
+  "role": {
+   "admin": "Admin (CEO)",
+   "pm": "Project manager",
+   "sales": "Sales",
+   "ops": "Operations",
+   "employee": "Employee"
+  },
+  "ops_category": {
+   "payroll": "Payroll",
+   "compliance": "Compliance",
+   "finance": "Finance",
+   "admin": "Admin",
+   "hr": "HR",
+   "it": "IT"
+  },
+  "recurrence": {
+   "none": "One-off",
+   "weekly": "Weekly",
+   "monthly": "Monthly",
+   "quarterly": "Quarterly",
+   "yearly": "Yearly"
+  },
+  "ops_status": {
+   "open": "Open",
+   "done": "Done"
+  },
+  "cr_status": {
+   "raised": "Raised",
+   "estimated": "Estimated",
+   "approved": "Approved",
+   "rejected": "Rejected",
+   "done": "Done"
+  },
+  "task_kind": {
+   "project": "Project task",
+   "general": "General task"
+  },
+  "task_priority": {
+   "low": "Low",
+   "normal": "Normal",
+   "high": "High",
+   "urgent": "Urgent"
+  },
+  "timeliness": {
+   "early": "Early",
+   "on_time": "On time",
+   "late": "Late"
+  },
+  "review_decision": {
+   "approved": "Approved",
+   "sent_back": "Sent back",
+   "pending": "Awaiting review"
+  },
+  "leave_status": {
+   "pending": "Pending",
+   "approved": "Approved",
+   "rejected": "Rejected",
+   "cancelled": "Cancelled"
+  },
+  "expense_category": {
+   "travel": "Travel",
+   "food": "Food & meals",
+   "lodging": "Lodging",
+   "client_entertainment": "Client entertainment",
+   "software": "Software & subscriptions",
+   "hardware": "Hardware",
+   "internet_phone": "Internet & phone",
+   "training": "Training & courses",
+   "office": "Office supplies",
+   "other": "Other"
+  },
+  "expense_status": {
+   "draft": "Draft",
+   "submitted": "Submitted",
+   "approved": "Approved",
+   "rejected": "Rejected",
+   "paid": "Paid"
+  },
+  "po_status": {
+   "draft": "Draft",
+   "pending": "Pending approval",
+   "approved": "Approved",
+   "rejected": "Rejected",
+   "closed": "Closed"
+  },
+  "bill_status": {
+   "received": "Received",
+   "approved": "Approved",
+   "paid": "Paid",
+   "disputed": "Disputed"
+  },
+  "budget_kind": {
+   "expense": "Expense",
+   "revenue": "Revenue"
+  },
+  "leakage_kind": {
+   "lost_deal": "Lost deal",
+   "unbilled_hours": "Unbilled hours",
+   "bad_debt": "Bad-debt risk",
+   "scope_creep": "Scope creep",
+   "discount": "Discount",
+   "write_off": "Write-off",
+   "credit_note": "Credit note",
+   "penalty": "Penalty",
+   "churn": "Churn"
+  },
+  "leakage_status": {
+   "open": "Open",
+   "recovered": "Recovered",
+   "accepted": "Accepted (written off)"
+  },
+  "appraisal_status": {
+   "not_started": "Not started",
+   "self_pending": "Self review pending",
+   "manager_pending": "Manager review pending",
+   "hr_pending": "HR review pending",
+   "completed": "Completed"
+  },
+  "candidate_stage": {
+   "applied": "Applied",
+   "screening": "Screening",
+   "interview": "Interview",
+   "offer": "Offer",
+   "hired": "Hired",
+   "rejected": "Rejected",
+   "withdrawn": "Withdrawn"
+  },
+  "candidate_source": {
+   "referral": "Referral",
+   "job_portal": "Job portal",
+   "linkedin": "LinkedIn",
+   "campus": "Campus",
+   "agency": "Agency",
+   "website": "Website",
+   "other": "Other"
+  },
+  "doc_category": {
+   "requirements": "Requirements",
+   "design": "Design",
+   "technical": "Technical",
+   "test": "Testing",
+   "contract": "Contract",
+   "meeting_notes": "Meeting notes",
+   "process": "Process",
+   "policy": "Policy",
+   "training": "Training",
+   "other": "Other"
+  },
+  "doc_visibility": {
+   "project": "Project team",
+   "company": "Everyone",
+   "managers": "Managers only"
+  },
+  "my_ack": {
+   "acknowledged": "Acknowledged",
+   "pending": "Pending",
+   "not_required": "Not required"
+  },
+  "okr_level": {
+   "company": "Company",
+   "team": "Team",
+   "person": "Personal"
+  },
+  "okr_metric": {
+   "manual": "Manual check-ins",
+   "revenue_billed": "Revenue billed",
+   "revenue_collected": "Revenue collected",
+   "deals_won_value": "Value of deals won",
+   "on_time_task_pct": "Tasks finished on time",
+   "timesheet_compliance": "Timesheet compliance",
+   "margin_pct": "Net margin",
+   "headcount": "Active headcount",
+   "leakage": "Revenue leakage"
+  },
+  "okr_status": {
+   "on_track": "On track",
+   "at_risk": "At risk",
+   "off_track": "Off track",
+   "done": "Done",
+   "not_started": "Not started"
+  }
+ },
+ "GRAIN_LABEL": {
+  "day": "Day",
+  "week": "Week",
+  "month": "Month",
+  "quarter": "Quarter",
+  "fy": "Financial year"
+ },
+ "MILESTONE_STATE": {
+  "achieved_on_time": {
+   "label": "Achieved on time",
+   "tone": "success"
+  },
+  "achieved_late": {
+   "label": "Achieved late",
+   "tone": "warning"
+  },
+  "on_track": {
+   "label": "On track",
+   "tone": "info"
+  },
+  "at_risk": {
+   "label": "At risk",
+   "tone": "warning"
+  },
+  "overdue": {
+   "label": "Overdue",
+   "tone": "danger"
+  },
+  "not_started": {
+   "label": "Not started",
+   "tone": "neutral"
+  }
+ },
+ "OP_LABEL": {
+  "eq": "is",
+  "neq": "is not",
+  "in": "is any of",
+  "nin": "is none of",
+  "gt": ">",
+  "gte": "≥",
+  "lt": "<",
+  "lte": "≤",
+  "contains": "contains",
+  "between": "between",
+  "is_empty": "is empty",
+  "not_empty": "is not empty"
+ },
+ "PRESET_LABEL": {
+  "this_month": "This month",
+  "last_month": "Last month",
+  "this_quarter": "This quarter",
+  "last_quarter": "Last quarter",
+  "this_fy": "This financial year",
+  "last_fy": "Last financial year",
+  "last_30_days": "Last 30 days",
+  "last_90_days": "Last 90 days",
+  "last_6_months": "Last 6 months",
+  "last_12_months": "Last 12 months",
+  "ytd": "Financial year to date",
+  "all": "All time"
+ }
+}

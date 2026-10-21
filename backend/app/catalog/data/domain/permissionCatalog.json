@@ -1,0 +1,1721 @@
+{
+ "DEFAULT_ROLES": [
+  {
+   "key": "administrator",
+   "name": "Administrator",
+   "persona": "admin",
+   "locked": true,
+   "description": "Sets up the workspace: master data, users, roles and controls. Full access.",
+   "permissions": [
+    "timesheet.own",
+    "daily_update.post",
+    "approvals.act",
+    "ai.use",
+    "projects.view_all",
+    "projects.create",
+    "projects.edit",
+    "projects.manage_all",
+    "tasks.edit",
+    "tasks.status_any",
+    "allocation.edit",
+    "change_requests.manage",
+    "documents.manage",
+    "estimates.manage",
+    "documents.view_all",
+    "openings.manage",
+    "team.view",
+    "tasks.assign_team",
+    "tasks.review",
+    "tasks.view_all",
+    "tasks.analytics",
+    "insights.view",
+    "delegations.manage",
+    "people.view_all",
+    "people.manage",
+    "leave.approve",
+    "leave.hr_entry",
+    "appraisals.manage",
+    "recruitment.manage",
+    "cost_rates.view",
+    "cost_rates.edit",
+    "payroll.run",
+    "payroll.finalise",
+    "deals.view_all",
+    "deals.edit_own",
+    "deals.edit_all",
+    "sales.performance_own",
+    "sales.performance_all",
+    "clients.manage",
+    "finance.view",
+    "finance.edit",
+    "margins.view",
+    "ledger.view",
+    "ops.manage",
+    "expenses.approve",
+    "expenses.pay",
+    "procurement.manage",
+    "budgets.manage",
+    "leakage.view",
+    "reports.view",
+    "reports.build",
+    "okrs.manage",
+    "documents.templates",
+    "documents.employee_files",
+    "workflows.design",
+    "workflows.start",
+    "documents.company",
+    "audit.view",
+    "data.export",
+    "settings.edit",
+    "theme.edit",
+    "holidays.edit",
+    "master.view",
+    "master.edit",
+    "shifts.manage",
+    "workflows.manage",
+    "emails.view",
+    "billing.manage",
+    "users.view",
+    "users.manage",
+    "employees.create",
+    "employees.edit",
+    "employees.deactivate",
+    "roles.view",
+    "roles.manage",
+    "makerchecker.check",
+    "makerchecker.configure",
+    "view_as"
+   ]
+  },
+  {
+   "key": "ceo",
+   "name": "CEO",
+   "persona": "admin",
+   "description": "Runs the company. Sees every number and is the final approver.",
+   "permissions": [
+    "timesheet.own",
+    "daily_update.post",
+    "approvals.act",
+    "ai.use",
+    "projects.view_all",
+    "projects.create",
+    "projects.edit",
+    "projects.manage_all",
+    "tasks.edit",
+    "tasks.status_any",
+    "allocation.edit",
+    "change_requests.manage",
+    "documents.manage",
+    "estimates.manage",
+    "documents.view_all",
+    "openings.manage",
+    "team.view",
+    "tasks.assign_team",
+    "tasks.review",
+    "tasks.view_all",
+    "tasks.analytics",
+    "insights.view",
+    "delegations.manage",
+    "people.view_all",
+    "people.manage",
+    "leave.approve",
+    "leave.hr_entry",
+    "appraisals.manage",
+    "recruitment.manage",
+    "cost_rates.view",
+    "cost_rates.edit",
+    "payroll.run",
+    "payroll.finalise",
+    "deals.view_all",
+    "deals.edit_own",
+    "deals.edit_all",
+    "sales.performance_own",
+    "sales.performance_all",
+    "clients.manage",
+    "finance.view",
+    "finance.edit",
+    "margins.view",
+    "ledger.view",
+    "ops.manage",
+    "expenses.approve",
+    "expenses.pay",
+    "procurement.manage",
+    "budgets.manage",
+    "leakage.view",
+    "reports.view",
+    "reports.build",
+    "okrs.manage",
+    "documents.templates",
+    "documents.employee_files",
+    "workflows.design",
+    "workflows.start",
+    "documents.company",
+    "audit.view",
+    "data.export",
+    "settings.edit",
+    "theme.edit",
+    "holidays.edit",
+    "master.view",
+    "master.edit",
+    "shifts.manage",
+    "workflows.manage",
+    "emails.view",
+    "billing.manage",
+    "users.view",
+    "users.manage",
+    "employees.create",
+    "employees.edit",
+    "employees.deactivate",
+    "roles.view",
+    "roles.manage",
+    "makerchecker.check",
+    "makerchecker.configure",
+    "view_as"
+   ]
+  },
+  {
+   "key": "cto",
+   "name": "CTO",
+   "persona": "pm",
+   "description": "Owns delivery and technology across all projects, without company finance.",
+   "permissions": [
+    "timesheet.own",
+    "daily_update.post",
+    "approvals.act",
+    "ai.use",
+    "tasks.view_all",
+    "estimates.manage",
+    "projects.create",
+    "projects.edit",
+    "tasks.edit",
+    "tasks.status_any",
+    "allocation.edit",
+    "change_requests.manage",
+    "documents.manage",
+    "openings.manage",
+    "team.view",
+    "tasks.assign_team",
+    "tasks.review",
+    "tasks.analytics",
+    "insights.view",
+    "delegations.manage",
+    "leave.approve",
+    "expenses.approve",
+    "recruitment.manage",
+    "reports.view",
+    "reports.build",
+    "projects.view_all",
+    "projects.manage_all",
+    "documents.view_all",
+    "margins.view",
+    "people.view_all",
+    "users.view",
+    "roles.view",
+    "master.view",
+    "audit.view"
+   ]
+  },
+  {
+   "key": "project_manager",
+   "name": "Project Manager",
+   "persona": "pm",
+   "description": "Plans and delivers projects, assigns and reviews the team’s work.",
+   "permissions": [
+    "timesheet.own",
+    "daily_update.post",
+    "approvals.act",
+    "ai.use",
+    "tasks.view_all",
+    "estimates.manage",
+    "projects.create",
+    "projects.edit",
+    "tasks.edit",
+    "tasks.status_any",
+    "allocation.edit",
+    "change_requests.manage",
+    "documents.manage",
+    "openings.manage",
+    "team.view",
+    "tasks.assign_team",
+    "tasks.review",
+    "tasks.analytics",
+    "insights.view",
+    "delegations.manage",
+    "leave.approve",
+    "expenses.approve",
+    "recruitment.manage",
+    "reports.view",
+    "reports.build"
+   ]
+  },
+  {
+   "key": "hr_manager",
+   "name": "HR Manager",
+   "persona": "ops",
+   "description": "Owns people operations: onboarding, leave, appraisals, payroll preparation and procurement.",
+   "permissions": [
+    "timesheet.own",
+    "daily_update.post",
+    "approvals.act",
+    "ai.use",
+    "projects.view_all",
+    "openings.manage",
+    "team.view",
+    "tasks.assign_team",
+    "tasks.review",
+    "tasks.analytics",
+    "insights.view",
+    "delegations.manage",
+    "people.view_all",
+    "people.manage",
+    "leave.approve",
+    "leave.hr_entry",
+    "appraisals.manage",
+    "recruitment.manage",
+    "cost_rates.view",
+    "payroll.run",
+    "ledger.view",
+    "ops.manage",
+    "expenses.approve",
+    "expenses.pay",
+    "procurement.manage",
+    "reports.view",
+    "reports.build",
+    "documents.company",
+    "holidays.edit",
+    "master.view",
+    "master.edit",
+    "shifts.manage",
+    "emails.view",
+    "tasks.view_all",
+    "documents.templates",
+    "documents.employee_files",
+    "workflows.design",
+    "workflows.start",
+    "users.view",
+    "employees.create",
+    "employees.edit",
+    "employees.deactivate",
+    "roles.view",
+    "makerchecker.check"
+   ]
+  },
+  {
+   "key": "hr_executive",
+   "name": "HR Executive",
+   "persona": "ops",
+   "description": "Day-to-day HR: onboards employees, records leave, runs recruitment. Sensitive changes go to the HR Manager.",
+   "permissions": [
+    "timesheet.own",
+    "daily_update.post",
+    "approvals.act",
+    "ai.use",
+    "tasks.view_all",
+    "documents.templates",
+    "documents.employee_files",
+    "workflows.start",
+    "people.view_all",
+    "leave.hr_entry",
+    "recruitment.manage",
+    "openings.manage",
+    "documents.company",
+    "ops.manage",
+    "reports.view",
+    "master.view",
+    "emails.view",
+    "users.view",
+    "employees.create",
+    "employees.edit"
+   ]
+  },
+  {
+   "key": "sales_manager",
+   "name": "Sales Manager",
+   "persona": "sales",
+   "description": "Runs the sales team and the whole pipeline.",
+   "permissions": [
+    "timesheet.own",
+    "daily_update.post",
+    "approvals.act",
+    "ai.use",
+    "deals.view_all",
+    "deals.edit_own",
+    "deals.edit_all",
+    "sales.performance_own",
+    "sales.performance_all",
+    "clients.manage",
+    "team.view",
+    "tasks.assign_team",
+    "tasks.review",
+    "tasks.view_all",
+    "estimates.manage",
+    "insights.view",
+    "delegations.manage",
+    "leave.approve",
+    "expenses.approve",
+    "reports.view",
+    "reports.build",
+    "leakage.view"
+   ]
+  },
+  {
+   "key": "sales_executive",
+   "name": "Sales Executive",
+   "persona": "sales",
+   "description": "Works their own deals and clients.",
+   "permissions": [
+    "timesheet.own",
+    "daily_update.post",
+    "approvals.act",
+    "ai.use",
+    "deals.edit_own",
+    "sales.performance_own",
+    "clients.manage",
+    "insights.view",
+    "reports.view",
+    "reports.build"
+   ]
+  },
+  {
+   "key": "employee",
+   "name": "Employee",
+   "persona": "employee",
+   "description": "Self-service: tasks, timesheets, leave, expenses, documents and appraisal.",
+   "permissions": [
+    "timesheet.own",
+    "daily_update.post",
+    "approvals.act",
+    "ai.use"
+   ]
+  }
+ ],
+ "LOCKED_PERMISSIONS": [
+  "roles.view",
+  "roles.manage",
+  "users.view",
+  "users.manage"
+ ],
+ "MODULE_LABEL": {
+  "my_work": "My work",
+  "delivery": "Projects & delivery",
+  "team": "Team & performance",
+  "people": "People & HR",
+  "sales": "Sales & clients",
+  "finance": "Finance & spend",
+  "company": "Reports & company",
+  "admin": "Workspace administration",
+  "access": "Users, roles & controls"
+ },
+ "MODULE_ORDER": [
+  "my_work",
+  "delivery",
+  "team",
+  "people",
+  "sales",
+  "finance",
+  "company",
+  "admin",
+  "access"
+ ],
+ "PERMISSIONS": [
+  {
+   "key": "timesheet.own",
+   "label": "Log own timesheet",
+   "description": "Fill and submit weekly timesheets.",
+   "module": "my_work",
+   "kind": "create"
+  },
+  {
+   "key": "daily_update.post",
+   "label": "Post daily updates",
+   "description": "Post the daily stand-up update with proof.",
+   "module": "my_work",
+   "kind": "create"
+  },
+  {
+   "key": "approvals.act",
+   "label": "Act on own approvals",
+   "description": "Approve items routed to them (reports-to and workflow scope still apply).",
+   "module": "my_work",
+   "kind": "approve"
+  },
+  {
+   "key": "ai.use",
+   "label": "Use Ask AI",
+   "description": "Ask questions in plain language and build AI reports within their own data access.",
+   "module": "my_work",
+   "kind": "view"
+  },
+  {
+   "key": "projects.view_all",
+   "label": "See all projects",
+   "description": "Every project in the company, not only the ones they work on.",
+   "module": "delivery",
+   "kind": "view"
+  },
+  {
+   "key": "projects.create",
+   "label": "Create projects",
+   "description": "Start new projects and import a WBS.",
+   "module": "delivery",
+   "kind": "create"
+  },
+  {
+   "key": "projects.edit",
+   "label": "Edit projects they manage",
+   "description": "Plan, milestones, status and team of projects where they are the PM.",
+   "module": "delivery",
+   "kind": "edit"
+  },
+  {
+   "key": "projects.manage_all",
+   "label": "Manage every project",
+   "description": "Edit any project and its tasks, and hand a project to another project manager.",
+   "module": "delivery",
+   "kind": "manage",
+   "requires": [
+    "projects.view_all",
+    "projects.edit"
+   ]
+  },
+  {
+   "key": "tasks.edit",
+   "label": "Plan and edit tasks",
+   "description": "Create, assign and reschedule project tasks.",
+   "module": "delivery",
+   "kind": "edit"
+  },
+  {
+   "key": "tasks.status_any",
+   "label": "Change any task status",
+   "description": "Move tasks that are owned by someone else.",
+   "module": "delivery",
+   "kind": "edit"
+  },
+  {
+   "key": "allocation.edit",
+   "label": "Allocate people",
+   "description": "Change allocation % of people on projects.",
+   "module": "delivery",
+   "kind": "edit"
+  },
+  {
+   "key": "change_requests.manage",
+   "label": "Handle change requests",
+   "description": "Raise, price and close client change requests.",
+   "module": "delivery",
+   "kind": "manage"
+  },
+  {
+   "key": "documents.manage",
+   "label": "Manage project documents",
+   "description": "Upload, version and archive project documents.",
+   "module": "delivery",
+   "kind": "manage"
+  },
+  {
+   "key": "estimates.manage",
+   "label": "Project cost calculator",
+   "description": "Estimate cost, margin and price for prospective projects before they exist; convert an estimate into a project.",
+   "module": "delivery",
+   "kind": "create"
+  },
+  {
+   "key": "documents.view_all",
+   "label": "See all project documents",
+   "description": "Open documents of projects they are not on.",
+   "module": "delivery",
+   "kind": "view"
+  },
+  {
+   "key": "openings.manage",
+   "label": "Manage openings",
+   "description": "Raise and track staffing openings.",
+   "module": "delivery",
+   "kind": "manage"
+  },
+  {
+   "key": "team.view",
+   "label": "See team pages",
+   "description": "Team workload, timesheets and availability of their reports.",
+   "module": "team",
+   "kind": "view"
+  },
+  {
+   "key": "tasks.assign_team",
+   "label": "Assign tasks to reports",
+   "description": "Give general tasks to people who report to them.",
+   "module": "team",
+   "kind": "create"
+  },
+  {
+   "key": "tasks.review",
+   "label": "Review submitted tasks",
+   "description": "Approve or send back tasks where they are the reviewer.",
+   "module": "team",
+   "kind": "approve"
+  },
+  {
+   "key": "tasks.view_all",
+   "label": "See all tasks",
+   "description": "Every task in the company with a filter by employee (managers, HR, admins, CXOs). Without it people see only their own tasks.",
+   "module": "team",
+   "kind": "view"
+  },
+  {
+   "key": "tasks.analytics",
+   "label": "Task timeliness analytics",
+   "description": "Early / on-time / late completion and delay reasons across people.",
+   "module": "team",
+   "kind": "view"
+  },
+  {
+   "key": "insights.view",
+   "label": "Insights & scorecards",
+   "description": "Manager dashboards and scorecards.",
+   "module": "team",
+   "kind": "view"
+  },
+  {
+   "key": "delegations.manage",
+   "label": "Delegate approvals",
+   "description": "Hand approvals to someone else while away.",
+   "module": "team",
+   "kind": "manage"
+  },
+  {
+   "key": "people.view_all",
+   "label": "See everyone’s HR records",
+   "description": "Profiles, leave and lifecycle of all employees.",
+   "module": "people",
+   "kind": "view"
+  },
+  {
+   "key": "people.manage",
+   "label": "Manage HR operations",
+   "description": "Lifecycle checklists, assets and leave policy.",
+   "module": "people",
+   "kind": "manage"
+  },
+  {
+   "key": "leave.approve",
+   "label": "Approve leave",
+   "description": "Approve leave for people in their approval scope.",
+   "module": "people",
+   "kind": "approve"
+  },
+  {
+   "key": "leave.hr_entry",
+   "label": "Record leave for others",
+   "description": "Enter leave on behalf of employees.",
+   "module": "people",
+   "kind": "edit"
+  },
+  {
+   "key": "appraisals.manage",
+   "label": "Run appraisals",
+   "description": "Open cycles, calibrate and close appraisals.",
+   "module": "people",
+   "kind": "manage"
+  },
+  {
+   "key": "recruitment.manage",
+   "label": "Recruitment",
+   "description": "Candidates, interviews and offers.",
+   "module": "people",
+   "kind": "manage"
+  },
+  {
+   "key": "cost_rates.view",
+   "label": "See salaries & cost rates",
+   "description": "CTC and cost per hour (read-only).",
+   "module": "people",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  {
+   "key": "cost_rates.edit",
+   "label": "Change salaries & cost rates",
+   "description": "Set CTC and cost per hour.",
+   "module": "people",
+   "kind": "sensitive",
+   "sensitive": true,
+   "requires": [
+    "cost_rates.view"
+   ]
+  },
+  {
+   "key": "payroll.run",
+   "label": "Prepare payroll",
+   "description": "Create and calculate monthly payroll runs.",
+   "module": "people",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  {
+   "key": "payroll.finalise",
+   "label": "Finalise payroll",
+   "description": "Lock a payroll run and post it to the ledger.",
+   "module": "people",
+   "kind": "sensitive",
+   "sensitive": true,
+   "requires": [
+    "payroll.run"
+   ]
+  },
+  {
+   "key": "deals.view_all",
+   "label": "See all deals",
+   "description": "The whole pipeline, not only deals they own.",
+   "module": "sales",
+   "kind": "view"
+  },
+  {
+   "key": "deals.edit_own",
+   "label": "Work own deals",
+   "description": "Create deals and move deals they own.",
+   "module": "sales",
+   "kind": "edit"
+  },
+  {
+   "key": "deals.edit_all",
+   "label": "Edit any deal",
+   "description": "Reassign and edit anyone’s deals.",
+   "module": "sales",
+   "kind": "manage",
+   "requires": [
+    "deals.view_all",
+    "deals.edit_own"
+   ]
+  },
+  {
+   "key": "sales.performance_own",
+   "label": "Own sales performance",
+   "description": "Their own targets, attainment and incentives.",
+   "module": "sales",
+   "kind": "view"
+  },
+  {
+   "key": "sales.performance_all",
+   "label": "Team sales performance",
+   "description": "Targets and attainment of the whole sales team.",
+   "module": "sales",
+   "kind": "view"
+  },
+  {
+   "key": "clients.manage",
+   "label": "Manage clients & contracts",
+   "description": "Client master, contracts and renewals.",
+   "module": "sales",
+   "kind": "manage"
+  },
+  {
+   "key": "finance.view",
+   "label": "See finance",
+   "description": "Invoices, payments, revenue and the CEO dashboard.",
+   "module": "finance",
+   "kind": "view",
+   "sensitive": true
+  },
+  {
+   "key": "finance.edit",
+   "label": "Raise invoices & record payments",
+   "description": "Create invoices and record receipts.",
+   "module": "finance",
+   "kind": "edit",
+   "sensitive": true,
+   "requires": [
+    "finance.view"
+   ]
+  },
+  {
+   "key": "margins.view",
+   "label": "See project margins",
+   "description": "Revenue, cost and margin of projects they can see.",
+   "module": "finance",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  {
+   "key": "ledger.view",
+   "label": "See the ledger",
+   "description": "Company income and expense ledger.",
+   "module": "finance",
+   "kind": "view"
+  },
+  {
+   "key": "ops.manage",
+   "label": "Operations register",
+   "description": "Recurring company costs, renewals and compliance items.",
+   "module": "finance",
+   "kind": "manage"
+  },
+  {
+   "key": "expenses.approve",
+   "label": "Approve expense claims",
+   "description": "Approve claims in their workflow step.",
+   "module": "finance",
+   "kind": "approve"
+  },
+  {
+   "key": "expenses.pay",
+   "label": "Pay expense claims",
+   "description": "Mark approved claims as reimbursed.",
+   "module": "finance",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  {
+   "key": "procurement.manage",
+   "label": "Procurement",
+   "description": "Vendors, purchase orders and vendor bills.",
+   "module": "finance",
+   "kind": "manage"
+  },
+  {
+   "key": "budgets.manage",
+   "label": "Budgets",
+   "description": "Set department and project budgets.",
+   "module": "finance",
+   "kind": "manage"
+  },
+  {
+   "key": "leakage.view",
+   "label": "Revenue leakage",
+   "description": "Lost and unbilled revenue analysis.",
+   "module": "finance",
+   "kind": "view",
+   "sensitive": true
+  },
+  {
+   "key": "reports.view",
+   "label": "Open reports",
+   "description": "Standard and saved reports within their data access.",
+   "module": "company",
+   "kind": "view"
+  },
+  {
+   "key": "reports.build",
+   "label": "Build custom reports",
+   "description": "Custom report builder and AI report studio.",
+   "module": "company",
+   "kind": "create",
+   "requires": [
+    "reports.view"
+   ]
+  },
+  {
+   "key": "okrs.manage",
+   "label": "Company OKRs",
+   "description": "Set objectives and key results.",
+   "module": "company",
+   "kind": "manage"
+  },
+  {
+   "key": "documents.templates",
+   "label": "Document templates & issuing",
+   "description": "Create letter templates (offer, joining, appraisal, payslip…) and issue documents to employees.",
+   "module": "company",
+   "kind": "manage"
+  },
+  {
+   "key": "documents.employee_files",
+   "label": "Employee documents",
+   "description": "See, upload and verify documents of every employee.",
+   "module": "company",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  {
+   "key": "workflows.design",
+   "label": "Design workflows",
+   "description": "Create multi-stage workflows with reviewer parameters and automatic actions.",
+   "module": "company",
+   "kind": "manage"
+  },
+  {
+   "key": "workflows.start",
+   "label": "Start workflows for others",
+   "description": "Launch workflows (e.g. an appraisal cycle) for employees.",
+   "module": "company",
+   "kind": "create"
+  },
+  {
+   "key": "documents.company",
+   "label": "Company library",
+   "description": "Manage policies and company-wide documents.",
+   "module": "company",
+   "kind": "manage"
+  },
+  {
+   "key": "audit.view",
+   "label": "Audit trail",
+   "description": "Who changed what, and when.",
+   "module": "company",
+   "kind": "view"
+  },
+  {
+   "key": "data.export",
+   "label": "Export all data",
+   "description": "Full workspace data export.",
+   "module": "company",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  {
+   "key": "settings.edit",
+   "label": "Company settings",
+   "description": "Calendar, timesheet, pay and project rules.",
+   "module": "admin",
+   "kind": "manage"
+  },
+  {
+   "key": "theme.edit",
+   "label": "Brand & appearance",
+   "description": "Workspace colours, fonts and logo.",
+   "module": "admin",
+   "kind": "manage"
+  },
+  {
+   "key": "holidays.edit",
+   "label": "Holiday calendar",
+   "description": "Add and remove company holidays.",
+   "module": "admin",
+   "kind": "manage"
+  },
+  {
+   "key": "master.view",
+   "label": "See master data",
+   "description": "Org profile, locations, departments, designations, grades and shifts.",
+   "module": "admin",
+   "kind": "view"
+  },
+  {
+   "key": "master.edit",
+   "label": "Edit master data",
+   "description": "Change the organisation’s master data.",
+   "module": "admin",
+   "kind": "manage",
+   "requires": [
+    "master.view"
+   ]
+  },
+  {
+   "key": "shifts.manage",
+   "label": "Shifts",
+   "description": "Create shifts and assign people to them.",
+   "module": "admin",
+   "kind": "manage",
+   "requires": [
+    "master.view"
+   ]
+  },
+  {
+   "key": "workflows.manage",
+   "label": "Approval workflows",
+   "description": "Who approves what, in which order, with SLAs.",
+   "module": "admin",
+   "kind": "manage",
+   "requires": [
+    "master.view"
+   ]
+  },
+  {
+   "key": "emails.view",
+   "label": "Email templates & outbox",
+   "description": "Edit templates and see emails the system sent.",
+   "module": "admin",
+   "kind": "manage"
+  },
+  {
+   "key": "billing.manage",
+   "label": "Billing & plan",
+   "description": "Subscription, seats and invoices for SeereonOS.",
+   "module": "admin",
+   "kind": "manage"
+  },
+  {
+   "key": "users.view",
+   "label": "See users",
+   "description": "The user list with roles and status.",
+   "module": "access",
+   "kind": "view"
+  },
+  {
+   "key": "users.manage",
+   "label": "Manage user access",
+   "description": "Change a user’s role, reporting line and extra permissions.",
+   "module": "access",
+   "kind": "sensitive",
+   "sensitive": true,
+   "requires": [
+    "users.view"
+   ]
+  },
+  {
+   "key": "employees.create",
+   "label": "Create employees",
+   "description": "Onboard a new employee and send the welcome email.",
+   "module": "access",
+   "kind": "create",
+   "requires": [
+    "users.view"
+   ]
+  },
+  {
+   "key": "employees.edit",
+   "label": "Edit employee records",
+   "description": "Job details, department, designation, shift.",
+   "module": "access",
+   "kind": "edit",
+   "requires": [
+    "users.view"
+   ]
+  },
+  {
+   "key": "employees.deactivate",
+   "label": "Deactivate employees",
+   "description": "Turn off access when someone leaves.",
+   "module": "access",
+   "kind": "sensitive",
+   "sensitive": true,
+   "requires": [
+    "users.view"
+   ]
+  },
+  {
+   "key": "roles.view",
+   "label": "See roles",
+   "description": "Roles and their permission matrix.",
+   "module": "access",
+   "kind": "view"
+  },
+  {
+   "key": "roles.manage",
+   "label": "Manage roles",
+   "description": "Create roles and change what each role can do.",
+   "module": "access",
+   "kind": "sensitive",
+   "sensitive": true,
+   "requires": [
+    "roles.view"
+   ]
+  },
+  {
+   "key": "makerchecker.check",
+   "label": "Check changes (maker-checker)",
+   "description": "Approve or reject sensitive changes made by someone else.",
+   "module": "access",
+   "kind": "approve"
+  },
+  {
+   "key": "makerchecker.configure",
+   "label": "Configure maker-checker",
+   "description": "Choose which changes need a second person.",
+   "module": "access",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  {
+   "key": "view_as",
+   "label": "View as another role",
+   "description": "Preview the product as any role (read-only).",
+   "module": "access",
+   "kind": "view"
+  }
+ ],
+ "PERMISSION_BY_KEY": {
+  "timesheet.own": {
+   "key": "timesheet.own",
+   "label": "Log own timesheet",
+   "description": "Fill and submit weekly timesheets.",
+   "module": "my_work",
+   "kind": "create"
+  },
+  "daily_update.post": {
+   "key": "daily_update.post",
+   "label": "Post daily updates",
+   "description": "Post the daily stand-up update with proof.",
+   "module": "my_work",
+   "kind": "create"
+  },
+  "approvals.act": {
+   "key": "approvals.act",
+   "label": "Act on own approvals",
+   "description": "Approve items routed to them (reports-to and workflow scope still apply).",
+   "module": "my_work",
+   "kind": "approve"
+  },
+  "ai.use": {
+   "key": "ai.use",
+   "label": "Use Ask AI",
+   "description": "Ask questions in plain language and build AI reports within their own data access.",
+   "module": "my_work",
+   "kind": "view"
+  },
+  "projects.view_all": {
+   "key": "projects.view_all",
+   "label": "See all projects",
+   "description": "Every project in the company, not only the ones they work on.",
+   "module": "delivery",
+   "kind": "view"
+  },
+  "projects.create": {
+   "key": "projects.create",
+   "label": "Create projects",
+   "description": "Start new projects and import a WBS.",
+   "module": "delivery",
+   "kind": "create"
+  },
+  "projects.edit": {
+   "key": "projects.edit",
+   "label": "Edit projects they manage",
+   "description": "Plan, milestones, status and team of projects where they are the PM.",
+   "module": "delivery",
+   "kind": "edit"
+  },
+  "projects.manage_all": {
+   "key": "projects.manage_all",
+   "label": "Manage every project",
+   "description": "Edit any project and its tasks, and hand a project to another project manager.",
+   "module": "delivery",
+   "kind": "manage",
+   "requires": [
+    "projects.view_all",
+    "projects.edit"
+   ]
+  },
+  "tasks.edit": {
+   "key": "tasks.edit",
+   "label": "Plan and edit tasks",
+   "description": "Create, assign and reschedule project tasks.",
+   "module": "delivery",
+   "kind": "edit"
+  },
+  "tasks.status_any": {
+   "key": "tasks.status_any",
+   "label": "Change any task status",
+   "description": "Move tasks that are owned by someone else.",
+   "module": "delivery",
+   "kind": "edit"
+  },
+  "allocation.edit": {
+   "key": "allocation.edit",
+   "label": "Allocate people",
+   "description": "Change allocation % of people on projects.",
+   "module": "delivery",
+   "kind": "edit"
+  },
+  "change_requests.manage": {
+   "key": "change_requests.manage",
+   "label": "Handle change requests",
+   "description": "Raise, price and close client change requests.",
+   "module": "delivery",
+   "kind": "manage"
+  },
+  "documents.manage": {
+   "key": "documents.manage",
+   "label": "Manage project documents",
+   "description": "Upload, version and archive project documents.",
+   "module": "delivery",
+   "kind": "manage"
+  },
+  "estimates.manage": {
+   "key": "estimates.manage",
+   "label": "Project cost calculator",
+   "description": "Estimate cost, margin and price for prospective projects before they exist; convert an estimate into a project.",
+   "module": "delivery",
+   "kind": "create"
+  },
+  "documents.view_all": {
+   "key": "documents.view_all",
+   "label": "See all project documents",
+   "description": "Open documents of projects they are not on.",
+   "module": "delivery",
+   "kind": "view"
+  },
+  "openings.manage": {
+   "key": "openings.manage",
+   "label": "Manage openings",
+   "description": "Raise and track staffing openings.",
+   "module": "delivery",
+   "kind": "manage"
+  },
+  "team.view": {
+   "key": "team.view",
+   "label": "See team pages",
+   "description": "Team workload, timesheets and availability of their reports.",
+   "module": "team",
+   "kind": "view"
+  },
+  "tasks.assign_team": {
+   "key": "tasks.assign_team",
+   "label": "Assign tasks to reports",
+   "description": "Give general tasks to people who report to them.",
+   "module": "team",
+   "kind": "create"
+  },
+  "tasks.review": {
+   "key": "tasks.review",
+   "label": "Review submitted tasks",
+   "description": "Approve or send back tasks where they are the reviewer.",
+   "module": "team",
+   "kind": "approve"
+  },
+  "tasks.view_all": {
+   "key": "tasks.view_all",
+   "label": "See all tasks",
+   "description": "Every task in the company with a filter by employee (managers, HR, admins, CXOs). Without it people see only their own tasks.",
+   "module": "team",
+   "kind": "view"
+  },
+  "tasks.analytics": {
+   "key": "tasks.analytics",
+   "label": "Task timeliness analytics",
+   "description": "Early / on-time / late completion and delay reasons across people.",
+   "module": "team",
+   "kind": "view"
+  },
+  "insights.view": {
+   "key": "insights.view",
+   "label": "Insights & scorecards",
+   "description": "Manager dashboards and scorecards.",
+   "module": "team",
+   "kind": "view"
+  },
+  "delegations.manage": {
+   "key": "delegations.manage",
+   "label": "Delegate approvals",
+   "description": "Hand approvals to someone else while away.",
+   "module": "team",
+   "kind": "manage"
+  },
+  "people.view_all": {
+   "key": "people.view_all",
+   "label": "See everyone’s HR records",
+   "description": "Profiles, leave and lifecycle of all employees.",
+   "module": "people",
+   "kind": "view"
+  },
+  "people.manage": {
+   "key": "people.manage",
+   "label": "Manage HR operations",
+   "description": "Lifecycle checklists, assets and leave policy.",
+   "module": "people",
+   "kind": "manage"
+  },
+  "leave.approve": {
+   "key": "leave.approve",
+   "label": "Approve leave",
+   "description": "Approve leave for people in their approval scope.",
+   "module": "people",
+   "kind": "approve"
+  },
+  "leave.hr_entry": {
+   "key": "leave.hr_entry",
+   "label": "Record leave for others",
+   "description": "Enter leave on behalf of employees.",
+   "module": "people",
+   "kind": "edit"
+  },
+  "appraisals.manage": {
+   "key": "appraisals.manage",
+   "label": "Run appraisals",
+   "description": "Open cycles, calibrate and close appraisals.",
+   "module": "people",
+   "kind": "manage"
+  },
+  "recruitment.manage": {
+   "key": "recruitment.manage",
+   "label": "Recruitment",
+   "description": "Candidates, interviews and offers.",
+   "module": "people",
+   "kind": "manage"
+  },
+  "cost_rates.view": {
+   "key": "cost_rates.view",
+   "label": "See salaries & cost rates",
+   "description": "CTC and cost per hour (read-only).",
+   "module": "people",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  "cost_rates.edit": {
+   "key": "cost_rates.edit",
+   "label": "Change salaries & cost rates",
+   "description": "Set CTC and cost per hour.",
+   "module": "people",
+   "kind": "sensitive",
+   "sensitive": true,
+   "requires": [
+    "cost_rates.view"
+   ]
+  },
+  "payroll.run": {
+   "key": "payroll.run",
+   "label": "Prepare payroll",
+   "description": "Create and calculate monthly payroll runs.",
+   "module": "people",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  "payroll.finalise": {
+   "key": "payroll.finalise",
+   "label": "Finalise payroll",
+   "description": "Lock a payroll run and post it to the ledger.",
+   "module": "people",
+   "kind": "sensitive",
+   "sensitive": true,
+   "requires": [
+    "payroll.run"
+   ]
+  },
+  "deals.view_all": {
+   "key": "deals.view_all",
+   "label": "See all deals",
+   "description": "The whole pipeline, not only deals they own.",
+   "module": "sales",
+   "kind": "view"
+  },
+  "deals.edit_own": {
+   "key": "deals.edit_own",
+   "label": "Work own deals",
+   "description": "Create deals and move deals they own.",
+   "module": "sales",
+   "kind": "edit"
+  },
+  "deals.edit_all": {
+   "key": "deals.edit_all",
+   "label": "Edit any deal",
+   "description": "Reassign and edit anyone’s deals.",
+   "module": "sales",
+   "kind": "manage",
+   "requires": [
+    "deals.view_all",
+    "deals.edit_own"
+   ]
+  },
+  "sales.performance_own": {
+   "key": "sales.performance_own",
+   "label": "Own sales performance",
+   "description": "Their own targets, attainment and incentives.",
+   "module": "sales",
+   "kind": "view"
+  },
+  "sales.performance_all": {
+   "key": "sales.performance_all",
+   "label": "Team sales performance",
+   "description": "Targets and attainment of the whole sales team.",
+   "module": "sales",
+   "kind": "view"
+  },
+  "clients.manage": {
+   "key": "clients.manage",
+   "label": "Manage clients & contracts",
+   "description": "Client master, contracts and renewals.",
+   "module": "sales",
+   "kind": "manage"
+  },
+  "finance.view": {
+   "key": "finance.view",
+   "label": "See finance",
+   "description": "Invoices, payments, revenue and the CEO dashboard.",
+   "module": "finance",
+   "kind": "view",
+   "sensitive": true
+  },
+  "finance.edit": {
+   "key": "finance.edit",
+   "label": "Raise invoices & record payments",
+   "description": "Create invoices and record receipts.",
+   "module": "finance",
+   "kind": "edit",
+   "sensitive": true,
+   "requires": [
+    "finance.view"
+   ]
+  },
+  "margins.view": {
+   "key": "margins.view",
+   "label": "See project margins",
+   "description": "Revenue, cost and margin of projects they can see.",
+   "module": "finance",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  "ledger.view": {
+   "key": "ledger.view",
+   "label": "See the ledger",
+   "description": "Company income and expense ledger.",
+   "module": "finance",
+   "kind": "view"
+  },
+  "ops.manage": {
+   "key": "ops.manage",
+   "label": "Operations register",
+   "description": "Recurring company costs, renewals and compliance items.",
+   "module": "finance",
+   "kind": "manage"
+  },
+  "expenses.approve": {
+   "key": "expenses.approve",
+   "label": "Approve expense claims",
+   "description": "Approve claims in their workflow step.",
+   "module": "finance",
+   "kind": "approve"
+  },
+  "expenses.pay": {
+   "key": "expenses.pay",
+   "label": "Pay expense claims",
+   "description": "Mark approved claims as reimbursed.",
+   "module": "finance",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  "procurement.manage": {
+   "key": "procurement.manage",
+   "label": "Procurement",
+   "description": "Vendors, purchase orders and vendor bills.",
+   "module": "finance",
+   "kind": "manage"
+  },
+  "budgets.manage": {
+   "key": "budgets.manage",
+   "label": "Budgets",
+   "description": "Set department and project budgets.",
+   "module": "finance",
+   "kind": "manage"
+  },
+  "leakage.view": {
+   "key": "leakage.view",
+   "label": "Revenue leakage",
+   "description": "Lost and unbilled revenue analysis.",
+   "module": "finance",
+   "kind": "view",
+   "sensitive": true
+  },
+  "reports.view": {
+   "key": "reports.view",
+   "label": "Open reports",
+   "description": "Standard and saved reports within their data access.",
+   "module": "company",
+   "kind": "view"
+  },
+  "reports.build": {
+   "key": "reports.build",
+   "label": "Build custom reports",
+   "description": "Custom report builder and AI report studio.",
+   "module": "company",
+   "kind": "create",
+   "requires": [
+    "reports.view"
+   ]
+  },
+  "okrs.manage": {
+   "key": "okrs.manage",
+   "label": "Company OKRs",
+   "description": "Set objectives and key results.",
+   "module": "company",
+   "kind": "manage"
+  },
+  "documents.templates": {
+   "key": "documents.templates",
+   "label": "Document templates & issuing",
+   "description": "Create letter templates (offer, joining, appraisal, payslip…) and issue documents to employees.",
+   "module": "company",
+   "kind": "manage"
+  },
+  "documents.employee_files": {
+   "key": "documents.employee_files",
+   "label": "Employee documents",
+   "description": "See, upload and verify documents of every employee.",
+   "module": "company",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  "workflows.design": {
+   "key": "workflows.design",
+   "label": "Design workflows",
+   "description": "Create multi-stage workflows with reviewer parameters and automatic actions.",
+   "module": "company",
+   "kind": "manage"
+  },
+  "workflows.start": {
+   "key": "workflows.start",
+   "label": "Start workflows for others",
+   "description": "Launch workflows (e.g. an appraisal cycle) for employees.",
+   "module": "company",
+   "kind": "create"
+  },
+  "documents.company": {
+   "key": "documents.company",
+   "label": "Company library",
+   "description": "Manage policies and company-wide documents.",
+   "module": "company",
+   "kind": "manage"
+  },
+  "audit.view": {
+   "key": "audit.view",
+   "label": "Audit trail",
+   "description": "Who changed what, and when.",
+   "module": "company",
+   "kind": "view"
+  },
+  "data.export": {
+   "key": "data.export",
+   "label": "Export all data",
+   "description": "Full workspace data export.",
+   "module": "company",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  "settings.edit": {
+   "key": "settings.edit",
+   "label": "Company settings",
+   "description": "Calendar, timesheet, pay and project rules.",
+   "module": "admin",
+   "kind": "manage"
+  },
+  "theme.edit": {
+   "key": "theme.edit",
+   "label": "Brand & appearance",
+   "description": "Workspace colours, fonts and logo.",
+   "module": "admin",
+   "kind": "manage"
+  },
+  "holidays.edit": {
+   "key": "holidays.edit",
+   "label": "Holiday calendar",
+   "description": "Add and remove company holidays.",
+   "module": "admin",
+   "kind": "manage"
+  },
+  "master.view": {
+   "key": "master.view",
+   "label": "See master data",
+   "description": "Org profile, locations, departments, designations, grades and shifts.",
+   "module": "admin",
+   "kind": "view"
+  },
+  "master.edit": {
+   "key": "master.edit",
+   "label": "Edit master data",
+   "description": "Change the organisation’s master data.",
+   "module": "admin",
+   "kind": "manage",
+   "requires": [
+    "master.view"
+   ]
+  },
+  "shifts.manage": {
+   "key": "shifts.manage",
+   "label": "Shifts",
+   "description": "Create shifts and assign people to them.",
+   "module": "admin",
+   "kind": "manage",
+   "requires": [
+    "master.view"
+   ]
+  },
+  "workflows.manage": {
+   "key": "workflows.manage",
+   "label": "Approval workflows",
+   "description": "Who approves what, in which order, with SLAs.",
+   "module": "admin",
+   "kind": "manage",
+   "requires": [
+    "master.view"
+   ]
+  },
+  "emails.view": {
+   "key": "emails.view",
+   "label": "Email templates & outbox",
+   "description": "Edit templates and see emails the system sent.",
+   "module": "admin",
+   "kind": "manage"
+  },
+  "billing.manage": {
+   "key": "billing.manage",
+   "label": "Billing & plan",
+   "description": "Subscription, seats and invoices for SeereonOS.",
+   "module": "admin",
+   "kind": "manage"
+  },
+  "users.view": {
+   "key": "users.view",
+   "label": "See users",
+   "description": "The user list with roles and status.",
+   "module": "access",
+   "kind": "view"
+  },
+  "users.manage": {
+   "key": "users.manage",
+   "label": "Manage user access",
+   "description": "Change a user’s role, reporting line and extra permissions.",
+   "module": "access",
+   "kind": "sensitive",
+   "sensitive": true,
+   "requires": [
+    "users.view"
+   ]
+  },
+  "employees.create": {
+   "key": "employees.create",
+   "label": "Create employees",
+   "description": "Onboard a new employee and send the welcome email.",
+   "module": "access",
+   "kind": "create",
+   "requires": [
+    "users.view"
+   ]
+  },
+  "employees.edit": {
+   "key": "employees.edit",
+   "label": "Edit employee records",
+   "description": "Job details, department, designation, shift.",
+   "module": "access",
+   "kind": "edit",
+   "requires": [
+    "users.view"
+   ]
+  },
+  "employees.deactivate": {
+   "key": "employees.deactivate",
+   "label": "Deactivate employees",
+   "description": "Turn off access when someone leaves.",
+   "module": "access",
+   "kind": "sensitive",
+   "sensitive": true,
+   "requires": [
+    "users.view"
+   ]
+  },
+  "roles.view": {
+   "key": "roles.view",
+   "label": "See roles",
+   "description": "Roles and their permission matrix.",
+   "module": "access",
+   "kind": "view"
+  },
+  "roles.manage": {
+   "key": "roles.manage",
+   "label": "Manage roles",
+   "description": "Create roles and change what each role can do.",
+   "module": "access",
+   "kind": "sensitive",
+   "sensitive": true,
+   "requires": [
+    "roles.view"
+   ]
+  },
+  "makerchecker.check": {
+   "key": "makerchecker.check",
+   "label": "Check changes (maker-checker)",
+   "description": "Approve or reject sensitive changes made by someone else.",
+   "module": "access",
+   "kind": "approve"
+  },
+  "makerchecker.configure": {
+   "key": "makerchecker.configure",
+   "label": "Configure maker-checker",
+   "description": "Choose which changes need a second person.",
+   "module": "access",
+   "kind": "sensitive",
+   "sensitive": true
+  },
+  "view_as": {
+   "key": "view_as",
+   "label": "View as another role",
+   "description": "Preview the product as any role (read-only).",
+   "module": "access",
+   "kind": "view"
+  }
+ },
+ "PERMISSION_KEYS": [
+  "timesheet.own",
+  "daily_update.post",
+  "approvals.act",
+  "ai.use",
+  "projects.view_all",
+  "projects.create",
+  "projects.edit",
+  "projects.manage_all",
+  "tasks.edit",
+  "tasks.status_any",
+  "allocation.edit",
+  "change_requests.manage",
+  "documents.manage",
+  "estimates.manage",
+  "documents.view_all",
+  "openings.manage",
+  "team.view",
+  "tasks.assign_team",
+  "tasks.review",
+  "tasks.view_all",
+  "tasks.analytics",
+  "insights.view",
+  "delegations.manage",
+  "people.view_all",
+  "people.manage",
+  "leave.approve",
+  "leave.hr_entry",
+  "appraisals.manage",
+  "recruitment.manage",
+  "cost_rates.view",
+  "cost_rates.edit",
+  "payroll.run",
+  "payroll.finalise",
+  "deals.view_all",
+  "deals.edit_own",
+  "deals.edit_all",
+  "sales.performance_own",
+  "sales.performance_all",
+  "clients.manage",
+  "finance.view",
+  "finance.edit",
+  "margins.view",
+  "ledger.view",
+  "ops.manage",
+  "expenses.approve",
+  "expenses.pay",
+  "procurement.manage",
+  "budgets.manage",
+  "leakage.view",
+  "reports.view",
+  "reports.build",
+  "okrs.manage",
+  "documents.templates",
+  "documents.employee_files",
+  "workflows.design",
+  "workflows.start",
+  "documents.company",
+  "audit.view",
+  "data.export",
+  "settings.edit",
+  "theme.edit",
+  "holidays.edit",
+  "master.view",
+  "master.edit",
+  "shifts.manage",
+  "workflows.manage",
+  "emails.view",
+  "billing.manage",
+  "users.view",
+  "users.manage",
+  "employees.create",
+  "employees.edit",
+  "employees.deactivate",
+  "roles.view",
+  "roles.manage",
+  "makerchecker.check",
+  "makerchecker.configure",
+  "view_as"
+ ],
+ "PERSONA_LABEL": {
+  "admin": "Leadership dashboard",
+  "pm": "Delivery dashboard",
+  "sales": "Sales dashboard",
+  "ops": "HR & operations dashboard",
+  "employee": "Employee home"
+ }
+}

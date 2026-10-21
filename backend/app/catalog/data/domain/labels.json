@@ -1,0 +1,321 @@
+{
+ "ACTIVITY_TYPE": {
+  "call": "Call",
+  "meeting": "Meeting",
+  "demo": "Demo",
+  "email": "Email",
+  "proposal": "Proposal",
+  "follow_up": "Follow-up",
+  "whatsapp": "WhatsApp"
+ },
+ "BILLING_MODEL": {
+  "fixed": "Fixed price",
+  "tm": "Time & material",
+  "subscription": "Subscription",
+  "ams_retainer": "AMS retainer"
+ },
+ "COMPLEXITY": {
+  "low": {
+   "label": "Low",
+   "tone": "neutral"
+  },
+  "medium": {
+   "label": "Medium",
+   "tone": "warning"
+  },
+  "high": {
+   "label": "High",
+   "tone": "danger"
+  },
+  "very_high": {
+   "label": "Very high",
+   "tone": "danger"
+  }
+ },
+ "COMPLEXITY_ORDER": [
+  "low",
+  "medium",
+  "high",
+  "very_high"
+ ],
+ "CR_STATUS": {
+  "raised": {
+   "label": "Raised",
+   "tone": "neutral"
+  },
+  "estimated": {
+   "label": "Estimated",
+   "tone": "info"
+  },
+  "approved": {
+   "label": "Approved",
+   "tone": "success"
+  },
+  "rejected": {
+   "label": "Rejected",
+   "tone": "danger"
+  },
+  "done": {
+   "label": "Done",
+   "tone": "brand"
+  }
+ },
+ "DEAL_SOURCE": {
+  "referral": "Referral",
+  "bni": "BNI",
+  "website": "Website",
+  "cold_call": "Cold call",
+  "event": "Event",
+  "partner": "Partner",
+  "existing_client": "Existing client",
+  "other": "Other"
+ },
+ "DEAL_STAGE": {
+  "lead": {
+   "label": "Lead",
+   "tone": "neutral",
+   "chance": 0.1,
+   "order": 0
+  },
+  "qualified": {
+   "label": "Qualified",
+   "tone": "info",
+   "chance": 0.2,
+   "order": 1
+  },
+  "demo": {
+   "label": "Demo",
+   "tone": "info",
+   "chance": 0.35,
+   "order": 2
+  },
+  "proposal": {
+   "label": "Proposal",
+   "tone": "accent",
+   "chance": 0.5,
+   "order": 3
+  },
+  "negotiation": {
+   "label": "Negotiation",
+   "tone": "warning",
+   "chance": 0.7,
+   "order": 4
+  },
+  "won": {
+   "label": "Won",
+   "tone": "success",
+   "chance": 1,
+   "order": 5
+  },
+  "lost": {
+   "label": "Lost",
+   "tone": "danger",
+   "chance": 0,
+   "order": 6
+  }
+ },
+ "DEAL_STAGES_OPEN": [
+  "lead",
+  "qualified",
+  "demo",
+  "proposal",
+  "negotiation"
+ ],
+ "HEALTH": {
+  "on_track": {
+   "label": "On track",
+   "tone": "success"
+  },
+  "at_risk": {
+   "label": "At risk",
+   "tone": "warning"
+  },
+  "off_track": {
+   "label": "Off track",
+   "tone": "danger"
+  }
+ },
+ "INTERNAL_CODES": {
+  "meeting": "Internal meeting",
+  "learning": "Learning",
+  "presales": "Pre-sales",
+  "admin": "Admin",
+  "interview": "Interviewing",
+  "bench": "Bench",
+  "breaks": "Lunch, tea and stand-up"
+ },
+ "LEAVE_TYPE": {
+  "casual": "Casual",
+  "sick": "Sick",
+  "earned": "Earned",
+  "compensatory": "Comp-off",
+  "lwp": "Leave without pay",
+  "optional_holiday": "Optional holiday"
+ },
+ "PROJECT_STATUS": {
+  "initiated": {
+   "label": "Initiated",
+   "tone": "neutral"
+  },
+  "active": {
+   "label": "Active",
+   "tone": "info"
+  },
+  "on_hold": {
+   "label": "On hold",
+   "tone": "warning",
+   "needsReason": true
+  },
+  "npa": {
+   "label": "NPA",
+   "tone": "danger",
+   "needsReason": true
+  },
+  "completed": {
+   "label": "Completed",
+   "tone": "success"
+  },
+  "closed": {
+   "label": "Closed",
+   "tone": "neutral",
+   "needsReason": true
+  }
+ },
+ "PROJECT_TYPE": {
+  "product": "Product",
+  "service": "Service",
+  "saas": "SaaS",
+  "ams": "AMS"
+ },
+ "STREAM": {
+  "sap_consulting": "SAP consulting",
+  "products": "Products",
+  "services": "Services",
+  "saas": "Subscriptions",
+  "ams": "AMS"
+ },
+ "TASK_STAGE": {
+  "new": {
+   "label": "New",
+   "tone": "neutral"
+  },
+  "selected": {
+   "label": "Selected for development",
+   "tone": "neutral"
+  },
+  "in_development": {
+   "label": "In development",
+   "tone": "info"
+  },
+  "unit_testing": {
+   "label": "Unit testing",
+   "tone": "info"
+  },
+  "functional_testing": {
+   "label": "Functional testing",
+   "tone": "info"
+  },
+  "uat": {
+   "label": "UAT",
+   "tone": "accent"
+  },
+  "waiting_feedback": {
+   "label": "Waiting for feedback",
+   "tone": "warning"
+  },
+  "on_hold": {
+   "label": "On hold",
+   "tone": "warning"
+  },
+  "blocked": {
+   "label": "Blocked",
+   "tone": "danger"
+  },
+  "completed": {
+   "label": "Completed",
+   "tone": "success"
+  }
+ },
+ "TASK_STAGE_ORDER": [
+  "new",
+  "selected",
+  "in_development",
+  "unit_testing",
+  "functional_testing",
+  "uat",
+  "waiting_feedback",
+  "on_hold",
+  "blocked",
+  "completed"
+ ],
+ "TASK_STATUS": {
+  "todo": {
+   "label": "To do",
+   "tone": "neutral"
+  },
+  "in_progress": {
+   "label": "In progress",
+   "tone": "info"
+  },
+  "blocked": {
+   "label": "Blocked",
+   "tone": "danger"
+  },
+  "in_review": {
+   "label": "In review",
+   "tone": "accent"
+  },
+  "done": {
+   "label": "Done",
+   "tone": "success"
+  }
+ },
+ "TASK_TAG_LABEL": {
+  "feature": {
+   "label": "Feature",
+   "tone": "neutral"
+  },
+  "bug": {
+   "label": "Bug",
+   "tone": "danger"
+  },
+  "improvement": {
+   "label": "Improvement",
+   "tone": "info"
+  },
+  "documentation": {
+   "label": "Documentation",
+   "tone": "neutral"
+  },
+  "support": {
+   "label": "Support",
+   "tone": "warning"
+  },
+  "meeting": {
+   "label": "Meeting",
+   "tone": "neutral"
+  }
+ },
+ "WEEK_STATUS": {
+  "open": {
+   "label": "Draft",
+   "tone": "info"
+  },
+  "submitted": {
+   "label": "Submitted",
+   "tone": "warning"
+  },
+  "approved": {
+   "label": "Approved",
+   "tone": "success"
+  },
+  "rejected": {
+   "label": "Rejected",
+   "tone": "danger"
+  },
+  "locked": {
+   "label": "Locked",
+   "tone": "danger"
+  }
+ }
+}

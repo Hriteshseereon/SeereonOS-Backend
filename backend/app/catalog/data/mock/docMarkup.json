@@ -1,0 +1,551 @@
+{
+ "CATEGORY_LABEL": {
+  "offer_letter": "Offer letter",
+  "joining_letter": "Joining & appointment",
+  "appraisal_letter": "Appraisal letter",
+  "confirmation_letter": "Confirmation letter",
+  "relieving_letter": "Relieving letter",
+  "experience_letter": "Experience certificate",
+  "warning_letter": "Warning letter",
+  "nda": "NDA",
+  "payslip": "Payslip",
+  "policy": "Policy",
+  "other": "Other"
+ },
+ "CATEGORY_PLACEHOLDERS": {
+  "offer_letter": [
+   {
+    "key": "ctc_annual",
+    "label": "Annual CTC",
+    "sample": "₹8,40,000",
+    "type": "money"
+   },
+   {
+    "key": "ctc_monthly",
+    "label": "Monthly CTC",
+    "sample": "₹70,000",
+    "type": "money"
+   },
+   {
+    "key": "offer_designation",
+    "label": "Offered designation",
+    "sample": "Senior MERN Developer",
+    "type": "text"
+   },
+   {
+    "key": "proposed_joining_date",
+    "label": "Proposed joining date",
+    "sample": "1 November 2026",
+    "type": "date"
+   },
+   {
+    "key": "probation_months",
+    "label": "Probation (months)",
+    "sample": "6",
+    "type": "number"
+   },
+   {
+    "key": "notice_period_days",
+    "label": "Notice period (days)",
+    "sample": "60",
+    "type": "number"
+   },
+   {
+    "key": "offer_valid_until",
+    "label": "Offer valid until",
+    "sample": "21 October 2026",
+    "type": "date"
+   }
+  ],
+  "joining_letter": [
+   {
+    "key": "ctc_annual",
+    "label": "Annual CTC",
+    "sample": "₹8,40,000",
+    "type": "money"
+   },
+   {
+    "key": "ctc_monthly",
+    "label": "Monthly CTC",
+    "sample": "₹70,000",
+    "type": "money"
+   },
+   {
+    "key": "reporting_time",
+    "label": "Reporting time",
+    "sample": "9:30 AM",
+    "type": "text"
+   },
+   {
+    "key": "probation_months",
+    "label": "Probation (months)",
+    "sample": "6",
+    "type": "number"
+   },
+   {
+    "key": "notice_period_days",
+    "label": "Notice period (days)",
+    "sample": "60",
+    "type": "number"
+   },
+   {
+    "key": "working_hours",
+    "label": "Working hours",
+    "sample": "9:30 AM to 6:30 PM, Monday to Friday, and alternate Saturdays",
+    "type": "text"
+   }
+  ],
+  "appraisal_letter": [
+   {
+    "key": "appraisal_period",
+    "label": "Appraisal period",
+    "sample": "FY 2025-26",
+    "type": "text"
+   },
+   {
+    "key": "rating",
+    "label": "Final rating",
+    "sample": "Exceeds expectations",
+    "type": "text"
+   },
+   {
+    "key": "old_ctc",
+    "label": "Current annual CTC",
+    "sample": "₹8,40,000",
+    "type": "money"
+   },
+   {
+    "key": "new_ctc",
+    "label": "Revised annual CTC",
+    "sample": "₹9,66,000",
+    "type": "money"
+   },
+   {
+    "key": "hike_pct",
+    "label": "Hike %",
+    "sample": "15",
+    "type": "number"
+   },
+   {
+    "key": "new_designation",
+    "label": "Designation from effective date",
+    "sample": "Senior MERN Developer",
+    "type": "text"
+   },
+   {
+    "key": "effective_from",
+    "label": "Effective from",
+    "sample": "1 April 2026",
+    "type": "date"
+   }
+  ],
+  "confirmation_letter": [
+   {
+    "key": "probation_end_date",
+    "label": "Probation completed on",
+    "sample": "31 March 2026",
+    "type": "date"
+   },
+   {
+    "key": "confirmation_date",
+    "label": "Confirmed with effect from",
+    "sample": "1 April 2026",
+    "type": "date"
+   },
+   {
+    "key": "notice_period_days",
+    "label": "Notice period (days)",
+    "sample": "60",
+    "type": "number"
+   }
+  ],
+  "relieving_letter": [
+   {
+    "key": "resignation_date",
+    "label": "Resignation date",
+    "sample": "15 August 2026",
+    "type": "date"
+   },
+   {
+    "key": "last_working_day",
+    "label": "Last working day",
+    "sample": "14 October 2026",
+    "type": "date"
+   }
+  ],
+  "experience_letter": [
+   {
+    "key": "last_working_day",
+    "label": "Last working day",
+    "sample": "14 October 2026",
+    "type": "date"
+   },
+   {
+    "key": "last_designation",
+    "label": "Designation at exit",
+    "sample": "Senior MERN Developer",
+    "type": "text"
+   },
+   {
+    "key": "key_work",
+    "label": "Key work (one line)",
+    "sample": "full-stack development of client ERP and CRM products",
+    "type": "textarea"
+   }
+  ],
+  "warning_letter": [
+   {
+    "key": "incident_date",
+    "label": "Incident date",
+    "sample": "8 October 2026",
+    "type": "date"
+   },
+   {
+    "key": "issue_description",
+    "label": "What happened",
+    "sample": "timesheets for three consecutive weeks were not submitted despite reminders",
+    "type": "textarea"
+   },
+   {
+    "key": "expected_correction",
+    "label": "Expected correction",
+    "sample": "submit every timesheet by Friday 6 PM",
+    "type": "textarea"
+   },
+   {
+    "key": "review_date",
+    "label": "Review date",
+    "sample": "14 November 2026",
+    "type": "date"
+   }
+  ],
+  "nda": [
+   {
+    "key": "effective_date",
+    "label": "Effective date",
+    "sample": "1 November 2026",
+    "type": "date"
+   },
+   {
+    "key": "term_years",
+    "label": "Confidentiality term (years)",
+    "sample": "3",
+    "type": "number"
+   },
+   {
+    "key": "governing_city",
+    "label": "Jurisdiction (city)",
+    "sample": "Pune",
+    "type": "text"
+   }
+  ],
+  "payslip": [
+   {
+    "key": "month_label",
+    "label": "Pay month",
+    "sample": "September 2026",
+    "type": "text"
+   },
+   {
+    "key": "pay_period",
+    "label": "Pay period",
+    "sample": "1 Sep 2026 – 30 Sep 2026",
+    "type": "text"
+   },
+   {
+    "key": "working_days",
+    "label": "Working days",
+    "sample": "22",
+    "type": "number"
+   },
+   {
+    "key": "paid_days",
+    "label": "Paid days",
+    "sample": "22",
+    "type": "number"
+   },
+   {
+    "key": "lwp_days",
+    "label": "Leave without pay (days)",
+    "sample": "0",
+    "type": "number"
+   },
+   {
+    "key": "unapproved_days",
+    "label": "Unapproved timesheet days",
+    "sample": "0",
+    "type": "number"
+   },
+   {
+    "key": "earnings_rows",
+    "label": "Earnings table rows",
+    "sample": "| Basic | ₹35,000.00 |\n| House rent allowance | ₹14,000.00 |\n| Special allowance | ₹21,000.00 |",
+    "generated": true
+   },
+   {
+    "key": "deductions_rows",
+    "label": "Deductions table rows",
+    "sample": "| Leave without pay (0 days) | ₹0.00 |\n| Unapproved timesheet days (0 days) | ₹0.00 |",
+    "generated": true
+   },
+   {
+    "key": "monthly_ctc",
+    "label": "Monthly CTC",
+    "sample": "₹70,000.00",
+    "type": "money"
+   },
+   {
+    "key": "gross_earnings",
+    "label": "Gross earnings",
+    "sample": "₹70,000.00",
+    "type": "money"
+   },
+   {
+    "key": "total_deductions",
+    "label": "Total deductions",
+    "sample": "₹0.00",
+    "type": "money"
+   },
+   {
+    "key": "variable_pay",
+    "label": "Variable pay",
+    "sample": "₹0.00",
+    "type": "money"
+   },
+   {
+    "key": "net_pay",
+    "label": "Net pay",
+    "sample": "₹70,000.00",
+    "type": "money"
+   },
+   {
+    "key": "net_pay_words",
+    "label": "Net pay in words",
+    "sample": "Rupees Seventy Thousand Only",
+    "type": "text"
+   },
+   {
+    "key": "bank_name",
+    "label": "Bank",
+    "sample": "HDFC Bank",
+    "type": "text"
+   },
+   {
+    "key": "pay_date",
+    "label": "Pay date",
+    "sample": "1 October 2026",
+    "type": "date"
+   }
+  ],
+  "policy": [
+   {
+    "key": "policy_name",
+    "label": "Policy name",
+    "sample": "Leave policy",
+    "type": "text"
+   },
+   {
+    "key": "effective_date",
+    "label": "Effective date",
+    "sample": "1 April 2026",
+    "type": "date"
+   }
+  ],
+  "other": []
+ },
+ "STANDARD_KEYS": [
+  "employee_name",
+  "employee_first_name",
+  "employee_code",
+  "employee_email",
+  "employee_phone",
+  "designation",
+  "department",
+  "grade",
+  "location",
+  "employment_type",
+  "joining_date",
+  "manager_name",
+  "company",
+  "company_brand",
+  "company_address",
+  "company_city",
+  "company_cin",
+  "company_gstin",
+  "company_email",
+  "company_phone",
+  "company_website",
+  "signatory_name",
+  "signatory_designation",
+  "today",
+  "ref_no"
+ ],
+ "STANDARD_PLACEHOLDERS": [
+  {
+   "key": "employee_name",
+   "label": "Employee name",
+   "sample": "Asha Verma",
+   "auto": true
+  },
+  {
+   "key": "employee_first_name",
+   "label": "First name",
+   "sample": "Asha",
+   "auto": true
+  },
+  {
+   "key": "employee_code",
+   "label": "Employee code",
+   "sample": "EMP-0003",
+   "auto": true
+  },
+  {
+   "key": "employee_email",
+   "label": "Work email",
+   "sample": "asha.verma@yourcompany.com",
+   "auto": true
+  },
+  {
+   "key": "employee_phone",
+   "label": "Phone",
+   "sample": "+91 94370 12345",
+   "auto": true
+  },
+  {
+   "key": "designation",
+   "label": "Designation",
+   "sample": "Senior Software Engineer",
+   "auto": true
+  },
+  {
+   "key": "department",
+   "label": "Department",
+   "sample": "Delivery",
+   "auto": true
+  },
+  {
+   "key": "grade",
+   "label": "Grade",
+   "sample": "L3 · Senior",
+   "auto": true
+  },
+  {
+   "key": "location",
+   "label": "Work location",
+   "sample": "Head office",
+   "auto": true
+  },
+  {
+   "key": "employment_type",
+   "label": "Employment type",
+   "sample": "Full-time",
+   "auto": true
+  },
+  {
+   "key": "joining_date",
+   "label": "Joining date",
+   "sample": "1 October 2025",
+   "auto": true
+  },
+  {
+   "key": "manager_name",
+   "label": "Reporting manager",
+   "sample": "Rahul Mehta",
+   "auto": true
+  },
+  {
+   "key": "company",
+   "label": "Company legal name",
+   "sample": "Your Company Pvt. Ltd.",
+   "auto": true
+  },
+  {
+   "key": "company_brand",
+   "label": "Company brand name",
+   "sample": "Your Company",
+   "auto": true
+  },
+  {
+   "key": "company_address",
+   "label": "Company address",
+   "sample": "2nd floor, Business Park, MG Road, Pune, Maharashtra 411001",
+   "auto": true
+  },
+  {
+   "key": "company_city",
+   "label": "Company city",
+   "sample": "Pune",
+   "auto": true
+  },
+  {
+   "key": "company_cin",
+   "label": "Company CIN",
+   "sample": "U72900MH2025PTC000000",
+   "auto": true
+  },
+  {
+   "key": "company_gstin",
+   "label": "Company GSTIN",
+   "sample": "27AAAAA0000A1Z5",
+   "auto": true
+  },
+  {
+   "key": "company_email",
+   "label": "Company email",
+   "sample": "hr@yourcompany.com",
+   "auto": true
+  },
+  {
+   "key": "company_phone",
+   "label": "Company phone",
+   "sample": "+91 20 0000 0000",
+   "auto": true
+  },
+  {
+   "key": "company_website",
+   "label": "Company website",
+   "sample": "yourcompany.com",
+   "auto": true
+  },
+  {
+   "key": "signatory_name",
+   "label": "Signatory name",
+   "sample": "Neha Kapoor",
+   "auto": true,
+   "hint": "The person issuing the document"
+  },
+  {
+   "key": "signatory_designation",
+   "label": "Signatory designation",
+   "sample": "HR Manager",
+   "auto": true
+  },
+  {
+   "key": "today",
+   "label": "Issue date",
+   "sample": "14 October 2026",
+   "auto": true
+  },
+  {
+   "key": "ref_no",
+   "label": "Reference number",
+   "sample": "HR/2026/0012",
+   "auto": true
+  }
+ ],
+ "TEMPLATE_CATEGORIES": [
+  "offer_letter",
+  "joining_letter",
+  "appraisal_letter",
+  "confirmation_letter",
+  "relieving_letter",
+  "experience_letter",
+  "warning_letter",
+  "nda",
+  "payslip",
+  "other"
+ ],
+ "$types": {
+  "STANDARD_KEYS": "set"
+ }
+}

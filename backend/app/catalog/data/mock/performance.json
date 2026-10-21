@@ -1,0 +1,13 @@
+{
+ "DELAY_REASON_LABEL": {
+  "scope_change": "Scope changed",
+  "dependency": "Waiting on another task",
+  "client_delay": "Client delay / input pending",
+  "underestimated": "Effort underestimated",
+  "leave_absence": "Leave or absence",
+  "priority_change": "Re-prioritised by manager",
+  "technical_issue": "Technical issue",
+  "resource_shortage": "Resource shortage",
+  "other": "Other"
+ }
+}

@@ -1,0 +1,46 @@
+{
+ "ADDITIONAL_COST_CATEGORIES": [
+  {
+   "value": "software",
+   "label": "Software & licences"
+  },
+  {
+   "value": "hardware",
+   "label": "Hardware"
+  },
+  {
+   "value": "travel",
+   "label": "Travel"
+  },
+  {
+   "value": "third_party",
+   "label": "Third-party services"
+  },
+  {
+   "value": "training",
+   "label": "Training"
+  },
+  {
+   "value": "other",
+   "label": "Other"
+  }
+ ],
+ "COMMERCIAL_MODELS": [
+  {
+   "value": "fixed",
+   "label": "Fixed price"
+  },
+  {
+   "value": "tm",
+   "label": "Time & material"
+  },
+  {
+   "value": "subscription",
+   "label": "Subscription"
+  },
+  {
+   "value": "ams_retainer",
+   "label": "AMS retainer"
+  }
+ ]
+}

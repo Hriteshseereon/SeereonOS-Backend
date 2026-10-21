@@ -1,0 +1,1357 @@
+{
+ "WF_DOC_TEMPLATES": [
+  {
+   "key": "promotion_letter",
+   "name": "Promotion letter",
+   "category": "other",
+   "letterhead": true,
+   "description": "Issued by the Promotion workflow: new designation, revised CTC and effective date.",
+   "placeholders": [
+    "ref_no",
+    "today",
+    "employee_name",
+    "employee_code",
+    "employee_first_name",
+    "designation",
+    "new_designation",
+    "hike_pct",
+    "old_ctc",
+    "new_ctc",
+    "effective_from",
+    "company",
+    "signatory_name",
+    "signatory_designation"
+   ],
+   "body": ":::right\nRef: {{ref_no}}\nDate: {{today}}\n:::\n\n**{{employee_name}}**\nEmployee code: {{employee_code}}\n\n## Promotion letter\n\nDear {{employee_first_name}},\n\nWe are pleased to promote you from **{{designation}}** to **{{new_designation}}** with effect from **{{effective_from}}**.\n\n| Component | Amount |\n|---|---|\n| Current annual CTC | {{old_ctc}} |\n| Revised annual CTC | {{new_ctc}} |\n| Increase | {{hike_pct}}% |\n\nAll other terms of your appointment remain unchanged. Congratulations on the new role.\n\nYours sincerely,\n\n**{{signatory_name}}**\n{{signatory_designation}}\nFor {{company}}"
+  }
+ ],
+ "WF_EMAIL_TEMPLATES": [
+  {
+   "key": "appraisal_letter",
+   "name": "Appraisal letter",
+   "subject": "Your appraisal letter — {{appraisal_period}}",
+   "body": "Hi {{employee_name}},\n\nYour appraisal for {{appraisal_period}} is complete. Final rating: {{rating}}. Your revised annual CTC is {{new_ctc}} ({{hike_pct}}% hike), effective {{effective_from}}.\n\nYour appraisal letter is in SeereonOS under Documents → My documents: {{login_url}}\n\n{{company}} HR"
+  }
+ ],
+ "defaultWfTemplates()": [
+  {
+   "key": "annual_appraisal",
+   "name": "Annual appraisal",
+   "process": "appraisal",
+   "active": true,
+   "rev": 1,
+   "self_service": false,
+   "description": "Employee self-appraisal → manager / TL review → unit head review → HR review → finance approval. On approval the appraisal letter is generated and emailed, and the new CTC goes to Cost rates for a checker.",
+   "stages": [
+    {
+     "key": "self",
+     "name": "Employee self-appraisal",
+     "assignee": "subject",
+     "sla_days": 5,
+     "can_send_back": false,
+     "instructions": "Rate yourself honestly against your goals and the competencies. Give examples — your manager sees the same delivery data.",
+     "fields": [
+      {
+       "key": "goals_rating",
+       "label": "Self rating — goals & KRAs",
+       "type": "rating",
+       "required": true,
+       "visible_to": [
+        "manager",
+        "unit_head",
+        "hr"
+       ]
+      },
+      {
+       "key": "competency_rating",
+       "label": "Self rating — competencies",
+       "type": "rating",
+       "required": true,
+       "visible_to": [
+        "manager",
+        "unit_head",
+        "hr"
+       ]
+      },
+      {
+       "key": "overall_self_rating",
+       "label": "Overall self rating",
+       "type": "rating",
+       "required": true,
+       "visible_to": [
+        "manager",
+        "unit_head",
+        "hr"
+       ]
+      },
+      {
+       "key": "achievements",
+       "label": "Key achievements",
+       "type": "textarea",
+       "required": true,
+       "visible_to": [
+        "manager",
+        "unit_head",
+        "hr"
+       ],
+       "min": 30,
+       "help": "What you delivered and the impact it had."
+      },
+      {
+       "key": "challenges",
+       "label": "Challenges faced",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "manager",
+        "unit_head",
+        "hr"
+       ]
+      },
+      {
+       "key": "development_needs",
+       "label": "Development needs",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "manager",
+        "unit_head",
+        "hr"
+       ],
+       "help": "Skills, training or exposure you want next."
+      }
+     ]
+    },
+    {
+     "key": "manager",
+     "name": "Manager / TL review",
+     "assignee": "reports_to",
+     "sla_days": 5,
+     "can_send_back": true,
+     "instructions": "Rate each parameter on evidence from the period. Your private comments go to HR only — the employee, unit head and finance never see them.",
+     "fields": [
+      {
+       "key": "delivery",
+       "label": "Delivery",
+       "type": "rating",
+       "required": true,
+       "visible_to": [
+        "unit_head",
+        "hr"
+       ]
+      },
+      {
+       "key": "quality",
+       "label": "Quality",
+       "type": "rating",
+       "required": true,
+       "visible_to": [
+        "unit_head",
+        "hr"
+       ]
+      },
+      {
+       "key": "ownership",
+       "label": "Ownership",
+       "type": "rating",
+       "required": true,
+       "visible_to": [
+        "unit_head",
+        "hr"
+       ]
+      },
+      {
+       "key": "collaboration",
+       "label": "Collaboration",
+       "type": "rating",
+       "required": true,
+       "visible_to": [
+        "unit_head",
+        "hr"
+       ]
+      },
+      {
+       "key": "overall_rating",
+       "label": "Overall rating",
+       "type": "rating",
+       "required": true,
+       "visible_to": [
+        "unit_head",
+        "hr",
+        "finance"
+       ]
+      },
+      {
+       "key": "feedback",
+       "label": "Feedback for the review panel",
+       "type": "textarea",
+       "required": true,
+       "visible_to": [
+        "unit_head",
+        "hr"
+       ],
+       "min": 30
+      },
+      {
+       "key": "recommended_hike_pct",
+       "label": "Recommended hike",
+       "type": "percent",
+       "required": true,
+       "visible_to": [
+        "unit_head",
+        "hr",
+        "finance"
+       ],
+       "min": 0,
+       "max": 40
+      },
+      {
+       "key": "promotion",
+       "label": "Promotion recommendation",
+       "type": "select",
+       "required": true,
+       "visible_to": [
+        "unit_head",
+        "hr",
+        "finance"
+       ],
+       "options": [
+        "No",
+        "Ready now",
+        "Ready in 6 months"
+       ]
+      },
+      {
+       "key": "private_comments",
+       "label": "Private comments to HR",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "hr"
+       ],
+       "help": "Only HR sees this."
+      }
+     ]
+    },
+    {
+     "key": "unit_head",
+     "name": "Unit head review",
+     "assignee": "department_head",
+     "sla_days": 3,
+     "can_send_back": true,
+     "instructions": "Calibrate across your unit. Endorse the manager’s recommended hike or modify it.",
+     "fields": [
+      {
+       "key": "calibrated_rating",
+       "label": "Calibrated rating",
+       "type": "rating",
+       "required": true,
+       "visible_to": [
+        "hr",
+        "finance"
+       ]
+      },
+      {
+       "key": "hike_decision",
+       "label": "Recommended hike",
+       "type": "select",
+       "required": true,
+       "visible_to": [
+        "hr",
+        "finance"
+       ],
+       "options": [
+        "Endorse",
+        "Modify"
+       ]
+      },
+      {
+       "key": "endorsed_hike_pct",
+       "label": "Endorsed hike",
+       "type": "percent",
+       "required": true,
+       "visible_to": [
+        "hr",
+        "finance"
+       ],
+       "min": 0,
+       "max": 40,
+       "help": "Same as the manager’s unless you modify it."
+      },
+      {
+       "key": "unit_comments",
+       "label": "Comments",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "hr"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "hr",
+     "name": "HR review",
+     "assignee": "role",
+     "role_key": "hr_manager",
+     "sla_days": 3,
+     "can_send_back": true,
+     "sees_compensation": true,
+     "instructions": "Check the pay band, normalise the hike across the company and set the outcome.",
+     "fields": [
+      {
+       "key": "band_check",
+       "label": "Policy band check",
+       "type": "select",
+       "required": true,
+       "visible_to": [
+        "finance"
+       ],
+       "options": [
+        "Within band",
+        "Above band — exception",
+        "Below band"
+       ]
+      },
+      {
+       "key": "final_rating",
+       "label": "Final rating",
+       "type": "rating",
+       "required": true,
+       "visible_to": [
+        "finance",
+        "subject"
+       ]
+      },
+      {
+       "key": "normalised_hike_pct",
+       "label": "Normalised hike",
+       "type": "percent",
+       "required": true,
+       "visible_to": [
+        "finance"
+       ],
+       "min": 0,
+       "max": 40
+      },
+      {
+       "key": "new_designation",
+       "label": "New designation",
+       "type": "text",
+       "required": false,
+       "visible_to": [
+        "finance",
+        "subject"
+       ],
+       "help": "Leave empty to keep the current designation."
+      },
+      {
+       "key": "effective_date",
+       "label": "Effective date",
+       "type": "date",
+       "required": true,
+       "visible_to": [
+        "finance",
+        "subject"
+       ]
+      },
+      {
+       "key": "hr_comments",
+       "label": "HR comments",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "finance"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "finance",
+     "name": "Finance approval",
+     "assignee": "role",
+     "role_key": "ceo",
+     "sla_days": 3,
+     "can_send_back": true,
+     "sees_compensation": true,
+     "instructions": "Approve the hike. Going above HR’s normalised hike needs a written reason.",
+     "fields": [
+      {
+       "key": "approved_hike_pct",
+       "label": "Approved hike",
+       "type": "percent",
+       "required": true,
+       "visible_to": [
+        "hr",
+        "subject"
+       ],
+       "min": 0,
+       "max": 40,
+       "max_from": "hr.normalised_hike_pct",
+       "override_field": "override_reason"
+      },
+      {
+       "key": "override_reason",
+       "label": "Reason for exceeding the normalised hike",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "hr"
+       ]
+      },
+      {
+       "key": "finance_comments",
+       "label": "Finance comments",
+       "type": "textarea",
+       "required": false,
+       "visible_to": []
+      }
+     ]
+    }
+   ],
+   "on_complete": [
+    {
+     "type": "update_ctc",
+     "config": {
+      "hike_field": "finance.approved_hike_pct",
+      "effective_field": "hr.effective_date",
+      "recommended_field": "manager.recommended_hike_pct",
+      "endorsed_field": "unit_head.endorsed_hike_pct",
+      "normalised_field": "hr.normalised_hike_pct"
+     }
+    },
+    {
+     "type": "generate_document",
+     "template_key": "appraisal_letter",
+     "config": {
+      "vars": {
+       "hike_pct": "finance.approved_hike_pct",
+       "effective_from": "hr.effective_date",
+       "new_designation": "hr.new_designation",
+       "rating": "hr.final_rating"
+      }
+     }
+    },
+    {
+     "type": "send_email",
+     "template_key": "appraisal_letter",
+     "config": {
+      "to": "subject",
+      "vars": {
+       "hike_pct": "finance.approved_hike_pct",
+       "effective_from": "hr.effective_date",
+       "new_designation": "hr.new_designation",
+       "rating": "hr.final_rating"
+      }
+     }
+    },
+    {
+     "type": "notify",
+     "config": {
+      "to": "reports_to",
+      "message": "The appraisal is complete and the letter has been issued."
+     }
+    }
+   ],
+   "on_reject": [
+    {
+     "type": "notify",
+     "config": {
+      "to": "initiator",
+      "message": "The appraisal workflow was rejected."
+     }
+    }
+   ]
+  },
+  {
+   "key": "probation_confirmation",
+   "name": "Probation confirmation",
+   "process": "confirmation",
+   "active": true,
+   "rev": 1,
+   "self_service": false,
+   "description": "Manager assesses the probation period, HR decides and the confirmation letter is issued.",
+   "stages": [
+    {
+     "key": "manager",
+     "name": "Manager assessment",
+     "assignee": "reports_to",
+     "sla_days": 5,
+     "can_send_back": false,
+     "fields": [
+      {
+       "key": "performance_rating",
+       "label": "Performance during probation",
+       "type": "rating",
+       "required": true,
+       "visible_to": [
+        "hr"
+       ]
+      },
+      {
+       "key": "recommendation",
+       "label": "Recommendation",
+       "type": "select",
+       "required": true,
+       "visible_to": [
+        "hr"
+       ],
+       "options": [
+        "Confirm",
+        "Extend by 3 months",
+        "Do not confirm"
+       ]
+      },
+      {
+       "key": "strengths",
+       "label": "Strengths",
+       "type": "textarea",
+       "required": true,
+       "visible_to": [
+        "hr"
+       ],
+       "min": 20
+      },
+      {
+       "key": "improvement_areas",
+       "label": "Areas to improve",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "hr"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "hr",
+     "name": "HR decision",
+     "assignee": "role",
+     "role_key": "hr_manager",
+     "sla_days": 3,
+     "can_send_back": true,
+     "fields": [
+      {
+       "key": "decision",
+       "label": "Decision",
+       "type": "select",
+       "required": true,
+       "visible_to": [
+        "subject"
+       ],
+       "options": [
+        "Confirm",
+        "Extend",
+        "Do not confirm"
+       ]
+      },
+      {
+       "key": "probation_end_date",
+       "label": "Probation ends / ended on",
+       "type": "date",
+       "required": true,
+       "visible_to": [
+        "subject"
+       ]
+      },
+      {
+       "key": "confirmation_date",
+       "label": "Confirmation / review date",
+       "type": "date",
+       "required": true,
+       "visible_to": [
+        "subject"
+       ]
+      },
+      {
+       "key": "notice_period_days",
+       "label": "Notice period after confirmation (days)",
+       "type": "number",
+       "required": true,
+       "visible_to": [
+        "subject"
+       ],
+       "min": 0,
+       "max": 180
+      },
+      {
+       "key": "hr_notes",
+       "label": "HR notes",
+       "type": "textarea",
+       "required": false,
+       "visible_to": []
+      }
+     ]
+    }
+   ],
+   "on_complete": [
+    {
+     "type": "generate_document",
+     "template_key": "confirmation_letter",
+     "config": {
+      "when": {
+       "field": "hr.decision",
+       "equals": "Confirm"
+      },
+      "vars": {
+       "confirmation_date": "hr.confirmation_date",
+       "probation_end_date": "hr.probation_end_date",
+       "notice_period_days": "hr.notice_period_days"
+      }
+     }
+    },
+    {
+     "type": "notify",
+     "config": {
+      "to": "subject",
+      "message": "Your probation review is complete."
+     }
+    }
+   ],
+   "on_reject": [
+    {
+     "type": "notify",
+     "config": {
+      "to": "initiator",
+      "message": "The probation confirmation was rejected."
+     }
+    }
+   ]
+  },
+  {
+   "key": "employee_onboarding",
+   "name": "Employee onboarding",
+   "process": "onboarding",
+   "active": true,
+   "rev": 1,
+   "self_service": false,
+   "description": "HR completes joining formalities, IT / admin sets up the laptop and accounts, the manager plans the first week, then the joining letter is issued.",
+   "stages": [
+    {
+     "key": "hr",
+     "name": "HR formalities",
+     "assignee": "role",
+     "role_key": "hr_manager",
+     "sla_days": 3,
+     "can_send_back": false,
+     "fields": [
+      {
+       "key": "joining_date",
+       "label": "Joining date",
+       "type": "date",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "documents_verified",
+       "label": "ID, PAN and bank documents verified",
+       "type": "checkbox",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "offer_signed",
+       "label": "Signed offer letter received",
+       "type": "checkbox",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "probation_months",
+       "label": "Probation (months)",
+       "type": "number",
+       "required": true,
+       "visible_to": [
+        "all"
+       ],
+       "min": 0,
+       "max": 12
+      },
+      {
+       "key": "notice_period_days",
+       "label": "Notice period (days)",
+       "type": "number",
+       "required": true,
+       "visible_to": [
+        "all"
+       ],
+       "min": 0,
+       "max": 180
+      },
+      {
+       "key": "hr_notes",
+       "label": "Notes for IT and the manager",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "it_admin",
+        "manager"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "it_admin",
+     "name": "IT & admin setup",
+     "assignee": "role",
+     "role_key": "administrator",
+     "sla_days": 2,
+     "can_send_back": true,
+     "fields": [
+      {
+       "key": "laptop",
+       "label": "Laptop",
+       "type": "select",
+       "required": true,
+       "visible_to": [
+        "all"
+       ],
+       "options": [
+        "Company laptop issued",
+        "Own device approved",
+        "Pending"
+       ]
+      },
+      {
+       "key": "email_created",
+       "label": "Email and SeereonOS account created",
+       "type": "checkbox",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "access_notes",
+       "label": "Access granted (Git, VPN, tools)",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "manager"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "manager",
+     "name": "Manager induction",
+     "assignee": "reports_to",
+     "sla_days": 3,
+     "can_send_back": true,
+     "fields": [
+      {
+       "key": "buddy",
+       "label": "Buddy",
+       "type": "text",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "first_week_plan",
+       "label": "First-week plan",
+       "type": "textarea",
+       "required": true,
+       "visible_to": [
+        "all"
+       ],
+       "min": 20
+      },
+      {
+       "key": "induction_done",
+       "label": "Induction meeting held",
+       "type": "checkbox",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      }
+     ]
+    }
+   ],
+   "on_complete": [
+    {
+     "type": "generate_document",
+     "template_key": "joining_letter",
+     "config": {
+      "vars": {
+       "joining_date": "hr.joining_date",
+       "probation_months": "hr.probation_months",
+       "notice_period_days": "hr.notice_period_days"
+      }
+     }
+    },
+    {
+     "type": "create_task",
+     "config": {
+      "to": "subject",
+      "title": "Complete your first-week plan",
+      "due_days": 5
+     }
+    },
+    {
+     "type": "notify",
+     "config": {
+      "to": "subject",
+      "message": "Welcome aboard — your joining letter is in Documents."
+     }
+    }
+   ],
+   "on_reject": [
+    {
+     "type": "notify",
+     "config": {
+      "to": "initiator",
+      "message": "The onboarding workflow was rejected."
+     }
+    }
+   ]
+  },
+  {
+   "key": "exit_clearance",
+   "name": "Exit clearance",
+   "process": "exit",
+   "active": true,
+   "rev": 1,
+   "self_service": false,
+   "description": "Manager confirms handover, IT recovers assets and access, finance settles dues and HR closes the exit with relieving and experience letters.",
+   "stages": [
+    {
+     "key": "manager",
+     "name": "Manager handover",
+     "assignee": "reports_to",
+     "sla_days": 3,
+     "can_send_back": false,
+     "fields": [
+      {
+       "key": "resignation_date",
+       "label": "Resignation date",
+       "type": "date",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "last_working_day",
+       "label": "Last working day",
+       "type": "date",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "key_work",
+       "label": "Key work (for the experience letter)",
+       "type": "text",
+       "required": true,
+       "visible_to": [
+        "hr"
+       ],
+       "help": "e.g. the customer portal and the payroll APIs"
+      },
+      {
+       "key": "kt_complete",
+       "label": "Knowledge transfer complete",
+       "type": "checkbox",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "handover_notes",
+       "label": "Handover notes",
+       "type": "textarea",
+       "required": true,
+       "visible_to": [
+        "hr"
+       ],
+       "min": 20
+      }
+     ]
+    },
+    {
+     "key": "it_assets",
+     "name": "IT & assets",
+     "assignee": "role",
+     "role_key": "administrator",
+     "sla_days": 2,
+     "can_send_back": true,
+     "fields": [
+      {
+       "key": "assets_returned",
+       "label": "All assets returned",
+       "type": "checkbox",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "access_revoked",
+       "label": "Access revoked",
+       "type": "checkbox",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "asset_notes",
+       "label": "Asset notes",
+       "type": "text",
+       "required": false,
+       "visible_to": [
+        "finance",
+        "hr"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "finance",
+     "name": "Finance clearance",
+     "assignee": "role",
+     "role_key": "ceo",
+     "sla_days": 3,
+     "can_send_back": true,
+     "fields": [
+      {
+       "key": "dues",
+       "label": "Dues",
+       "type": "select",
+       "required": true,
+       "visible_to": [
+        "hr"
+       ],
+       "options": [
+        "No dues",
+        "Recover in full & final",
+        "Pay in full & final"
+       ]
+      },
+      {
+       "key": "fnf_amount",
+       "label": "Full & final amount",
+       "type": "money",
+       "required": false,
+       "visible_to": [
+        "hr"
+       ]
+      },
+      {
+       "key": "finance_notes",
+       "label": "Finance notes",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "hr"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "hr",
+     "name": "HR closure",
+     "assignee": "role",
+     "role_key": "hr_manager",
+     "sla_days": 3,
+     "can_send_back": true,
+     "fields": [
+      {
+       "key": "exit_interview_done",
+       "label": "Exit interview held",
+       "type": "checkbox",
+       "required": true,
+       "visible_to": []
+      },
+      {
+       "key": "rehire_eligible",
+       "label": "Eligible for rehire",
+       "type": "select",
+       "required": true,
+       "visible_to": [],
+       "options": [
+        "Yes",
+        "No"
+       ]
+      },
+      {
+       "key": "relieving_date",
+       "label": "Relieving date",
+       "type": "date",
+       "required": true,
+       "visible_to": [
+        "subject"
+       ]
+      }
+     ]
+    }
+   ],
+   "on_complete": [
+    {
+     "type": "generate_document",
+     "template_key": "relieving_letter",
+     "config": {
+      "vars": {
+       "resignation_date": "manager.resignation_date",
+       "last_working_day": "manager.last_working_day",
+       "relieving_date": "hr.relieving_date"
+      }
+     }
+    },
+    {
+     "type": "generate_document",
+     "template_key": "experience_letter",
+     "config": {
+      "vars": {
+       "last_working_day": "manager.last_working_day",
+       "key_work": "manager.key_work"
+      }
+     }
+    },
+    {
+     "type": "notify",
+     "config": {
+      "to": "subject",
+      "message": "Your exit clearance is complete. Relieving and experience letters are in Documents."
+     }
+    }
+   ],
+   "on_reject": [
+    {
+     "type": "notify",
+     "config": {
+      "to": "initiator",
+      "message": "The exit clearance was rejected."
+     }
+    }
+   ]
+  },
+  {
+   "key": "promotion",
+   "name": "Promotion",
+   "process": "promotion",
+   "active": true,
+   "rev": 1,
+   "self_service": false,
+   "description": "Manager proposes a promotion, the unit head endorses, HR sets the designation and hike, finance approves and the promotion letter is issued.",
+   "stages": [
+    {
+     "key": "manager",
+     "name": "Manager proposal",
+     "assignee": "reports_to",
+     "sla_days": 5,
+     "can_send_back": false,
+     "fields": [
+      {
+       "key": "proposed_designation",
+       "label": "Proposed designation",
+       "type": "text",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "justification",
+       "label": "Justification",
+       "type": "textarea",
+       "required": true,
+       "visible_to": [
+        "unit_head",
+        "hr",
+        "finance"
+       ],
+       "min": 30
+      },
+      {
+       "key": "recommended_hike_pct",
+       "label": "Recommended hike",
+       "type": "percent",
+       "required": true,
+       "visible_to": [
+        "unit_head",
+        "hr",
+        "finance"
+       ],
+       "min": 0,
+       "max": 50
+      }
+     ]
+    },
+    {
+     "key": "unit_head",
+     "name": "Unit head endorsement",
+     "assignee": "department_head",
+     "sla_days": 3,
+     "can_send_back": true,
+     "fields": [
+      {
+       "key": "endorse",
+       "label": "Endorsement",
+       "type": "select",
+       "required": true,
+       "visible_to": [
+        "hr",
+        "finance"
+       ],
+       "options": [
+        "Endorse",
+        "Endorse with changes"
+       ]
+      },
+      {
+       "key": "endorsed_hike_pct",
+       "label": "Endorsed hike",
+       "type": "percent",
+       "required": true,
+       "visible_to": [
+        "hr",
+        "finance"
+       ],
+       "min": 0,
+       "max": 50
+      },
+      {
+       "key": "comments",
+       "label": "Comments",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "hr"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "hr",
+     "name": "HR review",
+     "assignee": "role",
+     "role_key": "hr_manager",
+     "sla_days": 3,
+     "can_send_back": true,
+     "sees_compensation": true,
+     "fields": [
+      {
+       "key": "new_designation",
+       "label": "New designation",
+       "type": "text",
+       "required": true,
+       "visible_to": [
+        "finance",
+        "subject"
+       ]
+      },
+      {
+       "key": "normalised_hike_pct",
+       "label": "Normalised hike",
+       "type": "percent",
+       "required": true,
+       "visible_to": [
+        "finance"
+       ],
+       "min": 0,
+       "max": 50
+      },
+      {
+       "key": "effective_date",
+       "label": "Effective date",
+       "type": "date",
+       "required": true,
+       "visible_to": [
+        "finance",
+        "subject"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "finance",
+     "name": "Finance approval",
+     "assignee": "role",
+     "role_key": "ceo",
+     "sla_days": 3,
+     "can_send_back": true,
+     "sees_compensation": true,
+     "fields": [
+      {
+       "key": "approved_hike_pct",
+       "label": "Approved hike",
+       "type": "percent",
+       "required": true,
+       "visible_to": [
+        "hr",
+        "subject"
+       ],
+       "min": 0,
+       "max": 50,
+       "max_from": "hr.normalised_hike_pct",
+       "override_field": "override_reason"
+      },
+      {
+       "key": "override_reason",
+       "label": "Reason for exceeding the normalised hike",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "hr"
+       ]
+      }
+     ]
+    }
+   ],
+   "on_complete": [
+    {
+     "type": "update_ctc",
+     "config": {
+      "hike_field": "finance.approved_hike_pct",
+      "effective_field": "hr.effective_date",
+      "recommended_field": "manager.recommended_hike_pct",
+      "endorsed_field": "unit_head.endorsed_hike_pct",
+      "normalised_field": "hr.normalised_hike_pct"
+     }
+    },
+    {
+     "type": "generate_document",
+     "template_key": "promotion_letter",
+     "config": {
+      "vars": {
+       "new_designation": "hr.new_designation",
+       "effective_from": "hr.effective_date",
+       "hike_pct": "finance.approved_hike_pct"
+      }
+     }
+    },
+    {
+     "type": "notify",
+     "config": {
+      "to": "subject",
+      "message": "Congratulations — your promotion letter is in Documents."
+     }
+    }
+   ],
+   "on_reject": [
+    {
+     "type": "notify",
+     "config": {
+      "to": "initiator",
+      "message": "The promotion proposal was rejected."
+     }
+    }
+   ]
+  },
+  {
+   "key": "document_approval",
+   "name": "Document approval",
+   "process": "document_approval",
+   "active": true,
+   "rev": 1,
+   "self_service": true,
+   "description": "Submit a document (proposal, policy draft, quotation) for your manager’s review and the CEO’s approval.",
+   "stages": [
+    {
+     "key": "submit",
+     "name": "Submit document",
+     "assignee": "initiator",
+     "sla_days": 2,
+     "can_send_back": false,
+     "fields": [
+      {
+       "key": "document_title",
+       "label": "Document title",
+       "type": "text",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "document",
+       "label": "Document",
+       "type": "file",
+       "required": true,
+       "visible_to": [
+        "all"
+       ]
+      },
+      {
+       "key": "purpose",
+       "label": "What needs approval and why",
+       "type": "textarea",
+       "required": true,
+       "visible_to": [
+        "all"
+       ],
+       "min": 15
+      }
+     ]
+    },
+    {
+     "key": "review",
+     "name": "Manager review",
+     "assignee": "reports_to",
+     "sla_days": 2,
+     "can_send_back": true,
+     "fields": [
+      {
+       "key": "review_notes",
+       "label": "Review notes",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "all"
+       ]
+      }
+     ]
+    },
+    {
+     "key": "approve",
+     "name": "CEO approval",
+     "assignee": "role",
+     "role_key": "ceo",
+     "sla_days": 2,
+     "can_send_back": true,
+     "fields": [
+      {
+       "key": "approval_notes",
+       "label": "Approval notes",
+       "type": "textarea",
+       "required": false,
+       "visible_to": [
+        "all"
+       ]
+      }
+     ]
+    }
+   ],
+   "on_complete": [
+    {
+     "type": "notify",
+     "config": {
+      "to": "initiator",
+      "message": "Your document was approved."
+     }
+    }
+   ],
+   "on_reject": [
+    {
+     "type": "notify",
+     "config": {
+      "to": "initiator",
+      "message": "Your document was not approved."
+     }
+    }
+   ]
+  }
+ ]
+}

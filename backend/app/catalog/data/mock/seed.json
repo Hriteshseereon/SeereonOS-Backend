@@ -1,0 +1,59 @@
+{
+ "DEFAULT_SETTINGS": {
+  "company.fy_start_month": 4,
+  "company.currency": "INR",
+  "calendar.weekly_off": [
+   0
+  ],
+  "calendar.saturday_rule": "some_off",
+  "calendar.saturday_off_weeks": [
+   2,
+   4
+  ],
+  "calendar.min_hours_per_day": 9,
+  "calendar.max_hours_per_day": 16,
+  "calendar.breaks_count": true,
+  "timesheet.hours_step": 0.5,
+  "timesheet.allow_future_entries": false,
+  "timesheet.internal_note_required": true,
+  "timesheet.weekly_lock": true,
+  "timesheet.unlock_max_days": 7,
+  "approval.sla_working_days": 2,
+  "approval.bulk_approve": true,
+  "pay.deduct_unapproved_days": false,
+  "pay.variable_default_pct": 20,
+  "pay.target_default": "ctc",
+  "pay.variable_threshold_pct": 100,
+  "projects.code_prefix": "PRJ",
+  "projects.empty_milestone_days": 7,
+  "projects.margin_floor_pct": 25,
+  "projects.effort_ratio_alert": 1.2,
+  "allocation.max_pct_per_person": 100,
+  "allocation.block_over": false,
+  "daily.proof_required": true,
+  "sales.stale_deal_days": 14,
+  "notify.friday_nudge_time": "16:00",
+  "notify.sla_digest_time": "09:30",
+  "security.password_min_length": 10,
+  "security.lockout_attempts": 5,
+  "security.lockout_minutes": 15,
+  "security.session_idle_minutes": 60,
+  "security.require_2fa_admins": false,
+  "ai.enabled": true,
+  "finance.opening_cash_paise": 150000000,
+  "finance.monthly_overheads_paise": 15000000,
+  "finance.cost_loading_pct": 15,
+  "team.default_productive_hours": 6
+ },
+ "DEFAULT_THEME": {
+  "preset": "seereon",
+  "primary": "#0C6B4E",
+  "accent": "#DAB34F",
+  "radius": "soft",
+  "density": "comfortable",
+  "font": "plex",
+  "mode": "light",
+  "sidebar": "light"
+ },
+ "DEMO_PASSWORD": "Seereon@123"
+}

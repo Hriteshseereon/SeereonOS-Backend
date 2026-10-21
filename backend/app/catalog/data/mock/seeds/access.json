@@ -1,0 +1,53 @@
+{
+ "NEW_TENANT_MC": {
+  "enabled": false,
+  "entities": [
+   "role",
+   "user_access",
+   "cost_rate",
+   "workflow",
+   "payroll_finalise",
+   "vendor",
+   "org_profile"
+  ],
+  "sla_days": 2
+ },
+ "SYSTEM_EMAIL_TEMPLATES": [
+  {
+   "key": "welcome",
+   "name": "Welcome & login details",
+   "subject": "Welcome to {{company}}, {{employee_name}} — your SeereonOS login",
+   "body": "Hi {{employee_name}},\n\nWelcome to {{company}}! Your SeereonOS account is ready.\n\nSign in: {{login_url}}\nUsername: {{username}}\nTemporary password: {{temp_password}}\n\nYou will be asked to set your own password the first time you sign in.\n\nYour role: {{role_name}}\nReporting manager: {{manager_name}}\nJoining date: {{joining_date}}\n\nSee you on day one,\n{{company}} HR"
+  },
+  {
+   "key": "password_reset",
+   "name": "Password reset by admin",
+   "subject": "Your {{company}} SeereonOS password was reset",
+   "body": "Hi {{employee_name}},\n\nAn administrator reset your SeereonOS password.\n\nSign in: {{login_url}}\nUsername: {{username}}\nTemporary password: {{temp_password}}\n\nYou will be asked to choose a new password when you sign in.\n\n{{company}} HR"
+  },
+  {
+   "key": "leave_decision",
+   "name": "Leave decision",
+   "subject": "Your leave request was {{decision}}",
+   "body": "Hi {{employee_name}},\n\n{{manager_name}} {{decision}} your leave from {{from_date}} to {{to_date}}.\n{{reason}}\n\n{{company}}"
+  },
+  {
+   "key": "expense_decision",
+   "name": "Expense decision",
+   "subject": "Your expense claim was {{decision}}",
+   "body": "Hi {{employee_name}},\n\nYour claim of {{amount}} for \"{{description}}\" was {{decision}} by {{approver_name}}.\n{{reason}}\n\n{{company}}"
+  },
+  {
+   "key": "task_assigned",
+   "name": "Task assigned",
+   "subject": "New task: {{task_title}}",
+   "body": "Hi {{employee_name}},\n\n{{manager_name}} assigned you \"{{task_title}}\", due {{due_date}}.\n\nOpen it: {{login_url}}\n\n{{company}}"
+  },
+  {
+   "key": "appraisal_completed",
+   "name": "Appraisal completed",
+   "subject": "Your {{cycle_name}} appraisal is complete",
+   "body": "Hi {{employee_name}},\n\nYour appraisal for {{cycle_name}} is complete. Final rating: {{rating}}.\n\nSee the details in SeereonOS: {{login_url}}\n\n{{company}} HR"
+  }
+ ]
+}

@@ -1,0 +1,8 @@
+{
+ "PAYROLL_CATEGORIES": [
+  "Salaries"
+ ],
+ "$types": {
+  "PAYROLL_CATEGORIES": "set"
+ }
+}

@@ -1,0 +1,101 @@
+{
+ "ENTITY_LABEL": {
+  "project": "Project",
+  "task": "Task",
+  "deal": "Deal",
+  "timesheet_week": "Timesheet",
+  "user": "Person",
+  "invoice": "Invoice",
+  "milestone": "Milestone",
+  "payroll_run": "Payroll",
+  "ledger": "Ledger",
+  "ledger_entry": "Ledger",
+  "key_result": "Key result",
+  "objective": "Objective",
+  "document": "Document",
+  "leave_request": "Leave",
+  "expense": "Expense",
+  "expense_claim": "Expense",
+  "purchase_order": "Purchase order",
+  "vendor_bill": "Vendor bill",
+  "appraisal": "Appraisal",
+  "settings": "Settings",
+  "tenant": "Workspace",
+  "change_request": "Change request",
+  "ops_item": "Operations",
+  "workspace": "Workspace",
+  "report": "Report",
+  "client": "Client",
+  "contract": "Contract",
+  "vendor": "Vendor",
+  "budget": "Budget",
+  "candidate": "Candidate",
+  "asset": "Asset"
+ },
+ "METRIC_META": {
+  "manual": {
+   "label": "Manual check-ins",
+   "unit": "",
+   "kind": "number",
+   "rate": false,
+   "finance": false
+  },
+  "revenue_billed": {
+   "label": "Revenue billed",
+   "unit": "₹",
+   "kind": "money",
+   "rate": false,
+   "finance": true
+  },
+  "revenue_collected": {
+   "label": "Revenue collected",
+   "unit": "₹",
+   "kind": "money",
+   "rate": false,
+   "finance": true
+  },
+  "deals_won_value": {
+   "label": "Value of deals won",
+   "unit": "₹",
+   "kind": "money",
+   "rate": false,
+   "finance": true
+  },
+  "on_time_task_pct": {
+   "label": "Tasks finished on time",
+   "unit": "%",
+   "kind": "percent",
+   "rate": true,
+   "finance": false
+  },
+  "timesheet_compliance": {
+   "label": "Timesheet compliance",
+   "unit": "%",
+   "kind": "percent",
+   "rate": true,
+   "finance": false
+  },
+  "margin_pct": {
+   "label": "Net margin",
+   "unit": "%",
+   "kind": "percent",
+   "rate": true,
+   "finance": true
+  },
+  "headcount": {
+   "label": "Active headcount",
+   "unit": "people",
+   "kind": "number",
+   "rate": false,
+   "finance": false
+  },
+  "leakage": {
+   "label": "Revenue leakage",
+   "unit": "₹",
+   "kind": "money",
+   "rate": false,
+   "finance": true,
+   "lowerIsBetter": true
+  }
+ }
+}

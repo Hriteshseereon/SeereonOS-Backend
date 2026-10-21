@@ -1,0 +1,26 @@
+{
+ "EXPENSE_CATEGORIES": [
+  "Salaries",
+  "Rent",
+  "Tools & software",
+  "Marketing",
+  "Utilities",
+  "Travel",
+  "Equipment",
+  "Compliance",
+  "Subcontractors",
+  "Professional fees",
+  "Other"
+ ],
+ "INCOME_CATEGORIES": [
+  "SAP consulting",
+  "Consulting",
+  "Subscription / AMC",
+  "Services",
+  "Milestone invoice",
+  "SaaS subscriptions",
+  "AMS",
+  "Product licence",
+  "Other income"
+ ]
+}

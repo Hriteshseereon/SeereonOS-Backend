@@ -1,0 +1,17 @@
+{
+ "CHANGE_ENTITY_LABEL": {
+  "role": "Roles & permissions",
+  "user_access": "User access (role, extra permissions)",
+  "employee": "Employee creation & deactivation",
+  "cost_rate": "Salaries & cost rates",
+  "workflow": "Approval workflows",
+  "org_profile": "Organisation profile",
+  "master_record": "Master data (departments, grades…)",
+  "shift": "Shifts",
+  "vendor": "Vendor bank & tax details",
+  "budget": "Budgets",
+  "payroll_finalise": "Payroll finalisation",
+  "settings": "Company settings",
+  "makerchecker_config": "Maker-checker settings"
+ }
+}

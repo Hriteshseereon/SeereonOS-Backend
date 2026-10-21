@@ -1,0 +1,62 @@
+{
+ "GST_PCT": 18,
+ "PLANS": [
+  {
+   "code": "trial",
+   "name": "Trial",
+   "price_per_user_paise": 0,
+   "billing_period": "monthly",
+   "max_users": 25,
+   "features": [
+    "All features for 14 days",
+    "Up to 25 people",
+    "Every module included",
+    "Email support"
+   ]
+  },
+  {
+   "code": "starter",
+   "name": "Starter",
+   "price_per_user_paise": 39900,
+   "billing_period": "monthly",
+   "max_users": 25,
+   "features": [
+    "Projects, tasks & timesheets",
+    "Approvals with SLA",
+    "Holidays & working calendar",
+    "CSV exports",
+    "Email support"
+   ]
+  },
+  {
+   "code": "growth",
+   "name": "Growth",
+   "price_per_user_paise": 49900,
+   "billing_period": "monthly",
+   "max_users": 100,
+   "features": [
+    "Everything in Starter",
+    "Margins, cost rates & payroll",
+    "Sales pipeline & compensation",
+    "Insights & report builder",
+    "AI assistant",
+    "Priority support"
+   ]
+  },
+  {
+   "code": "scale",
+   "name": "Scale",
+   "price_per_user_paise": 69900,
+   "billing_period": "monthly",
+   "max_users": null,
+   "features": [
+    "Everything in Growth",
+    "Unlimited people",
+    "Two-step verification enforcement",
+    "Scheduled reports",
+    "Dedicated success manager",
+    "Data residency in India"
+   ]
+  }
+ ]
+}

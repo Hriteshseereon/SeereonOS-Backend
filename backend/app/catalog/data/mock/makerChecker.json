@@ -1,0 +1,61 @@
+{
+ "DEFAULT_MC": {
+  "enabled": false,
+  "entities": [],
+  "sla_days": 2
+ },
+ "MC_ENTITY_GROUPS": [
+  {
+   "title": "Access",
+   "entities": [
+    "role",
+    "user_access",
+    "employee"
+   ]
+  },
+  {
+   "title": "Money",
+   "entities": [
+    "cost_rate",
+    "payroll_finalise",
+    "vendor",
+    "budget"
+   ]
+  },
+  {
+   "title": "Configuration",
+   "entities": [
+    "workflow",
+    "org_profile",
+    "master_record",
+    "shift",
+    "settings"
+   ]
+  }
+ ],
+ "RECOMMENDED_MC_ENTITIES": [
+  "role",
+  "user_access",
+  "cost_rate",
+  "workflow",
+  "payroll_finalise",
+  "vendor",
+  "org_profile",
+  "makerchecker_config"
+ ],
+ "REQUIRED_PERMISSION_OF": {
+  "role": "roles.manage",
+  "user_access": "users.manage",
+  "employee": "employees.create",
+  "cost_rate": "cost_rates.edit",
+  "workflow": "workflows.manage",
+  "org_profile": "master.edit",
+  "master_record": "master.edit",
+  "shift": "shifts.manage",
+  "vendor": "procurement.manage",
+  "budget": "budgets.manage",
+  "payroll_finalise": "payroll.finalise",
+  "settings": "settings.edit",
+  "makerchecker_config": "makerchecker.configure"
+ }
+}

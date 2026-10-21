@@ -1,0 +1,251 @@
+{
+ "BILL_STATUS": {
+  "received": {
+   "label": "Received",
+   "tone": "warning"
+  },
+  "approved": {
+   "label": "Approved",
+   "tone": "info"
+  },
+  "paid": {
+   "label": "Paid",
+   "tone": "success"
+  },
+  "disputed": {
+   "label": "Disputed",
+   "tone": "danger"
+  }
+ },
+ "BUDGET_EXPENSE_CATEGORIES": [
+  "Salaries",
+  "Rent",
+  "Tools & software",
+  "Marketing",
+  "Utilities",
+  "Internet & phone",
+  "Travel",
+  "Lodging",
+  "Food & meals",
+  "Client entertainment",
+  "Training",
+  "Office supplies",
+  "Equipment",
+  "Compliance",
+  "Professional fees",
+  "Subcontractors",
+  "Other"
+ ],
+ "CLIENT_HEALTH": {
+  "good": {
+   "label": "Good",
+   "tone": "success"
+  },
+  "watch": {
+   "label": "Watch",
+   "tone": "warning"
+  },
+  "at_risk": {
+   "label": "At risk",
+   "tone": "danger"
+  }
+ },
+ "CLIENT_STATUS": {
+  "prospect": {
+   "label": "Prospect",
+   "tone": "info"
+  },
+  "active": {
+   "label": "Active",
+   "tone": "success"
+  },
+  "dormant": {
+   "label": "Dormant",
+   "tone": "neutral"
+  },
+  "churned": {
+   "label": "Churned",
+   "tone": "danger"
+  }
+ },
+ "CONTRACT_KIND": {
+  "msa": "MSA",
+  "sow": "SOW",
+  "amc": "AMC",
+  "licence": "Licence",
+  "nda": "NDA",
+  "retainer": "Retainer"
+ },
+ "CONTRACT_STATUS": {
+  "draft": {
+   "label": "Draft",
+   "tone": "neutral"
+  },
+  "active": {
+   "label": "Active",
+   "tone": "success"
+  },
+  "expiring": {
+   "label": "Expiring",
+   "tone": "warning"
+  },
+  "expired": {
+   "label": "Expired",
+   "tone": "danger"
+  },
+  "terminated": {
+   "label": "Terminated",
+   "tone": "neutral"
+  },
+  "renewed": {
+   "label": "Renewed",
+   "tone": "info"
+  }
+ },
+ "EXPENSE_CATEGORY": {
+  "travel": "Travel",
+  "food": "Food & meals",
+  "lodging": "Lodging",
+  "client_entertainment": "Client entertainment",
+  "software": "Tools & software",
+  "hardware": "Equipment",
+  "internet_phone": "Internet & phone",
+  "training": "Training",
+  "office": "Office supplies",
+  "other": "Other"
+ },
+ "EXPENSE_CATEGORY_LABEL": {
+  "travel": "Travel",
+  "food": "Food & meals",
+  "lodging": "Lodging",
+  "client_entertainment": "Client entertainment",
+  "software": "Software & subscriptions",
+  "hardware": "Hardware",
+  "internet_phone": "Internet & phone",
+  "training": "Training & courses",
+  "office": "Office supplies",
+  "other": "Other"
+ },
+ "EXPENSE_MAX_AGE_DAYS": 90,
+ "EXPENSE_STATUS": {
+  "draft": {
+   "label": "Draft",
+   "tone": "neutral"
+  },
+  "submitted": {
+   "label": "Submitted",
+   "tone": "warning"
+  },
+  "approved": {
+   "label": "Approved",
+   "tone": "info"
+  },
+  "rejected": {
+   "label": "Rejected",
+   "tone": "danger"
+  },
+  "paid": {
+   "label": "Paid",
+   "tone": "success"
+  }
+ },
+ "LEAKAGE_KIND": {
+  "lost_deal": {
+   "label": "Lost deal",
+   "auto": true
+  },
+  "unbilled_hours": {
+   "label": "Unbilled hours",
+   "auto": true
+  },
+  "bad_debt": {
+   "label": "Bad-debt risk",
+   "auto": true
+  },
+  "scope_creep": {
+   "label": "Scope creep",
+   "auto": false
+  },
+  "discount": {
+   "label": "Discount",
+   "auto": false
+  },
+  "write_off": {
+   "label": "Write-off",
+   "auto": false
+  },
+  "credit_note": {
+   "label": "Credit note",
+   "auto": false
+  },
+  "penalty": {
+   "label": "Penalty",
+   "auto": false
+  },
+  "churn": {
+   "label": "Churn",
+   "auto": false
+  }
+ },
+ "LEAKAGE_STATUS": {
+  "open": {
+   "label": "Open",
+   "tone": "warning"
+  },
+  "recovered": {
+   "label": "Recovered",
+   "tone": "success"
+  },
+  "accepted": {
+   "label": "Accepted",
+   "tone": "neutral"
+  }
+ },
+ "MANUAL_LEAKAGE_KINDS": [
+  "discount",
+  "write_off",
+  "credit_note",
+  "penalty",
+  "scope_creep",
+  "churn"
+ ],
+ "PO_STATUS": {
+  "draft": {
+   "label": "Draft",
+   "tone": "neutral"
+  },
+  "pending": {
+   "label": "Pending approval",
+   "tone": "warning"
+  },
+  "approved": {
+   "label": "Approved",
+   "tone": "info"
+  },
+  "rejected": {
+   "label": "Rejected",
+   "tone": "danger"
+  },
+  "closed": {
+   "label": "Closed",
+   "tone": "success"
+  }
+ },
+ "RECEIPT_LIMIT_PAISE": 50000,
+ "RENEWAL_WINDOW_DAYS": 60,
+ "SECOND_APPROVAL_PAISE": 2500000,
+ "VENDOR_STATUS": {
+  "active": {
+   "label": "Active",
+   "tone": "success"
+  },
+  "blocked": {
+   "label": "Blocked",
+   "tone": "danger"
+  }
+ },
+ "$skipped": {
+  "GSTIN_RE": "GSTIN_RE is a RegExp",
+  "PAN_RE": "PAN_RE is a RegExp"
+ }
+}
