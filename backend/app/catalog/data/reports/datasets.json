@@ -1075,6 +1075,10 @@
      "type": "enum",
      "options": [
       {
+       "value": "project_work",
+       "label": "Project work (no task)"
+      },
+      {
        "value": "meeting",
        "label": "Internal meeting"
       },
@@ -1089,6 +1093,14 @@
       {
        "value": "admin",
        "label": "Admin"
+      },
+      {
+       "value": "support",
+       "label": "Support"
+      },
+      {
+       "value": "other",
+       "label": "Other"
       },
       {
        "value": "interview",
@@ -3908,6 +3920,10 @@
        "label": "Website"
       },
       {
+       "value": "careers",
+       "label": "Careers link"
+      },
+      {
        "value": "other",
        "label": "Other"
       }
@@ -5459,6 +5475,10 @@
      "type": "enum",
      "options": [
       {
+       "value": "project_work",
+       "label": "Project work (no task)"
+      },
+      {
        "value": "meeting",
        "label": "Internal meeting"
       },
@@ -5473,6 +5493,14 @@
       {
        "value": "admin",
        "label": "Admin"
+      },
+      {
+       "value": "support",
+       "label": "Support"
+      },
+      {
+       "value": "other",
+       "label": "Other"
       },
       {
        "value": "interview",
@@ -8292,6 +8320,10 @@
        "label": "Website"
       },
       {
+       "value": "careers",
+       "label": "Careers link"
+      },
+      {
        "value": "other",
        "label": "Other"
       }
@@ -8890,10 +8922,13 @@
    "internal": "Internal"
   },
   "internal_code": {
+   "project_work": "Project work (no task)",
    "meeting": "Internal meeting",
    "learning": "Learning",
    "presales": "Pre-sales",
    "admin": "Admin",
+   "support": "Support",
+   "other": "Other",
    "interview": "Interviewing",
    "bench": "Bench",
    "breaks": "Lunch, tea and stand-up"
@@ -9064,6 +9099,7 @@
    "campus": "Campus",
    "agency": "Agency",
    "website": "Website",
+   "careers": "Careers link",
    "other": "Other"
   },
   "doc_category": {

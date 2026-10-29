@@ -1,6 +1,18 @@
 {
  "ADDITIONAL_COST_CATEGORIES": [
   {
+   "value": "office_hardware",
+   "label": "Office & hardware"
+  },
+  {
+   "value": "expenses",
+   "label": "Expenses"
+  },
+  {
+   "value": "misc",
+   "label": "Miscellaneous"
+  },
+  {
    "value": "software",
    "label": "Software & licences"
   },
@@ -25,6 +37,26 @@
    "label": "Other"
   }
  ],
+ "COMMERCIAL_GROUPS": [
+  {
+   "key": "office_hardware",
+   "label": "Office & hardware",
+   "hint": "Devices, licences, seats, infrastructure",
+   "example": "e.g. Test devices, cloud hosting"
+  },
+  {
+   "key": "expenses",
+   "label": "Expenses",
+   "hint": "Travel, training, third-party services",
+   "example": "e.g. On-site visit, Bhubaneswar → Pune"
+  },
+  {
+   "key": "misc",
+   "label": "Miscellaneous",
+   "hint": "Anything else the project costs",
+   "example": "e.g. Courier, stamp duty"
+  }
+ ],
  "COMMERCIAL_MODELS": [
   {
    "value": "fixed",
@@ -42,5 +74,16 @@
    "value": "ams_retainer",
    "label": "AMS retainer"
   }
- ]
+ ],
+ "COST_GROUP_OF": {
+  "office_hardware": "office_hardware",
+  "software": "office_hardware",
+  "hardware": "office_hardware",
+  "expenses": "expenses",
+  "travel": "expenses",
+  "training": "expenses",
+  "third_party": "expenses",
+  "misc": "misc",
+  "other": "misc"
+ }
 }

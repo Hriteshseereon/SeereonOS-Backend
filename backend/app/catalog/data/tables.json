@@ -58,6 +58,7 @@
   "doc_templates",
   "issued_documents",
   "employee_documents",
+  "teams",
   "task_reviews",
   "documents",
   "document_versions",
@@ -83,6 +84,8 @@
   "revenue_leakage",
   "objectives",
   "key_results",
-  "pending_tokens"
+  "pending_tokens",
+  "holiday_calendars",
+  "fy_openings"
  ]
 }

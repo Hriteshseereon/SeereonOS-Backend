@@ -56,7 +56,7 @@ def approval_kpis(ctx: Ctx, days: Any = 30) -> dict[str, dict[str, Any]]:
     if days is UNDEF:  # JS default parameter
         days = 30
     if type(days) is int:
-        return scope().shared(('kpi:approvals', days, ctx.today), ('timesheet_weeks', 'tenants', 'holidays'), lambda: _approval_kpis(ctx, days))
+        return scope().shared(('kpi:approvals', days, ctx.today), ('timesheet_weeks', 'tenants', 'holidays', 'holiday_calendars'), lambda: _approval_kpis(ctx, days))
     return _approval_kpis(ctx, days)
 
 

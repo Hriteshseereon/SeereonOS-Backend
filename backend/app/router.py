@@ -35,6 +35,8 @@ MODULES: list[tuple[str, str]] = [
     ('admin', 'app.routes.admin'),
     ('billing', 'app.routes.billing'),
     ('projects', 'app.routes.projects'),
+    ('recruiting', 'app.routes.recruiting'),  # v9: openings moved out of projects (same position → same match order)
+    ('projectWizard', 'app.routes.project_wizard'),  # v9 (A1): New Project wizard + escalation matrix
     ('tasks', 'app.routes.tasks'),
     ('notifications', 'app.routes.notifications'),
     ('timesheets', 'app.routes.timesheets'),
@@ -43,10 +45,12 @@ MODULES: list[tuple[str, str]] = [
     ('finance', 'app.routes.finance'),
     ('operations', 'app.routes.operations'),
     ('dashboards', 'app.routes.dashboards'),
+    ('dashboards', 'app.routes.insight_views'),  # v9 A4: insight views with charts (/insight-views)
     ('reports', 'app.routes.reports'),
     ('taskflow', 'app.routes.taskflow'),
     ('documents', 'app.routes.documents'),
     ('hr', 'app.routes.hr'),
+    ('hr', 'app.routes.leave_docs'),  # v9 A2: leave application documents
     ('spend', 'app.routes.spend'),
     ('clients', 'app.routes.clients'),
     ('company', 'app.routes.company'),
@@ -57,6 +61,8 @@ MODULES: list[tuple[str, str]] = [
     ('invoices', 'app.routes.invoices'),
     ('docs', 'app.routes.docs_v7'),
     ('workflows', 'app.routes.workflows_v7'),
+    ('teams', 'app.routes.teams'),  # v9 (A3): teams master + People › Team overview
+    ('adminSetup', 'app.routes.admin_setup'),  # v9 (A5): leave types & policies, holiday calendars, FY opening balances
 ]
 
 # request bodies may carry files as data: URLs (15 MB) on these routes; every other route: 1 MB (server/src/limits.ts)
@@ -66,6 +72,7 @@ UPLOAD_ROUTES = frozenset(
     {
         'PUT /tenant/logo',
         'POST /projects',
+        'POST /projects/wizard',
         'POST /milestones/:id/invoice',
         'POST /tasks',
         'POST /tasks/:id/attachments',
@@ -89,6 +96,9 @@ UPLOAD_ROUTES = frozenset(
         'POST /holidays/import',
         'POST /projects/:id/import',
         'POST /users/bulk-invite',
+        'POST /public/openings/:token',  # v9 careers page: resume ≤ 5 MB as a data: URL
+        'POST /leave-requests',  # v9 A2: up to 3 supporting documents ≤ 5 MB each
+        'POST /leave-requests/:id/attachments',  # v9 A2
     }
 )
 

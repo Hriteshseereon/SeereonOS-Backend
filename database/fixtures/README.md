@@ -16,6 +16,11 @@ python -m app.devtools.fixtures load-demo                    # dates shifted so 
 python -m app.devtools.fixtures load-demo --today 2026-11-02 # …or as of a given day (golden / parity runs)
 ```
 
+At load time the loader also brings the v8-era export up to the v9 data rules (`link_demo_rows`, idempotent): every
+project gets its parent customer (`projects.client_id`, matched by name like V010's backfill — V010 runs before the
+fixture is loaded) and every milestone with tasks gets the dates the sweep would write (start = earliest task start,
+deadline = last task's due date), so every screen agrees from the first request.
+
 Dates are shifted by **whole weeks** (export day → the latest same weekday on or before `--today`), in columns, inside
 JSON values and inside ids such as `wk_<user>_<monday>`, so Mondays stay Mondays. Demo accounts use the password
 `Seereon@123` (e.g. `santosh@seereon.co.in`, `platform@seereon.co.in`). `--in-place` replaces all data of a running

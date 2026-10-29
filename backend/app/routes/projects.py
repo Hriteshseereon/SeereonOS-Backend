@@ -1,6 +1,6 @@
 """Port of src/mock/routes/projects.ts — Module B: projects & delivery. Projects, milestones, WBS tasks (write side of the
 shared task contract), allocations, schedule / critical path, money (margins, invoices, payments), change requests,
-openings, WBS import and the client view. The v5 costing routes are registered first (app.engine.costing).
+WBS import and the client view (openings moved to app/routes/recruiting.py in v9). The v5 costing routes are registered first (app.engine.costing).
 
 Exported helpers (snake_case of the TS exports): my_project_ids, can_view, can_edit, next_task_no, sync_achieved.
 
@@ -54,6 +54,7 @@ from app.engine.analytics import (
     current_rate_ph,
     deps_of,
     ensure_swept,
+    is_untasked_project_entry,
     milestone_state,
     open_blockers,
     project_metrics,
@@ -692,6 +693,8 @@ def _project_money(ctx: Ctx, p: dict) -> dict[str, Any]:
     task_ids = {t['id'] for t in tasks}
     ms = _live_milestones(ctx, p['id'])
     entries = [e for e in costed_entries(ctx) if e.get('kind') == 'task' and js_truthy(e.get('task_id')) and e['task_id'] in task_ids]
+    # v9 (A2, D5): time booked to the project without a task (by person; in "No milestone")
+    entries += [e for e in costed_entries(ctx) if is_untasked_project_entry(e) and e['project_id'] == p['id']]
     people: dict[Any, dict] = {}
 
     def touch(id_: Any) -> dict:
@@ -742,6 +745,9 @@ def _project_money(ctx: Ctx, p: dict) -> dict[str, Any]:
         for t in ts:
             bt = by_task.get(t['id'])
             lc = lc + coalesce(bt['c'] if bt else UNDEF, 0)
+        if g['id'] is None and None in by_task:  # v9 (D5): untasked project time
+            logged = logged + by_task[None]['h']
+            lc = lc + by_task[None]['c']
         row = {**g, 'est_hours': est, 'logged_hours': logged, 'variance_hours': logged - est, 'planned_cost': js_round(pc), 'logged_cost': js_round(lc)}
         if row['id'] is not None or est > 0 or logged > 0:
             by_milestone.append(row)
@@ -1428,6 +1434,7 @@ def create_project(req: Req) -> Any:
             'baseline_end_on': end_on,
             'color_hue': hue,
             'costing': {**vc['costing'], 'saved_at': now_iso(), 'saved_by': me} if vc is not None else None,
+            **_client_link(ctx, req.b('client_id'), client),
         },
     )
     insert(
@@ -1486,6 +1493,18 @@ def create_project(req: Req) -> Any:
     return p
 
 
+def _client_link(ctx: Ctx, client_id: Any, client: str) -> dict:
+    """v9 (D2): the parent customer of a new project — the client_id sent, else the customer whose name matches the
+    client text. No key at all when there is none (internal work or a name not in the master yet)."""
+    from app.routes.clients import client_for_name
+
+    if isinstance(client_id, str) and client_id:
+        c = find(ctx, 'clients', client_id, 'Customer')
+        return {'client_id': c['id']}
+    c = client_for_name(ctx, client)
+    return {'client_id': c['id']} if c is not None else {}
+
+
 def get_project_detail(req: Req) -> Any:
     ctx = req.ctx
     p = _get_project(ctx, req.params['id'])
@@ -1520,7 +1539,11 @@ def get_project_detail(req: Req) -> Any:
     cr = (
         sorted((c for c in rows(ctx, 'change_requests') if c['project_id'] == p['id']), key=lambda c: locale_key(c['created_at']), reverse=True)
         if has_any(ctx, 'change_requests.manage', 'projects.view_all')
-        else []
+        else [
+            cr_for_recipient(ctx, c)
+            for c in sorted((c for c in rows(ctx, 'change_requests') if c['project_id'] == p['id']), key=lambda c: locale_key(c['created_at']), reverse=True)
+            if _cr_sent_to_me(ctx, c)
+        ]
     )
     return {
         'project': _strip_project(ctx, p),
@@ -1576,6 +1599,19 @@ def patch_project(req: Req) -> Any:
         ch['name'] = _need(body['name'], 'name', 'Project name')
     if _has_key(body, 'client'):
         ch['client'] = _need(body['client'], 'client', 'Client')
+    if _has_key(body, 'client_id'):
+        # v9: change the parent customer; the client text follows the customer's name
+        cid = body['client_id']
+        if js_truthy(cid):
+            c = find(ctx, 'clients', cid, 'Customer')
+            ch['client_id'] = c['id']
+            ch['client'] = c['name']
+        else:
+            ch['client_id'] = None
+    if _has_key(body, 'client_details'):
+        from app.routes.project_wizard import validate_client_details
+
+        ch['client_details'] = validate_client_details(body['client_details'], 'client_details')
     if _has_key(body, 'type'):
         if not _in(body['type'], TYPES):
             err(422, 'VALIDATION', 'Choose a project type.', 'type')
@@ -1980,6 +2016,14 @@ def patch_task(req: Req) -> Any:
     backup = ch['backup_id'] if 'backup_id' in ch else prop(t, 'backup_id')
     if js_truthy(owner) and js_truthy(backup) and owner == backup:
         err(422, 'VALIDATION', 'The backup must be a different person from the owner.', 'backup_id')
+    # v9 (A2, D4): co-assignees — never the owner (a new owner leaves the list), never the backup
+    prev_co = _taskflow.co_assignees_of(t)
+    if _has_key(body, 'assignee_ids') or 'owner_id' in ch or 'backup_id' in ch:
+        co = _taskflow.valid_co_assignees(ctx, body['assignee_ids'], owner) if _has_key(body, 'assignee_ids') else [x for x in prev_co if x != owner]
+        if js_truthy(backup) and backup in co:
+            err(422, 'VALIDATION', f'{user_name(ctx, backup)} is the backup. Choose someone else as an assignee, or change the backup.', 'assignee_ids')
+        if co != prev_co:
+            ch['assignee_ids'] = co
     if _has_key(body, 'est_hours'):
         v = js_number(body['est_hours'])
         if not is_finite(v) or v < 0 or v > 999:
@@ -2057,6 +2101,16 @@ def patch_task(req: Req) -> Any:
     # (no notifications / reschedule log from PATCH) — mirrored by comparing with the updated row.
     if js_truthy(ch.get('owner_id')) and ch['owner_id'] != out.get('owner_id') and ch['owner_id'] != me:
         notify(ctx, ch['owner_id'], 'NTF-14', 'Task assigned to you', f'{code} {js_str(out["title"])} · {js_str(p["name"])}', f'/my-tasks?task={t["id"]}')
+    for x in ch.get('assignee_ids', []):
+        if x != me and x not in prev_co:
+            notify(
+                ctx,
+                x,
+                'NTF-14',
+                'Task assigned to you',
+                f'{code} {js_str(out["title"])} · {js_str(p["name"])} · with {user_name(ctx, out.get("owner_id"))} (owner)',
+                f'/tasks/{t["id"]}',
+            )
     for w in ch.get('watcher_ids', []):
         if w != me and w not in coalesce(prop(out, 'watcher_ids'), []):
             notify(
@@ -2096,7 +2150,7 @@ def set_task_status(req: Req) -> Any:
     p = find(ctx, 'projects', t['project_id'], 'Project')
     editor = can_edit(ctx, p) or _taskflow.can_manage_general(ctx, t)
     me = ctx.user['id']
-    if not editor and t.get('owner_id') != me and t.get('backup_id') != me and not _taskflow.can_review_task(ctx, t):
+    if not editor and t.get('owner_id') != me and t.get('backup_id') != me and not _taskflow.is_co_assignee(t, me) and not _taskflow.can_review_task(ctx, t):
         err(403, 'FORBIDDEN', 'Only the task owner, their backup or the project manager can change its status.')
     to = req.b('status')
     if not _in(to, TASK_STATUSES):
@@ -2478,8 +2532,196 @@ def list_change_requests(req: Req) -> Any:
     ctx = req.ctx
     p = _get_project(ctx, req.params['id'])
     if not has_any(ctx, 'change_requests.manage', 'projects.view_all') and not can_edit(ctx, p):
-        err(403, 'FORBIDDEN', 'Only the project manager and admins see change requests.')
+        mine = [c for c in rows(ctx, 'change_requests') if c['project_id'] == p['id'] and _cr_sent_to_me(ctx, c)]
+        if not mine:
+            err(403, 'FORBIDDEN', 'Only the project manager and admins see change requests.')
+        # v9: a team member a change request was sent to sees those requests (read-only, no billable value)
+        lst = sorted(mine, key=lambda c: (coalesce(prop(c, 'number'), 0), locale_key(c['created_at'])), reverse=True)
+        return {
+            'items': [cr_for_recipient(ctx, c) for c in lst],
+            'raised': len(lst),
+            'awaiting': sum(1 for c in lst if c.get('status') in ('raised', 'estimated')),
+            'approved_hours': _sum_of(c['hours'] for c in lst if c.get('status') in ('approved', 'done')),
+            'approved_value': None,
+            'baseline_hours': None,
+            'scope_growth': None,
+            'next_number': None,
+            'can_manage': False,
+            'recipient_view': True,
+        }
     return _cr_list(ctx, p)
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# v9 item 7: a project manager sends a change request to chosen team members (notification + e-mail; it shows in
+# their Changes tab and under Delivery › Change requests › Sent to me). The approve / reject flow is unchanged.
+# ---------------------------------------------------------------------------------------------------------------------
+CR_EMAIL_KEY = 'change_request_sent'
+CR_EMAIL_TEMPLATE = {
+    'key': CR_EMAIL_KEY,
+    'name': 'Change request sent to you',
+    'subject': '{{cr_number}} on {{project_name}}: {{cr_title}}',
+    'body': (
+        'Hi {{employee_name}},\n\n{{sender_name}} sent you change request {{cr_number}} on {{project_code}} {{project_name}}:\n\n'
+        '{{cr_title}}\n{{cr_description}}\n\nEffort: {{cr_hours}} · working-days impact: {{cr_impact_days}} · status: {{cr_status}}\n{{note}}\n\n'
+        'Open it in SeereonOS: {{link}}\n\n{{company}}'
+    ),
+    'active': True,
+}
+
+
+def _sum_of(xs: Any) -> Any:
+    s: Any = 0
+    for x in xs:
+        s = s + x
+    return s
+
+
+def _cr_sent_to_me(ctx: Ctx, c: dict) -> bool:
+    lst = c.get('sent_to')
+    return isinstance(lst, list) and any(isinstance(x, dict) and x.get('user_id') == ctx.user['id'] for x in lst)
+
+
+def cr_for_recipient(ctx: Ctx, c: dict) -> dict:
+    """A change request as a team member it was sent to sees it: no billable value unless they see money."""
+    if has_any(ctx, 'finance.view', 'margins.view', 'projects.edit'):
+        return c
+    return {**c, 'value_paise': None}
+
+
+def _ensure_cr_template(ctx: Ctx) -> None:
+    from app.engine.email import template_for
+
+    if template_for(ctx, CR_EMAIL_KEY) is None and not any(t.get('key') == CR_EMAIL_KEY for t in rows(ctx, 'email_templates')):
+        insert(ctx, 'email_templates', {k: CR_EMAIL_TEMPLATE[k] for k in ('key', 'name', 'subject', 'body', 'active')})
+
+
+def send_change_request(req: Req) -> Any:
+    """POST /change-requests/:id/send {user_ids: ID[], note?} — anyone who manages the project's change requests."""
+    ctx = req.ctx
+    cr = find(ctx, 'change_requests', req.params['id'], 'Change request')
+    p = _cr_project(ctx, cr['project_id'])
+    ids = req.b('user_ids')
+    if not isinstance(ids, list) or not ids:
+        err(422, 'VALIDATION', 'Choose at least one team member to send it to.', 'user_ids')
+    if len(ids) > 50:
+        err(422, 'VALIDATION', 'Send it to at most 50 people at a time.', 'user_ids')
+    note = js_trim(js_str(coalesce(req.b('note'), '')))
+    if js_len(note) > 1000:
+        err(422, 'VALIDATION', 'Keep the note under 1,000 characters.', 'note')
+    me = ctx.user['id']
+    people: list[dict] = []
+    for i, id_ in enumerate(dict.fromkeys(x for x in ids if isinstance(x, str))):
+        u = _active_user(ctx, id_, f'user_ids.{i}')
+        if u is None:
+            continue
+        if u['id'] == me:
+            err(422, 'VALIDATION', 'You can’t send a change request to yourself.', f'user_ids.{i}')
+        people.append(u)
+    if not people:
+        err(422, 'VALIDATION', 'Choose at least one team member to send it to.', 'user_ids')
+    now = now_iso()
+    cur = [dict(x) for x in (cr.get('sent_to') or []) if isinstance(x, dict)]
+    by = {x.get('user_id'): x for x in cur}
+    for u in people:
+        if u['id'] in by:
+            by[u['id']].update({'sent_at': now, 'sent_by': me, 'seen_at': None})
+        else:
+            cur.append({'user_id': u['id'], 'sent_at': now, 'sent_by': me, 'seen_at': None})
+    out = update(ctx, 'change_requests', cr['id'], {'sent_to': cur, 'sent_at': now, 'sent_by': me, 'send_note': note or None})
+    tag = f'CR-{js_str(coalesce(prop(cr, "number"), "?"))}'
+    from app.engine.email import login_url, send_email
+
+    _ensure_cr_template(ctx)
+    base = login_url()[: -len('/login')] if login_url().endswith('/login') else login_url()
+    team = set(my_project_team(ctx, p))
+    outside = [u['name'] for u in people if u['id'] not in team and not _user_sees_all(ctx, u)]
+    for u in people:
+        on_project = u['id'] in team or _user_sees_all(ctx, u)
+        path = f'/projects/{p["id"]}/changes' if on_project else '/delivery/change-requests'
+        notify(ctx, u['id'], 'NTF-03', f'{tag} sent to you', f'{js_str(ctx.user.get("name", UNDEF))}: {js_str(cr["title"])} · {js_str(p["name"])}{" — " + note[:120] if note else ""}', path)
+        if js_truthy(u.get('email')):
+            send_email(
+                ctx,
+                CR_EMAIL_KEY,
+                {'email': u['email'], 'user_id': u['id']},
+                {
+                    'employee_name': u['name'],
+                    'sender_name': js_str(ctx.user.get('name', UNDEF)),
+                    'cr_number': tag,
+                    'cr_title': cr['title'],
+                    'cr_description': js_str(coalesce(cr.get('description'), '')),
+                    'cr_hours': f'{js_str(cr["hours"])}h',
+                    'cr_impact_days': js_str(coalesce(cr.get('impact_days'), 0)),
+                    # the words the Changes tab uses (raised / estimated = awaiting a decision)
+                    'cr_status': {'raised': 'awaiting decision', 'estimated': 'awaiting decision'}.get(cr['status'], js_str(cr['status'])),
+                    'project_code': p['code'],
+                    'project_name': p['name'],
+                    'note': f'Note: {note}' if note else '',
+                    'link': f'{base}{path}',
+                },
+                {'entity': 'change_request', 'id': cr['id']},
+            )
+    names = ', '.join(u['name'] for u in people)
+    log_activity(ctx, 'project', p['id'], 'cr.sent', f'{tag} sent to {names}{": " + note if note else ""}')
+    if outside:
+        warn(ctx, 'CR_SENT_OUTSIDE_TEAM', f'{", ".join(outside)} {"is" if len(outside) == 1 else "are"} not on this project yet: they see {tag} under Change requests › Sent to me.')
+    return out
+
+
+def _user_sees_all(ctx: Ctx, u: dict) -> bool:
+    return 'projects.view_all' in permissions_of(u)
+
+
+def my_project_team(ctx: Ctx, p: dict) -> list:
+    """People on a project: PM, task owners / backups, allocated people."""
+    ids = [p.get('pm_id')]
+    for t in rows(ctx, 'tasks'):
+        if t['project_id'] == p['id']:
+            ids += [t.get('owner_id'), t.get('backup_id')]
+    for a in rows(ctx, 'allocations'):
+        if a['project_id'] == p['id']:
+            ids.append(a['user_id'])
+    return [x for x in dict.fromkeys(ids) if x]
+
+
+def mark_cr_seen(req: Req) -> Any:
+    """POST /change-requests/:id/seen — a recipient acknowledges the change request (the sender sees who has)."""
+    ctx = req.ctx
+    cr = find(ctx, 'change_requests', req.params['id'], 'Change request')
+    if not _cr_sent_to_me(ctx, cr):
+        err(403, 'FORBIDDEN', 'This change request wasn’t sent to you.')
+    now = now_iso()
+    lst = [({**x, 'seen_at': x.get('seen_at') or now} if x.get('user_id') == ctx.user['id'] else dict(x)) for x in cr.get('sent_to') or [] if isinstance(x, dict)]
+    out = update(ctx, 'change_requests', cr['id'], {'sent_to': lst})
+    p = find(ctx, 'projects', cr['project_id'], 'Project')
+    log_activity(ctx, 'project', p['id'], 'cr.seen', f'{js_str(ctx.user.get("name", UNDEF))} acknowledged CR-{js_str(coalesce(prop(cr, "number"), "?"))}')
+    return cr_for_recipient(ctx, out)
+
+
+def sent_to_me(req: Req) -> Any:
+    """GET /change-requests/sent-to-me — every change request sent to me, newest first, across projects."""
+    ctx = req.ctx
+    pm = {p['id']: p for p in rows(ctx, 'projects')}
+    items = []
+    for c in rows(ctx, 'change_requests'):
+        if not _cr_sent_to_me(ctx, c):
+            continue
+        me = next(x for x in c['sent_to'] if isinstance(x, dict) and x.get('user_id') == ctx.user['id'])
+        p = pm.get(c['project_id'])
+        items.append(
+            {
+                **cr_for_recipient(ctx, c),
+                'project_code': p['code'] if p else '',
+                'project_name': p['name'] if p else '',
+                'can_open_project': bool(p and can_view(ctx, p)),
+                'my_sent_at': me.get('sent_at'),
+                'my_seen_at': me.get('seen_at'),
+                'sent_by_name': user_name(ctx, me.get('sent_by')),
+            }
+        )
+    items.sort(key=lambda x: locale_key(coalesce(x['my_sent_at'], '')), reverse=True)
+    return {'items': items, 'unseen': sum(1 for x in items if not x['my_seen_at'])}
 
 
 def add_change_request(req: Req) -> Any:
@@ -2793,100 +3035,6 @@ def import_wbs(req: Req) -> Any:
     return _import_preview(ctx, p, js_str(coalesce(req.b('text'), '')))
 
 
-# ---------- openings (UI-35) ----------
-_OPEN_STATUS = ['open', 'interviewing', 'offered', 'filled', 'on_hold']
-_OPEN_RANK = {'open': 0, 'interviewing': 1, 'offered': 2, 'on_hold': 3, 'filled': 4}
-
-
-def _opening_guard(ctx: Ctx, o: dict | None = None) -> None:
-    if not has(ctx, 'openings.manage'):
-        err(403, 'FORBIDDEN', 'Only admins, project managers and operations manage openings.')
-    if o is not None and not has_any(ctx, 'projects.manage_all', 'people.view_all'):
-        pid = o.get('project_id')
-        pr = next((x for x in rows(ctx, 'projects') if x['id'] == pid), None) if js_truthy(pid) else None
-        me = ctx.user['id']
-        if o.get('owner_id') != me and prop(pr, 'pm_id') != me and o.get('created_by') != me:
-            err(403, 'FORBIDDEN', 'You can change openings you own or that are on your projects.')
-
-
-def _validate_opening(ctx: Ctx, b: Any, partial: bool) -> dict[str, Any]:
-    out: dict[str, Any] = {}
-    bb = b if isinstance(b, dict) else {}
-    if not partial or 'role' in bb:
-        out['role'] = _need(bb.get('role', UNDEF), 'role', 'Role')
-    if not partial or 'count' in bb:
-        n = js_number(bb.get('count', UNDEF))
-        if not is_integer(n) or n < 1 or n > 50:
-            err(422, 'VALIDATION', 'Count must be between 1 and 50.', 'count')
-        out['count'] = _intify(n)
-    if not partial or 'status' in bb:
-        s = coalesce(bb.get('status', UNDEF), 'open')
-        if not _in(s, _OPEN_STATUS):
-            err(422, 'VALIDATION', 'Choose a valid status.', 'status')
-        out['status'] = s
-    if not partial or 'owner_id' in bb:
-        if not js_truthy(bb.get('owner_id', UNDEF)):
-            err(422, 'VALIDATION', 'Choose who owns this opening.', 'owner_id')
-        out['owner_id'] = _active_user(ctx, bb['owner_id'], 'owner_id')['id']  # type: ignore[index]
-    if not partial or 'project_id' in bb:
-        pid = js_or(bb.get('project_id', UNDEF), None)
-        if js_truthy(pid):
-            find(ctx, 'projects', pid, 'Project')
-        out['project_id'] = pid
-    if not partial or 'needed_by' in bb:
-        d = js_or(bb.get('needed_by', UNDEF), None)
-        if js_truthy(d) and not _iso_test(d):
-            err(422, 'VALIDATION', 'Needed by must be a date.', 'needed_by')
-        out['needed_by'] = d
-    if not partial or 'notes' in bb:
-        out['notes'] = js_trim(js_str(coalesce(bb.get('notes', UNDEF), '')))
-    return out
-
-
-def _opening_view(ctx: Ctx, o: dict) -> dict[str, Any]:
-    pid = o.get('project_id')
-    pr = next((x for x in rows(ctx, 'projects') if x['id'] == pid), None) if js_truthy(pid) else None
-    return {**o, 'project_code': coalesce(prop(pr, 'code'), None), 'project_name': coalesce(prop(pr, 'name'), None)}
-
-
-def list_openings(req: Req) -> Any:
-    ctx = req.ctx
-    _opening_guard(ctx)
-    return sorted(
-        (_opening_view(ctx, o) for o in rows(ctx, 'openings')),
-        key=lambda o: (_OPEN_RANK[o['status']], locale_key(coalesce(prop(o, 'needed_by'), '9999'))),
-    )
-
-
-def add_opening(req: Req) -> Any:
-    ctx = req.ctx
-    _opening_guard(ctx)
-    v = _validate_opening(ctx, req.body, False)
-    o = insert(ctx, 'openings', v)
-    log_activity(ctx, 'opening', o['id'], 'opening.created', f'Opening: {js_str(o["count"])} × {js_str(o["role"])}')
-    if o['owner_id'] != ctx.user['id']:
-        notify(ctx, o['owner_id'], 'NTF-14', 'Opening assigned to you', f'{js_str(o["count"])} × {js_str(o["role"])}', '/openings')
-    return o
-
-
-def patch_opening(req: Req) -> Any:
-    ctx = req.ctx
-    o = find(ctx, 'openings', req.params['id'], 'Opening')
-    _opening_guard(ctx, o)
-    out = update(ctx, 'openings', o['id'], _validate_opening(ctx, req.body, True), req.if_match)
-    log_activity(ctx, 'opening', o['id'], 'opening.updated', f'Opening {js_str(out["role"])}: {js_str(out["status"]).replace("_", " ", 1)}')
-    return out
-
-
-def delete_opening(req: Req) -> Any:
-    ctx = req.ctx
-    o = find(ctx, 'openings', req.params['id'], 'Opening')
-    _opening_guard(ctx, o)
-    remove(ctx, 'openings', o['id'])
-    log_activity(ctx, 'opening', o['id'], 'opening.deleted', f'Removed opening {js_str(o["role"])}')
-    return None
-
-
 def register(r: Any) -> None:
     # v5 costing routes first: static paths (/projects/costing/preview, /projects/calendar-summary) before /projects/:id
     register_costing_routes(r, CostingDeps(can_view, can_edit))
@@ -2917,10 +3065,9 @@ def register(r: Any) -> None:
     r.patch('/change-requests/:id', patch_change_request)
     r.post('/change-requests/:id/decision', decide_change_request)
     r.post('/change-requests/:id/add-tasks', add_cr_tasks)
+    r.get('/change-requests/sent-to-me', sent_to_me)
+    r.post('/change-requests/:id/send', send_change_request)
+    r.post('/change-requests/:id/seen', mark_cr_seen)
     r.get('/projects/:id/activity', project_activity)
     r.get('/projects/:id/client-view', client_view)
     r.post('/projects/:id/import', import_wbs)
-    r.get('/openings', list_openings)
-    r.post('/openings', add_opening)
-    r.patch('/openings/:id', patch_opening)
-    r.delete('/openings/:id', delete_opening)

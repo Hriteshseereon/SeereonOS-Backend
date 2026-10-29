@@ -32,7 +32,10 @@ from typing import Any
 import orjson
 
 _BACKEND = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-DEFAULT_FILE = os.path.abspath(os.path.join(_BACKEND, '..', 'database', 'fixtures', 'demo', 'demo_seed.json.gz'))
+_FIXTURE = os.path.join('database', 'fixtures', 'demo', 'demo_seed.json.gz')
+# backend repository (database/ inside it) or monorepo (backend/ next to database/)
+DEFAULT_FILE = next((os.path.abspath(p) for p in (os.path.join(_BACKEND, _FIXTURE), os.path.join(_BACKEND, '..', _FIXTURE))
+                     if os.path.isfile(p)), os.path.abspath(os.path.join(_BACKEND, '..', _FIXTURE)))
 DEMO_PASSWORD_NOTE = 'demo accounts use the password Seereon@123'
 _DATE = re.compile(r'(?<!\d)(\d{4})-(\d{2})-(\d{2})(?!\d)')
 
@@ -93,14 +96,51 @@ def shift(v: Any, days: int) -> Any:
     return v
 
 
+def link_demo_rows(tables: dict[str, list[dict[str, Any]]]) -> dict[str, int]:
+    """V9-FIX: bring the v8-era export up to the v9 data rules at load time (idempotent — only fills what is missing
+    or stale, so loading an already linked export changes nothing):
+
+    * projects.client_id (V010, D2): the customer whose name matches the project's client text (case/space-insensitive,
+      first customer in table order — the same rule as V010's backfill, which runs before the fixture is loaded);
+    * milestone dates (G4.02 / BR-20): a milestone with tasks starts at its earliest task start and ends on its last
+      task's due date — what the sweep writes on the first read, so every screen agrees from the first request.
+    """
+    n = {'projects_linked': 0, 'milestones_synced': 0}
+    by_name: dict[tuple[str, str], str] = {}
+    for c in tables.get('clients') or []:
+        by_name.setdefault((c['tenant_id'], (c.get('name') or '').strip().lower()), c['id'])
+    for p in tables.get('projects') or []:
+        if p.get('client_id'):
+            continue
+        cid = by_name.get((p['tenant_id'], (p.get('client') or '').strip().lower()))
+        if cid:
+            p['client_id'] = cid
+            n['projects_linked'] += 1
+    tasks_of: dict[Any, list[dict[str, Any]]] = {}
+    for t in tables.get('tasks') or []:
+        if t.get('milestone_id'):
+            tasks_of.setdefault(t['milestone_id'], []).append(t)
+    for m in tables.get('milestones') or []:
+        mine = tasks_of.get(m['id'])
+        if m.get('deleted_at') or not mine:
+            continue
+        end = max(t['due_on'] for t in mine)
+        start = min(t['start_on'] for t in mine)
+        if m.get('planned_end') != end or m.get('planned_start') != start:
+            m['planned_end'], m['planned_start'] = end, start
+            n['milestones_synced'] += 1
+    return n
+
+
 def demo_data(today: str | None = None, path: str = DEFAULT_FILE) -> tuple[dict[str, list[dict[str, Any]]], dict[str, Any]]:
-    """(tables shifted to `today`, info)"""
+    """(tables shifted to `today` and linked (link_demo_rows), info)"""
     fx = read_fixture(path)
     today = today or time.strftime('%Y-%m-%d')
     days = week_shift_days(fx['generated_on'], today)
     tables = {k: shift(v, days) for k, v in fx['tables'].items()}
+    linked = link_demo_rows(tables)
     anchor = (dt.date.fromisoformat(fx['generated_on']) + dt.timedelta(days=days)).isoformat()
-    info = {'file': path, 'generated_on': fx['generated_on'], 'today': today, 'shift_days': days, 'data_today': anchor}
+    info = {'file': path, 'generated_on': fx['generated_on'], 'today': today, 'shift_days': days, 'data_today': anchor, **linked}
     return tables, info
 
 

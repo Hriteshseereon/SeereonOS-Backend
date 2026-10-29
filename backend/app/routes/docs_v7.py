@@ -1116,6 +1116,73 @@ def emp_people(req: Req) -> Any:
     return sorted(out, key=lambda a: (-a['pending'], -len(a['missing']), locale_key(a['name'])))
 
 
+def emp_teams(req: Req) -> Any:
+    """GET /employee-docs/teams — v9 Documents › Team documents (D8): the employee-document summary of every active
+    person (same rows as /employee-docs/people) grouped by team (teams master), or by department when the company has
+    no active team; people in no team are listed last. HR / CEO / admin only (documents.employee_files)."""
+    ctx = req.ctx
+    people = emp_people(req)  # enforces documents.employee_files
+    by_id = {p['user_id']: p for p in people}
+    teams = [t for t in rows(ctx, 'teams') if t.get('active')]
+    groups: list[dict[str, Any]] = []
+    if teams:
+        for t in sorted(teams, key=lambda x: locale_key(x['name'])):
+            ids = [m for m in coalesce(t.get('member_ids', UNDEF), []) if m in by_id]
+            groups.append(
+                {
+                    'id': t['id'],
+                    'kind': 'team',
+                    'name': t['name'],
+                    'lead_name': user_name(ctx, t.get('lead_id')) if js_truthy(t.get('lead_id')) else None,
+                    'ids': ids,
+                }
+            )
+        placed = {m for g in groups for m in g['ids']}
+        rest = [p['user_id'] for p in people if p['user_id'] not in placed]
+        if rest:
+            groups.append({'id': '_none', 'kind': 'unassigned', 'name': 'Not in a team', 'lead_name': None, 'ids': rest})
+    else:
+        deps = {d['id']: d for d in rows(ctx, 'departments')}
+        users = {u['id']: u for u in rows(ctx, 'users')}
+        by_dep: dict[Any, list] = {}
+        for p in people:
+            did = users.get(p['user_id'], {}).get('department_id')
+            by_dep.setdefault(did if did in deps else None, []).append(p['user_id'])
+        for did, ids in sorted(by_dep.items(), key=lambda kv: (kv[0] is None, locale_key(deps[kv[0]]['name']) if kv[0] else '')):
+            d = deps.get(did) if did else None
+            groups.append(
+                {
+                    'id': did or '_none',
+                    'kind': 'department' if d else 'unassigned',
+                    'name': d['name'] if d else 'No department',
+                    'lead_name': user_name(ctx, d.get('head_id')) if d and js_truthy(d.get('head_id')) else None,
+                    'ids': ids,
+                }
+            )
+    out = []
+    for g in groups:
+        ps = sorted((by_id[i] for i in g['ids']), key=lambda a: (-a['pending'], -len(a['missing']), locale_key(a['name'])))
+        out.append(
+            {
+                'id': g['id'],
+                'kind': g['kind'],
+                'name': g['name'],
+                'lead_name': g['lead_name'],
+                'people': ps,
+                'totals': {
+                    'people': len(ps),
+                    'docs': sum(p['docs'] for p in ps),
+                    'verified': sum(p['verified'] for p in ps),
+                    'pending': sum(p['pending'] for p in ps),
+                    'missing_people': sum(1 for p in ps if p['missing']),
+                    'expiring': sum(p['expiring'] for p in ps),
+                    'issued': sum(p['issued'] for p in ps),
+                },
+            }
+        )
+    return {'mode': 'teams' if teams else 'departments', 'groups': out}
+
+
 def emp_person(req: Req) -> Any:
     ctx = req.ctx
     _boot(ctx)
@@ -1343,6 +1410,7 @@ def register(r: Any) -> None:
     r.post('/payroll/:id/payslips', payslip_generate)
     # employee documents
     r.get('/employee-docs/people', emp_people)
+    r.get('/employee-docs/teams', emp_teams)  # v9 Team documents
     r.get('/employee-docs/person/:userId', emp_person)
     r.post('/employee-docs', emp_upload)
     for action in ('verify', 'reject'):

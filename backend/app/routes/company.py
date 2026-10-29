@@ -728,6 +728,19 @@ def inbox_items(ctx: Ctx) -> list[dict]:
                         {'label': 'Status', 'value': 'Raised' if cr['status'] == 'raised' else 'Estimated', 'type': 'text'},
                         {'label': 'Hours', 'value': prop(cr, 'hours'), 'type': 'hours'},
                         {'label': 'Value', 'value': prop(cr, 'value_paise'), 'type': 'money'},
+                        # v9 (item 7): the PM also sent it to me — say so (FYI recipients without a decision only get
+                        # the notification and Change requests › Sent to me)
+                        *(
+                            [
+                                {
+                                    'label': 'Sent to you',
+                                    'value': f'by {user_name(ctx, cr.get("sent_by"))}' + (f': {cr["send_note"]}' if cr.get('send_note') else ''),
+                                    'type': 'text',
+                                }
+                            ]
+                            if any(isinstance(x, dict) and x.get('user_id') == me for x in (cr.get('sent_to') or []))
+                            else []
+                        ),
                     ],
                 },
             )

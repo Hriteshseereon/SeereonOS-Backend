@@ -10,7 +10,8 @@ runners are serialised with an advisory lock.
 Connection: MIGRATION_DATABASE_URL — the OWNER role (seereon_owner), used by this command only; when it is not set,
 DATABASE_URL is used if that role has the rights (single-role local setups). The API, the worker and the CLI never
 read MIGRATION_DATABASE_URL.
-Files: MIGRATIONS_DIR, default ../database/migrations relative to backend/ (the repository layout) or /app/migrations
+Files: MIGRATIONS_DIR, default ../database/migrations relative to backend/ (monorepo layout), database/migrations inside
+the backend repository (separate-repository layout) or /app/migrations
 (the Docker image copies database/migrations there at build time).
 """
 
@@ -33,7 +34,9 @@ def default_migrations_dir() -> str:
     explicit = os.environ.get('MIGRATIONS_DIR')
     if explicit:
         return explicit
-    for d in (os.path.join(_BACKEND, '..', 'database', 'migrations'), '/app/migrations', os.path.join(_BACKEND, 'migrations')):
+    # backend repository (database/ inside it), monorepo (backend/ next to database/), Docker image, legacy
+    for d in (os.path.join(_BACKEND, 'database', 'migrations'), os.path.join(_BACKEND, '..', 'database', 'migrations'),
+              '/app/migrations', os.path.join(_BACKEND, 'migrations')):
         if os.path.isdir(d):
             return os.path.abspath(d)
     return os.path.abspath(os.path.join(_BACKEND, '..', 'database', 'migrations'))

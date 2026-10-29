@@ -12,6 +12,7 @@
   "budget": "Budgets",
   "payroll_finalise": "Payroll finalisation",
   "settings": "Company settings",
-  "makerchecker_config": "Maker-checker settings"
+  "makerchecker_config": "Maker-checker settings",
+  "opening_balance": "Financial-year opening balances"
  }
 }

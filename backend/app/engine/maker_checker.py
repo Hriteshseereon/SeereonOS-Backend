@@ -56,6 +56,9 @@ DEFAULT_MC = _MC['DEFAULT_MC']
 RECOMMENDED_MC_ENTITIES = _MC['RECOMMENDED_MC_ENTITIES']
 REQUIRED_PERMISSION_OF = _MC['REQUIRED_PERMISSION_OF']
 MC_ENTITY_GROUPS = _MC['MC_ENTITY_GROUPS']
+# v9 (A5): financial-year opening balances (reopening locked balances) — added here: the TS reference (mock) is frozen
+REQUIRED_PERMISSION_OF = {**REQUIRED_PERMISSION_OF, 'opening_balance': 'finance.edit'}
+MC_ENTITY_GROUPS = [{**g, 'entities': [*g['entities'], 'opening_balance']} if g['title'] == 'Money' else g for g in MC_ENTITY_GROUPS]
 
 Applier = Callable[[Ctx, dict], dict]
 _appliers: dict[str, Applier] = {}

@@ -340,6 +340,11 @@ class PgBackend:
         rows = self._query('SELECT seereon_invite_tenant(%s)', [token])
         return rows[0][0] if rows else None
 
+    def opening_tenant(self, token: str) -> str | None:
+        """tenant of a public apply link (V012 seereon_opening_tenant; the careers page has no session)"""
+        rows = self._query('SELECT seereon_opening_tenant(%s)', [token])
+        return rows[0][0] if rows else None
+
     def reset_token_tenant(self, token_hash: str) -> str | None:
         rows = self._query('SELECT seereon_reset_token_tenant(%s)', [token_hash])
         return rows[0][0] if rows else None

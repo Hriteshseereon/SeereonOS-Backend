@@ -392,7 +392,10 @@ def log_activity(ctx: Ctx, entity: str, entity_id: Any, action: str, summary: st
 
 
 def calendar_for(ctx: Ctx, user_id: str | None = None) -> CalendarCtx:
-    holidays = rows(ctx, 'holidays')
+    # v9: a person gets the holiday calendar of their location; company-wide maths uses the default calendar
+    from app.engine.holiday_cal import holidays_default, holidays_for_user
+
+    holidays = holidays_for_user(ctx.tenant_id, user_id) if user_id else holidays_default(ctx.tenant_id)
     leave_dates = None
     if user_id:
         leave_dates = {lv['date'] for lv in rows(ctx, 'leave') if lv.get('user_id') == user_id and lv.get('portion') == 'full'}

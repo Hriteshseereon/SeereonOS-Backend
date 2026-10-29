@@ -37,7 +37,7 @@ from app.ctx import (
     warn,
 )
 from app.domain.calendar import add_days, diff_days, fy_label, fy_range, fy_start_year, is_real_iso_date
-from app.domain.gst import GST_STATES
+from app.domain.gst import GST_STATES, gstin_problem
 from app.domain.money import fmt_money
 from app.engine.analytics import costed_entries, current_rate_ph, milestone_state
 from app.frozen import thaw
@@ -64,7 +64,7 @@ from app.js import (
     pad_start,
     prop,
 )
-from app.modules.spend.labels import GSTIN_RE, PAN_RE
+from app.modules.spend.labels import PAN_RE
 
 __all__ = [
     'GST_STATES',
@@ -717,8 +717,9 @@ def _check_party(out: list, key: str, p: dict, label: str, require_gstin: bool, 
         out.append({'field': f'{key}.pincode', 'message': 'PIN code has 6 digits.'})
     if p['gstin']:
         g = p['gstin']
-        if not _test(GSTIN_RE, g):
-            out.append({'field': f'{key}.gstin', 'message': 'GSTIN must be 15 characters, e.g. 21AAKCS4821M1Z5.'})
+        gp = gstin_problem(g)  # V9-FIX (item 3): say what is actually wrong
+        if gp:
+            out.append({'field': f'{key}.gstin', 'message': gp})
         elif india and p['state_code'] and g[:2] != p['state_code']:
             out.append(
                 {

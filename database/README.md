@@ -21,7 +21,8 @@ ADMIN_DATABASE_URL=… RESTORE_OWNER_URL=… RESTORE_APP_URL=… BACKUP_AGE_IDEN
 |---|---|
 | [docs/README.md](docs/README.md) | **the manual**: setup, roles and the security boundary, RLS, conventions, migration policy, backups, restore, monitoring queries, file storage, data dictionary, performance |
 | [docs/ERD.md](docs/ERD.md) | entity-relationship diagrams |
-| `bootstrap.sql` | roles + database + grants (idempotent; re-run to rotate the passwords) |
-| `migrations/V001…V009` | the schema; applied in order, checksummed — never edit an applied file, add `V010__…` |
+| `bootstrap.sql` | roles + database + grants (idempotent; re-run to rotate the passwords) — needs a superuser |
+| `bootstrap_managed.sql` | the same for **managed PostgreSQL without a superuser (Neon, RDS, Azure, Supabase)**: run once as the provider's admin role (Neon: `neondb_owner` on the direct, non-pooled host with `sslmode=require`); migrate over the direct host, run the app (`DATABASE_URL`, `seereon_app`) over the pooled host |
+| `migrations/V001…V014` | the schema; applied in order, checksummed — never edit an applied file, add `V015__…` |
 | `scripts/backup.sh`, `restore.sh`, `restore_test.sh` | encrypted `pg_dump -Fc` with retention; restore into an empty database; scripted restore test |
 | `fixtures/` | **development / test only** demo data ([fixtures/README.md](fixtures/README.md)); never loaded in production |

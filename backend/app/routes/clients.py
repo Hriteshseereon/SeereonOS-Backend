@@ -25,8 +25,10 @@ from app.ctx import (
     scope,
     update,
     user_name,
+    warn,
 )
 from app.domain.calendar import add_days, diff_days, fy_range, fy_start_year, parse_iso, to_iso
+from app.domain.gst import gstin_checksum_note, gstin_problem
 from app.domain.money import fmt_money
 from app.domain.sales import deal_value
 from app.engine.analytics import project_metrics
@@ -50,7 +52,7 @@ from app.js import (
     prop,
     to_fixed,
 )
-from app.modules.spend.labels import CONTRACT_KIND, GSTIN_RE, PAN_RE, RENEWAL_WINDOW_DAYS
+from app.modules.spend.labels import CONTRACT_KIND, PAN_RE, RENEWAL_WINDOW_DAYS
 from app.routes.invoices import EXPORT_CODE, state_code_of, state_name
 from app.routes.spend import leakage_rows, provide_clients_helpers
 
@@ -215,7 +217,7 @@ def _client_model(ctx: Ctx) -> dict[str, Any]:
     items = []
     for c in clients_raw:
         key = _lc(c['name'])
-        ps = [p for p in projects if _lc(p['client']) == key]
+        ps = projects_of_client(ctx, c, projects)
         ids = {p['id'] for p in ps}
         inv = [i for i in invoices if i['project_id'] in ids]
         other = [l for l in income_ledger if _matches_client(c['name'], l['description'])]  # noqa: E741
@@ -265,7 +267,7 @@ def _client_model(ctx: Ctx) -> dict[str, Any]:
         open_deals = [d for d in ds if d['stage'] != 'won' and d['stage'] != 'lost']
         items.append(
             {
-                **c,
+                **customer_view(ctx, c),
                 'status': status,
                 'health': health,
                 'owner_name': user_name(ctx, c.get('owner_id')),
@@ -329,8 +331,13 @@ def _validate_client(ctx: Ctx, body: Any, existing: dict | None = None) -> dict[
     if dup:
         err(409, 'DUPLICATE_CLIENT', f'{js_str(dup["name"])} is already a client.', 'name')
     gstin = js_upper(js_trim(js_str(coalesce(bg('gstin'), ex('gstin'), ''))))
-    if gstin and not GSTIN_RE.search(gstin):
-        err(422, 'VAL_GSTIN', 'GSTIN must be 15 characters (e.g. 21AAKFM9876Q1ZP). Leave it blank for overseas clients.', 'gstin')
+    gp = gstin_problem(gstin) if gstin else None  # V9-FIX (item 3): say what is actually wrong
+    if gp:
+        err(422, 'VAL_GSTIN', f'{gp} Leave it blank for overseas clients.', 'gstin')
+    if gstin and gstin != coalesce(ex('gstin'), None):
+        note = gstin_checksum_note(gstin)
+        if note:
+            warn(ctx, 'GSTIN_CHECK', note)
     email = js_trim(js_str(coalesce(bg('email'), ex('email'), '')))
     if email and not _EMAIL_RE.search(email):
         err(422, 'VAL_EMAIL', 'Enter a valid email address.', 'email')
@@ -363,7 +370,9 @@ def _validate_client(ctx: Ctx, body: Any, existing: dict | None = None) -> dict[
     pincode = js_trim(js_str(coalesce(bg('pincode'), ex('pincode'), '')))
     if india and pincode and not re.search(r'^[0-9]{6}\Z', pincode):
         err(422, 'VAL_PIN', 'PIN code has 6 digits.', 'pincode')
-    pan = js_upper(js_trim(js_str(coalesce(bg('pan'), ex('pan'), gstin[2:12] if gstin else ''))))
+    pan = js_upper(js_trim(js_str(coalesce(bg('pan'), ex('pan'), ''))))
+    if not pan and gstin:  # an empty PAN is filled from the GSTIN (the form sends '' when left empty)
+        pan = gstin[2:12]
     if pan and not PAN_RE.search(pan):
         err(422, 'VAL_PAN', 'PAN is 10 characters, e.g. AAKCS4821M.', 'pan')
     if pan and gstin and gstin[2:12] != pan:
@@ -391,7 +400,258 @@ def _validate_client(ctx: Ctx, body: Any, existing: dict | None = None) -> dict[
             err(422, 'VAL_STATUS', 'Unknown status.', 'status')
         out['status'] = status
         out['status_manual'] = status == 'churned'
+    out.update(_validate_customer_extras(body, existing, india, out))
     return out
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# v9 (D2): customers = the clients master, extended. Every field below is optional and only written when the request
+# carries it (an absent field keeps the stored value; rows without them read exactly as before).
+# ---------------------------------------------------------------------------------------------------------------------
+CIN_RE = re.compile(r'^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}\Z')
+LLPIN_RE = re.compile(r'^[A-Z]{3}-[0-9]{4}\Z')
+IFSC_RE = re.compile(r'^[A-Z]{4}0[A-Z0-9]{6}\Z')
+UPI_RE = re.compile(r'^[A-Za-z0-9._-]{2,256}@[A-Za-z]{2,64}\Z')
+ACCOUNT_RE = re.compile(r'^[0-9]{6,20}\Z')
+MASK = '•'
+CUSTOMER_FIELDS = ('registered_name', 'display_name', 'cin', 'registered_address', 'contacts', 'payments_profile')
+
+
+def _txt(v: Any, n: int) -> str:
+    return js_trim(js_str(coalesce(v, '')))[:n]
+
+
+def _validate_customer_extras(body: Any, existing: dict | None, india: bool, base: dict) -> dict[str, Any]:
+    b = body if isinstance(body, dict) else {}
+    out: dict[str, Any] = {}
+    if 'registered_name' in b:
+        out['registered_name'] = _txt(b['registered_name'], 200) or None
+    if 'display_name' in b:
+        out['display_name'] = _txt(b['display_name'], 120) or None
+    if 'cin' in b:
+        cin = js_upper(_txt(b['cin'], 40))
+        if cin and not (CIN_RE.search(cin) or LLPIN_RE.search(cin)):
+            err(422, 'VAL_CIN', 'CIN is 21 characters, e.g. U72200OR2019PTC031234 (or an LLPIN like AAB-1234).', 'cin')
+        out['cin'] = cin or None
+    if 'registered_address' in b:
+        a = b['registered_address']
+        if a is None or a == '':
+            out['registered_address'] = None
+        else:
+            if not isinstance(a, dict):
+                err(422, 'VALIDATION', 'The registered address must be an object.', 'registered_address')
+            st = _txt(a.get('state'), 60)
+            sc = js_or(_txt(a.get('state_code'), 4), state_code_of(st))
+            if india and sc and not state_name(sc):
+                err(422, 'VAL_STATE', 'Choose a valid Indian state for the registered address.', 'registered_address.state')
+            pin = _txt(a.get('pincode'), 12)
+            if india and pin and not re.search(r'^[0-9]{6}\Z', pin):
+                err(422, 'VAL_PIN', 'Registered address: PIN code has 6 digits.', 'registered_address.pincode')
+            line = _txt(a.get('line'), 400)
+            city = _txt(a.get('city'), 80)
+            same = a.get('same_as_billing') is True
+            if same:
+                line, city, st, sc, pin = base['billing_address'], base['city'], base['state'], base['state_code'], base['pincode']
+            out['registered_address'] = (
+                {'line': line, 'city': city, 'state': js_or(st, state_name(sc)) if india else st, 'state_code': sc, 'pincode': pin, 'same_as_billing': same}
+                if line or city or st or pin or same
+                else None
+            )
+    if 'contacts' in b:
+        lst = b['contacts']
+        if lst is None:
+            lst = []
+        if not isinstance(lst, list):
+            err(422, 'VALIDATION', 'Contacts must be a list.', 'contacts')
+        if len(lst) > 20:
+            err(422, 'VALIDATION', 'Keep it to 20 contacts.', 'contacts')
+        cs = []
+        for i, x in enumerate(lst):
+            o = x if isinstance(x, dict) else {}
+            nm = _txt(o.get('name'), 120)
+            em = _txt(o.get('email'), 160)
+            ph = _txt(o.get('phone'), 40)
+            role = _txt(o.get('role'), 80)
+            if not nm and not em and not ph:
+                continue
+            if not nm:
+                err(422, 'VAL_REQUIRED', f'Contact {i + 1}: add the name.', f'contacts.{i}.name')
+            if em and not _EMAIL_RE.search(em):
+                err(422, 'VAL_EMAIL', f'Contact {i + 1}: enter a valid email address.', f'contacts.{i}.email')
+            cs.append({'name': nm, 'role': role, 'email': em, 'phone': ph, 'primary': o.get('primary') is True})
+        if cs and not any(c['primary'] for c in cs):
+            cs[0]['primary'] = True
+        out['contacts'] = cs or None
+        prim = next((c for c in cs if c['primary']), None)
+        if prim is not None and 'primary_contact' not in b:
+            out['primary_contact'] = prim['name']
+            if 'email' not in b and prim['email']:
+                out['email'] = prim['email']
+            if 'phone' not in b and prim['phone']:
+                out['phone'] = prim['phone']
+    if 'payments_profile' in b:
+        pp = b['payments_profile']
+        if pp is None or pp == '':
+            out['payments_profile'] = None
+        else:
+            if not isinstance(pp, dict):
+                err(422, 'VALIDATION', 'The payments profile must be an object.', 'payments_profile')
+            old = existing.get('payments_profile') if existing else None
+            old = old if isinstance(old, dict) else {}
+            acc = re.sub(r'\s+', '', _txt(pp.get('account_no'), 40))
+            if acc and MASK in acc:
+                acc = js_str(coalesce(old.get('account_no'), ''))  # the masked copy came back unchanged: keep the stored number
+            if acc and not ACCOUNT_RE.search(acc):
+                err(422, 'VAL_ACCOUNT', 'Account number: 6 to 20 digits.', 'payments_profile.account_no')
+            ifsc = js_upper(_txt(pp.get('ifsc'), 20))
+            if ifsc and not IFSC_RE.search(ifsc):
+                err(422, 'VAL_IFSC', 'IFSC is 11 characters, e.g. SBIN0001234.', 'payments_profile.ifsc')
+            upi = _txt(pp.get('upi'), 120)
+            if upi and not UPI_RE.search(upi):
+                err(422, 'VAL_UPI', 'UPI ID looks like name@bank.', 'payments_profile.upi')
+            bem = _txt(pp.get('billing_email'), 160)
+            if bem and not _EMAIL_RE.search(bem):
+                err(422, 'VAL_EMAIL', 'Billing e-mail: enter a valid address.', 'payments_profile.billing_email')
+            terms_v = pp.get('payment_terms_days')
+            terms: Any = None
+            if terms_v is not None and terms_v != '':
+                terms = js_number(terms_v)
+                if not is_integer(terms) or terms < 0 or terms > 180:
+                    err(422, 'VAL_RANGE', 'Payment terms must be between 0 and 180 days.', 'payments_profile.payment_terms_days')
+                out['payment_terms_days'] = terms
+            prof = {
+                'bank_name': _txt(pp.get('bank_name'), 120),
+                'account_name': _txt(pp.get('account_name'), 160),
+                'account_no': acc,
+                'ifsc': ifsc,
+                'upi': upi,
+                'payment_terms_days': terms if terms is not None else base['payment_terms_days'],
+                'billing_email': bem,
+            }
+            has_any_value = any(prof[k] for k in ('bank_name', 'account_name', 'account_no', 'ifsc', 'upi', 'billing_email')) or terms is not None
+            out['payments_profile'] = prof if has_any_value else None
+    return out
+
+
+def mask_account(no: Any) -> str:
+    s = js_str(coalesce(no, ''))
+    return '' if not s else MASK * max(0, len(s) - 4) + s[-4:]
+
+
+def customer_view(ctx: Ctx, c: dict) -> dict:
+    """A client row for the API: the payments profile's account number is masked unless the reader holds finance.edit."""
+    pp = c.get('payments_profile')
+    if isinstance(pp, dict) and pp.get('account_no') and not has(ctx, 'finance.edit'):
+        return {**c, 'payments_profile': {**pp, 'account_no': mask_account(pp['account_no']), 'account_masked': True}}
+    return c
+
+
+def projects_of_client(ctx: Ctx, c: dict, projects: list | None = None) -> list[dict]:
+    """Projects of a customer: linked by client_id (v9), or — for rows created before the link — by the client name."""
+    key = _lc(c['name'])
+    return [p for p in (projects if projects is not None else rows(ctx, 'projects')) if p.get('client_id') == c['id'] or (not p.get('client_id') and _lc(p['client']) == key)]
+
+
+def client_for_name(ctx: Ctx, name: Any) -> dict | None:
+    """The customer row a project's client text points at (None for internal work or a name not in the master)."""
+    k = _lc(js_str(coalesce(name, '')))
+    if k in INTERNAL:
+        return None
+    return next((c for c in rows(ctx, 'clients') if _lc(c['name']) == k), None)
+
+
+def create_customer(ctx: Ctx, body: Any) -> dict:
+    """Validate + insert a customer (used by POST /clients and the New Project wizard)."""
+    v = _validate_client(ctx, body)
+    row = insert(ctx, 'clients', {'status': 'prospect', 'since': None, 'health': None, **v})
+    log_activity(ctx, 'client', row['id'], 'created', f'Added client {js_str(row["name"])}')
+    return row
+
+
+def validate_customer(ctx: Ctx, body: Any) -> dict:
+    """Dry-run validation of a new customer (wizard preview)."""
+    return _validate_client(ctx, body)
+
+
+def _options(req: Req) -> Any:
+    """GET /customers/options — the customer picker of the New Project wizard and the cost calculator: key details only
+    (no payments profile). Project creators, estimators and client managers."""
+    ctx = req.ctx
+    if not has_any(ctx, 'clients.manage', 'projects.create', 'estimates.manage'):
+        err(403, 'FORBIDDEN', 'Only people who create projects or estimates can pick customers.')
+    _sync_clients(ctx)
+    projects = rows(ctx, 'projects')
+    out = []
+    for c in rows(ctx, 'clients'):
+        ps = projects_of_client(ctx, c, projects)
+        out.append(
+            {
+                'id': c['id'],
+                'name': c['name'],
+                'display_name': c.get('display_name') or None,
+                'registered_name': c.get('registered_name') or None,
+                'gstin': c.get('gstin') or '',
+                'pan': c.get('pan') or '',
+                'cin': c.get('cin') or '',
+                'industry': c.get('industry') or '',
+                'country': c.get('country') or 'India',
+                'city': c.get('city') or '',
+                'state': c.get('state') or '',
+                'state_code': c.get('state_code') or '',
+                'pincode': c.get('pincode') or '',
+                'billing_address': c.get('billing_address') or '',
+                'registered_address': c.get('registered_address') or None,
+                'primary_contact': c.get('primary_contact') or '',
+                'email': c.get('email') or '',
+                'phone': c.get('phone') or '',
+                'contacts': c.get('contacts') or [],
+                'payment_terms_days': c.get('payment_terms_days'),
+                'has_payments_profile': isinstance(c.get('payments_profile'), dict),
+                'status': c.get('status'),
+                'projects': len(ps),
+                'active_projects': sum(1 for p in ps if p['status'] in ('initiated', 'active', 'on_hold', 'npa')),
+            }
+        )
+    return {'items': sorted(out, key=lambda x: locale_key(x['name'])), 'can_create': has_any(ctx, 'clients.manage', 'projects.create'), 'can_see_payments': has(ctx, 'finance.edit')}
+
+
+def _customer_projects(req: Req) -> Any:
+    """GET /clients/:id/projects — the customer's projects (customer detail page): every project linked to it."""
+    ctx = req.ctx
+    require_action(ctx, 'clients.manage', MANAGE_CLIENTS)
+    c = find(ctx, 'clients', req.params['id'], 'Client')
+    see_value = has_any(ctx, 'finance.view', 'projects.edit', 'margins.view')
+    items = []
+    for p in projects_of_client(ctx, c):
+        m = project_metrics(ctx, p)
+        items.append(
+            {
+                'id': p['id'],
+                'code': p['code'],
+                'name': p['name'],
+                'status': p['status'],
+                'type': p['type'],
+                'billing_model': p['billing_model'],
+                'start_on': p['start_on'],
+                'end_on': p['end_on'],
+                'pm_id': p.get('pm_id'),
+                'pm_name': user_name(ctx, p.get('pm_id')),
+                'health': m['health'],
+                'progress': m['progress'],
+                'contract_value_paise': p['contract_value_paise'] if see_value else None,
+                'linked': p.get('client_id') == c['id'],
+            }
+        )
+    items.sort(key=lambda x: (1 if x['status'] in ('completed', 'closed') else 0, locale_key(x['start_on'])), reverse=False)
+    return {
+        'items': items,
+        'totals': {
+            'projects': len(items),
+            'active': sum(1 for x in items if x['status'] in ('initiated', 'active', 'on_hold', 'npa')),
+            'contract_value_paise': _sum(x['contract_value_paise'] or 0 for x in items) if see_value else None,
+        },
+        'can_create_project': has(ctx, 'projects.create'),
+    }
 
 
 def _validate_contract(ctx: Ctx, body: Any, existing: dict | None = None) -> dict[str, Any]:
@@ -495,7 +755,7 @@ def _detail(req: Req) -> Any:
     m = _client_model(ctx)
     c = next(x for x in m['items'] if x['id'] == cid)
     key = _lc(c['name'])
-    ps = [p for p in rows(ctx, 'projects') if _lc(p['client']) == key]
+    ps = projects_of_client(ctx, c)
     ids = {p['id'] for p in ps}
     show_money = has(ctx, 'finance.view')
     deals = [d for d in rows(ctx, 'deals') if _lc(d['client']) == key]
@@ -505,7 +765,10 @@ def _detail(req: Req) -> Any:
         if js_truthy(e.get('billable_to_client')) and js_truthy(e.get('project_id')) and e['project_id'] in ids and e['status'] in ('approved', 'paid')
     ]
     contacts: list[dict] = []
-    if js_truthy(c.get('primary_contact')):
+    for ct in c.get('contacts') or []:  # v9: the customer's own contacts first
+        if isinstance(ct, dict) and ct.get('name'):
+            contacts.append({'name': ct['name'], 'role': ct.get('role') or ('Primary contact' if ct.get('primary') else 'Contact'), 'email': ct.get('email', ''), 'phone': ct.get('phone', ''), 'source': 'Customer'})
+    if js_truthy(c.get('primary_contact')) and not any(_lc(x['name']) == _lc(c['primary_contact']) for x in contacts):
         contacts.append({'name': c['primary_contact'], 'role': 'Primary contact', 'email': c.get('email', UNDEF), 'phone': c.get('phone', UNDEF), 'source': 'Client master'})
     for d in deals:
         if js_truthy(d.get('contact')) and not any(_lc(x['name']) == _lc(d['contact']) for x in contacts):
@@ -606,10 +869,7 @@ def _detail(req: Req) -> Any:
 def _create(req: Req) -> Any:
     ctx = req.ctx
     require_action(ctx, 'clients.manage', MANAGE_CLIENTS)
-    v = _validate_client(ctx, req.body)
-    row = insert(ctx, 'clients', {'status': 'prospect', 'since': None, 'health': None, **v})
-    log_activity(ctx, 'client', row['id'], 'created', f'Added client {js_str(row["name"])}')
-    return row
+    return customer_view(ctx, create_customer(ctx, req.body))
 
 
 def _patch(req: Req) -> Any:
@@ -621,7 +881,7 @@ def _patch(req: Req) -> Any:
         # keep projects and deals pointing at the renamed client
         old = _lc(cur['name'])
         for p in list(rows(ctx, 'projects')):
-            if _lc(p['client']) == old:
+            if p.get('client_id') == cur['id'] or (not p.get('client_id') and _lc(p['client']) == old):
                 _patch_quiet('projects', p, {'client': v['name']})
         for d in list(rows(ctx, 'deals')):
             if _lc(d['client']) == old:
@@ -631,7 +891,7 @@ def _patch(req: Req) -> Any:
     row = update(ctx, 'clients', cur['id'], v, req.if_match)
     bs = _g(req.body, 'status')
     log_activity(ctx, 'client', row['id'], 'edited', f'Updated client {js_str(row["name"])}{" · status " + js_str(bs) if js_truthy(bs) else ""}')
-    return row
+    return customer_view(ctx, row)
 
 
 def _create_contract(req: Req) -> Any:
@@ -766,3 +1026,5 @@ def register(r: Any) -> None:
     r.post('/contracts/:id/renew', _renew)
     r.delete('/contracts/:id', _delete_contract)
     r.get('/clients-lite', _lite)
+    r.get('/customers/options', _options)
+    r.get('/clients/:id/projects', _customer_projects)

@@ -37,6 +37,23 @@ re-running `bootstrap.sql` for ANY database name resets both passwords. Use one 
 staging, development/test); never run the development or test bootstrap (simple passwords) on the production
 cluster — it would change the passwords the running API and worker use.
 
+**Managed PostgreSQL without a superuser (Neon, RDS, Azure, Supabase):** use `database/bootstrap_managed.sql` (same
+roles and grants) as the provider's admin role. On Neon, bootstrap and migrate over the **direct** host and run the
+API/worker over the **pooled** host (`-pooler` in the host name; the runtime only uses `SET LOCAL`, so the pooler's
+transaction mode is supported). Always `sslmode=require`:
+
+```sh
+# once, as neondb_owner on the DIRECT host (database neondb)
+psql "postgresql://neondb_owner:<pw>@ep-xxxx.<region>.aws.neon.tech/neondb?sslmode=require" -v ON_ERROR_STOP=1 \
+     -v dbname=seereonos -v owner_password="<owner pw>" -v app_password="<app pw>" -f database/bootstrap_managed.sql
+# every release (from backend/): seereon_owner on the DIRECT host
+MIGRATION_DATABASE_URL="postgresql://seereon_owner:<owner pw>@ep-xxxx.<region>.aws.neon.tech/seereonos?sslmode=require" python -m app.db.migrate
+# API / worker / CLI: seereon_app on the POOLED host
+DATABASE_URL="postgresql://seereon_app:<app pw>@ep-xxxx-pooler.<region>.aws.neon.tech/seereonos?sslmode=require"
+```
+
+Strong passwords: `python -c "import secrets; print(secrets.token_urlsafe(24))"` (URL-safe, no escaping needed).
+
 ### 2. Configure
 
 Copy [.env.example](.env.example) into your secret store / orchestrator (or `backend/deploy/.env` for compose) and
@@ -65,10 +82,11 @@ boot" and the reason in the log; it never comes up answering 500). On a plain ho
 | `METRICS_TOKEN` | no | — | enables `GET /metrics` (Prometheus) with `Authorization: Bearer <token>`; ≥ 24 chars. Unset: `/metrics` is 404 |
 | `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE` | no | —, `APP_ENV`, `0` | optional error reporting; request bodies, cookies, auth headers, tokens and personal data are scrubbed |
 | `STATIC_DIR` | no | dev: `../frontend/dist`; prod: off | serve a built web app from the API's origin with SPA fallback (production normally serves the web app separately) |
-| `TZ` | yes | image: `Asia/Kolkata` | the business time zone ("today" for every tenant); API and worker must match |
+| `TZ` | yes | image: `Asia/Kolkata` | the business time zone ("today" for every tenant); API and worker must match. On a plain host set `TZ` itself — `SEEREON_TZ` in `.env.example` becomes `TZ` only under compose |
 | `LOG_LEVEL` | no | `info` | JSON lines on stdout; secrets, tokens, password hashes and URL credentials are redacted |
 | `SESSION_IDLE_HOURS`, `SESSION_ABSOLUTE_DAYS` | no | 12, 30 | session expiry |
 | `RATE_LIMIT_AUTH`, `RATE_LIMIT_GLOBAL` | no | 10, 600 | per minute: auth endpoints (exact, shared in PostgreSQL), per token (per worker process) |
+| `RATE_LIMIT_CAREERS` | no | 5 | applications per client IP per 10 minutes on the public careers page (`POST /public/openings/:token`, shared in PostgreSQL); the job page itself allows max(60, 24×this) views per IP per minute |
 | `SECURITY_EVENTS_RETENTION_DAYS` | no | 400 | audit trail retention (worker `cleanup`) |
 | `WORKER_STALE_SECONDS` | no | 180 | `/readyz` reports the worker as stale after this |
 | `EMAIL_MAX_ATTEMPTS`, `EMAIL_BATCH` | no | 8, 20 | delivery attempts before dead-letter; messages per round |
@@ -223,6 +241,11 @@ python -m app.devtools.fixtures load-demo      # DEVELOPMENT demo data (refused 
 uvicorn app.main:app --port 8000 --reload      # http://localhost:8000/api/docs ; serves ../frontend/dist when built
 cd ../frontend && npm run dev                  # the web app on :5173 (VITE_API_BASE_URL=http://localhost:8000/api/v1)
 ```
+
+Every `python -m app.…` command and `uvicorn app.main:app` read `backend/.env.local` by themselves (variables already set
+in the shell win; ignored when `APP_ENV=production`), so the `set -a` line is optional. **Windows (PowerShell)**: the same
+steps, with `py -3.11 -m venv .venv; .venv\Scripts\Activate.ps1`, `copy .env.local.example .env.local`, and `psql`
+from the PostgreSQL installer's `bin` folder; gunicorn is Linux/macOS only — use the `uvicorn` command locally.
 
 Demo accounts: `santosh@seereon.co.in`, `platform@seereon.co.in`, … password `Seereon@123` (development only).
 E-mail locally: with `EMAIL_DELIVERY=disabled`, reset and invitation e-mails are still queued (sealed) — read them with

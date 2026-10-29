@@ -58,6 +58,10 @@ from app.domain.calendar import (
 )
 from app.domain.labels import LEAVE_TYPE
 from app.engine.analytics import avg_allocation, cal, sla_due
+from app.engine.holiday_cal import has_calendars, holidays_for_user
+from app.engine.leave_types import applies_to as _policy_applies
+from app.engine.leave_types import check_leave_application, leave_type_codes
+from app.engine.leave_types import is_active as _policy_active
 from app.engine.performance import DELAY_REASON_LABEL, task_stats, task_timeliness
 from app.engine.workflows import advance_approval, approval_route, ensure_wf, start_approval, step_label, wf_patch
 from app.js import (
@@ -81,6 +85,7 @@ from app.js import (
     nullish,
     prop,
 )
+from app.routes import leave_docs as _leave_docs
 
 LEAVE_TYPES = ['casual', 'sick', 'earned', 'compensatory', 'lwp', 'optional_holiday']
 
@@ -203,7 +208,7 @@ def balance_for(ctx: Ctx, u: dict, typ: Any, as_of: Any = UNDEF, exclude_request
     if as_of is UNDEF:
         as_of = ctx.today
     p = _policy_of(ctx, typ)
-    if not p:
+    if not p or not _policy_active(p) or not _policy_applies(p, u):  # v9: switched off / not for this person
         return None
     fm = prop(_S(ctx), 'company.fy_start_month')
     fy = fy_start_year(as_of, fm)
@@ -212,7 +217,10 @@ def balance_for(ctx: Ctx, u: dict, typ: Any, as_of: Any = UNDEF, exclude_request
     start_month = month_of(u['joined_on']) if u['joined_on'] > frm else month_of(frm)
     months_in_fy = js_max(0, _months_idx(month_of(to)) - _months_idx(start_month) + 1)
     months_so_far = js_max(0, js_min(months_in_fy, _months_idx(month_of(as_of)) - _months_idx(start_month) + 1))
-    accrued = half((p['annual_days'] * months_in_fy) / 12) if p['accrual'] == 'upfront' else half((p['annual_days'] * months_so_far) / 12)
+    if p['accrual'] == 'annual':  # v9: the full quota at the start of every FY, also in the year someone joins
+        accrued = p['annual_days']
+    else:
+        accrued = half((p['annual_days'] * months_in_fy) / 12) if p['accrual'] == 'upfront' else half((p['annual_days'] * months_so_far) / 12)
     # carry forward from last FY (unused, capped)
     if p['carry_forward_max'] > 0 and u['joined_on'] < frm:
         prev = fy_range(fy - 1, fm)
@@ -236,8 +244,12 @@ def balance_for(ctx: Ctx, u: dict, typ: Any, as_of: Any = UNDEF, exclude_request
     }
 
 
-def _working_dates_in(ctx: Ctx, frm: str, to: str) -> list[str]:
+def _working_dates_in(ctx: Ctx, frm: str, to: str, user_id: Any = None) -> list[str]:
     c = cal(ctx)
+    if user_id and has_calendars(ctx.tenant_id):  # v9 (A5): the person's holiday calendar (their location)
+        from app.domain.calendar import CalendarCtx
+
+        c = CalendarCtx(c.settings, holidays_for_user(ctx.tenant_id, user_id))
     if c.leave_dates is not None:
         from dataclasses import replace
 
@@ -273,6 +285,7 @@ def _leave_view(ctx: Ctx, r: dict) -> dict[str, Any]:
         'via_delegation': d['via'],
         'step_label': step_label(r) if pend else None,
         'route': approval_route(ctx, r, pend),
+        **_leave_docs.view_extra(ctx, r),  # v9: supporting documents (only when the request has some)
     }
 
 
@@ -357,7 +370,7 @@ def _create_leave_rows(ctx: Ctx, r: dict, approved_by: Any) -> int:
     existing = {x['date'] for x in rows(ctx, 'leave') if x.get('user_id') == r['user_id']}
     skipped_weeks = 0
     n = 0
-    for d in _working_dates_in(ctx, r['from_on'], r['to_on']):
+    for d in _working_dates_in(ctx, r['from_on'], r['to_on'], r['user_id']):
         if d in existing:
             continue
         lv = insert(ctx, 'leave', {'user_id': r['user_id'], 'date': d, 'type': r['type'], 'portion': r['portion'], 'source': 'hr', 'approved_by': approved_by})
@@ -835,6 +848,7 @@ def leave_taken(req: Req) -> Any:
     fy_start = js_number(req.q('fy')) if js_truthy(req.q('fy')) else fy_start_year(ctx.today, fm)
     rg = fy_range(fy_start, fm)
     frm, to = rg['from'], rg['to']
+    codes = leave_type_codes(ctx)  # v9 (A5): built-in + custom leave types
     min_h = prop(_S(ctx), 'calendar.min_hours_per_day')
     base = [u for u in rows(ctx, 'users') if u.get('status') != 'invited' and not u.get('is_super_admin')] if see_all else [ctx.user, *reports]
     people = sorted(base, key=lambda u: locale_key(u['name']))
@@ -852,7 +866,7 @@ def leave_taken(req: Req) -> Any:
         for x in ls:
             tot += 0.5 if x.get('portion') == 'half' else 1
         return {
-            'by_type': {t: sum(1 for x in ls if x.get('type') == t and x.get('portion') == 'full') for t in LEAVE_TYPES},
+            'by_type': {t: sum(1 for x in ls if x.get('type') == t and x.get('portion') == 'full') for t in codes},
             'half_days': sum(1 for x in ls if x.get('portion') == 'half') * 0.5,
             'total': r2(tot),
         }
@@ -872,7 +886,7 @@ def leave_taken(req: Req) -> Any:
         }
         if row['total'] > 0 or timesheet_days > 0 or planned['total'] > 0:
             out.append(row)
-    return {'fy_label': fy_label(fy_start), 'from': frm, 'to': to, 'as_of': ctx.today, 'min_hours': min_h, 'types': LEAVE_TYPES, 'rows': out}
+    return {'fy_label': fy_label(fy_start), 'from': frm, 'to': to, 'as_of': ctx.today, 'min_hours': min_h, 'types': codes, 'rows': out}
 
 
 def list_leave_requests(req: Req) -> Any:
@@ -893,12 +907,13 @@ def list_leave_requests(req: Req) -> Any:
             x for x in all_ if x['user_id'] != me['id'] and (hr or _sees_all_people(ctx) or mine_to_approve(x) or _is_above(ctx, me['id'], x['user_id']))
         ][:200]
     ]
-    balances = [b for b in (balance_for(ctx, me, t) for t in LEAVE_TYPES) if b]
+    codes = leave_type_codes(ctx)  # v9 (A5): built-in + the tenant's custom leave types
+    balances = [b for b in (balance_for(ctx, me, t) for t in codes) if b]
     fm = prop(_S(ctx), 'company.fy_start_month')
 
     def type_rank(p: dict) -> int:
         t = p.get('type')
-        return LEAVE_TYPES.index(t) if t in LEAVE_TYPES else -1
+        return codes.index(t) if t in codes else -1
 
     return {
         'mine': mine,
@@ -918,7 +933,7 @@ def create_leave_request(req: Req) -> Any:
     ctx = req.ctx
     me = find(ctx, 'users', ctx.user_id)
     typ = req.b('type')
-    if not _in(typ, LEAVE_TYPES):
+    if not _in(typ, leave_type_codes(ctx)):
         err(422, 'VALIDATION', 'Choose a leave type.', 'type')
     portion = 'half' if req.b('portion') == 'half' else 'full'
     frm = _str(req.b('from_on'))
@@ -937,7 +952,8 @@ def create_leave_request(req: Req) -> Any:
     reason = _str(req.b('reason'))
     if js_len(reason) < 5:
         err(422, 'VALIDATION', 'Give a reason of at least 5 characters.', 'reason')
-    dates = _working_dates_in(ctx, frm, to)
+    docs = _leave_docs.validate_new(ctx, req.b('attachments'))  # v9: optional supporting documents
+    dates = _working_dates_in(ctx, frm, to, me['id'])
     if not dates:
         err(
             422,
@@ -948,7 +964,7 @@ def create_leave_request(req: Req) -> Any:
             'from_on',
         )
     if typ == 'optional_holiday':
-        opt = {h['date'] for h in rows(ctx, 'holidays') if js_truthy(h.get('optional'))}
+        opt = {h['date'] for h in holidays_for_user(ctx.tenant_id, me) if js_truthy(h.get('optional'))}  # v9: the person's calendar
         bad = next((d for d in dates if d not in opt), None)
         if bad:
             err(
@@ -989,6 +1005,7 @@ def create_leave_request(req: Req) -> Any:
                 f'Not enough {LEAVE_TYPE[typ].lower()} leave: {js_str(rem)} day{"" if rem == 1 else "s"} left, this request needs {js_str(days)}. Pick fewer days or apply as leave without pay.',
                 'type',
             )
+    check_leave_application(ctx, me, typ, days, bool(docs))  # v9 (A5): type switched off / not applicable / document needed
     from app.routes.timesheets import resolve_approver
 
     wf = start_approval(ctx, 'leave', {'requester_id': me['id']}, resolve_approver(ctx, me))
@@ -1012,6 +1029,7 @@ def create_leave_request(req: Req) -> Any:
             **(wf_patch(wf) if approver else {}),
         },
     )
+    row = _leave_docs.store(ctx, row, docs)
     rng = f' – {fmt_date(to)}' if to != frm else ''
     log_activity(
         ctx,
@@ -1026,7 +1044,8 @@ def create_leave_request(req: Req) -> Any:
             approver,
             'NTF-04',
             'Leave request',
-            f'{me["name"]} asked for {js_str(days)} day{"" if days == 1 else "s"} of {LEAVE_TYPE[typ].lower()} leave from {fmt_date(frm)}: “{reason[:80]}”',
+            f'{me["name"]} asked for {js_str(days)} day{"" if days == 1 else "s"} of {LEAVE_TYPE[typ].lower()} leave from {fmt_date(frm)}: “{reason[:80]}”'
+            + (f' · {len(docs)} document{"" if len(docs) == 1 else "s"} attached' if docs else ''),
             '/leave',
         )
         for dl in _active_delegations_from(ctx, approver):
@@ -1165,7 +1184,7 @@ def cancel_leave(req: Req) -> Any:
     if r['status'] == 'approved':
         if r['from_on'] <= ctx.today:
             err(409, 'LEAVE_STARTED', 'This leave has already started. Ask HR to change the recorded days.')
-        dates = set(_working_dates_in(ctx, r['from_on'], r['to_on']))
+        dates = set(_working_dates_in(ctx, r['from_on'], r['to_on'], r['user_id']))
         for lv in [
             x for x in rows(ctx, 'leave') if x.get('user_id') == r['user_id'] and x['date'] in dates and x.get('type') == r['type'] and x.get('source') == 'hr'
         ]:
@@ -1193,7 +1212,7 @@ def put_leave_policy(req: Req) -> Any:
     ctx = req.ctx
     require_action(ctx, 'people.manage', 'Only HR and admins can change leave policy.')
     typ = req.params['type']
-    if typ not in LEAVE_TYPES or typ == 'lwp':
+    if typ not in leave_type_codes(ctx) or typ == 'lwp':
         err(422, 'VALIDATION', 'Pick a paid leave type.')
     annual = js_number(req.b('annual_days'))
     carry = js_number(req.b('carry_forward_max'))
@@ -1201,7 +1220,7 @@ def put_leave_policy(req: Req) -> Any:
         err(422, 'VALIDATION', 'Annual days must be between 0 and 60 (half days allowed).', 'annual_days')
     if not is_finite(carry) or carry < 0 or carry > 60:
         err(422, 'VALIDATION', 'Carry-forward must be between 0 and 60 days.', 'carry_forward_max')
-    accrual = 'monthly' if req.b('accrual') == 'monthly' else 'upfront'
+    accrual = req.b('accrual') if req.b('accrual') in ('monthly', 'annual') else 'upfront'  # v9: + annual
     cur = next((p for p in rows(ctx, 'leave_policies') if p.get('type') == typ), None)
     if cur:
         out = update(ctx, 'leave_policies', cur['id'], {'annual_days': annual, 'carry_forward_max': carry, 'accrual': accrual}, req.if_match)

@@ -20,6 +20,7 @@ from app.engine.costing import (
     calendar_summary,
     clean_additional,
     cost_chain,
+    cost_groups,
     min_hours,
     person_range_cost,
     price_and_markup,
@@ -116,8 +117,16 @@ def _clean_milestones(lst: Any) -> list[dict]:
         o = m if isinstance(m, dict) else {}
         if not js_trim(js_str(coalesce(o.get('name', UNDEF), ''))):
             continue
-        out.append({'name': _slice16(js_trim(js_str(o.get('name', UNDEF))), 120), 'billing_amount_paise': js_max(0, js_round(_num(o.get('billing_amount_paise', UNDEF))))})
+        row = {'name': _slice16(js_trim(js_str(o.get('name', UNDEF))), 120), 'billing_amount_paise': js_max(0, js_round(_num(o.get('billing_amount_paise', UNDEF))))}
+        bp = o.get('billing_pct', UNDEF)
+        if not _blank(bp):  # v9: milestone-wise price breakdown as a % of the price
+            row['billing_pct'] = js_min(100, js_max(0, js_round(_num(bp) * 100) / 100))
+        out.append(row)
     return out
+
+
+def _pct_mode(milestones: list[dict]) -> bool:
+    return bool(milestones) and all('billing_pct' in m for m in milestones)
 
 
 def _clean_resources(lst: Any) -> list[dict]:
@@ -176,7 +185,10 @@ def compute_estimate(ctx: Ctx, a: dict) -> dict[str, Any]:
     """The estimate calculator. Every number on the estimate screens, the list, compare and the PDFs comes from here."""
     see_rates = can_see_salaries(ctx)
     ok_range = _iso(a['start_on']) and _iso(a['end_on']) and a['end_on'] >= a['start_on']
-    milestones = spread_milestones(ctx, a['start_on'], a['end_on'], a['milestones']) if ok_range else []
+    pct_mode = _pct_mode(a['milestones'])
+    # % of price milestones: the percentages weigh the date spread; amounts follow once the price is known (below)
+    ms_in = [{**m, 'billing_amount_paise': js_round(m['billing_pct'] * 100)} for m in a['milestones']] if pct_mode else a['milestones']
+    milestones = spread_milestones(ctx, a['start_on'], a['end_on'], ms_in) if ok_range else []
     users = {u['id']: u for u in rows(ctx, 'users')}
     errors: list[dict] = []
     res_total: Any = 0
@@ -188,6 +200,7 @@ def compute_estimate(ctx: Ctx, a: dict) -> dict[str, Any]:
     named_rows = 0
     warnings: list[str] = []
     out = []
+    raw_costs: list = []
     for i, r in enumerate(a['resources']):
         is_person = js_truthy(r['user_id'])
         if is_person:
@@ -215,14 +228,9 @@ def compute_estimate(ctx: Ctx, a: dict) -> dict[str, Any]:
             fail('role_label', f'Row {i + 1}: name the role, e.g. “Senior React developer”, or pick a person.')
         elif r['monthly_ctc_paise'] is None or not is_finite(r['monthly_ctc_paise']) or r['monthly_ctc_paise'] <= 0:
             fail('monthly_ctc_paise', f'{js_str(who)}: type the assumed monthly CTC for this role.')
-        if mi is None:
-            fail(
-                'milestone_id',
-                f'{js_str(who)}: choose the milestone. Every resource row lands on a milestone.'
-                if milestones
-                else f'{js_str(who)}: add the milestones first. Every resource row lands on a milestone.',
-            )
-        elif not ms:
+        # v9: a row without a milestone is an "All milestones" row: it spans the estimate (or its own dates), and its
+        # cost lands on each milestone by the working days it overlaps (the calculator lists resources before milestones)
+        if mi is not None and not ms:
             fail('milestone_id', f'{js_str(who)}: that milestone no longer exists. Choose another milestone.')
         if pct is None or pct < 1 or pct > 100:
             fail('pct', f'{js_str(who)}: set an allocation between 1% and 100%.')
@@ -251,10 +259,26 @@ def compute_estimate(ctx: Ctx, a: dict) -> dict[str, Any]:
             cpd = c['cpd']
             cph = c['cph']
             hours = c['hours']
+            if ms is None and milestones:
+                # All milestones: cost each milestone's overlap; the row costs the sum of its parts
+                cost = 0
+                md = 0
+                for m in milestones:
+                    a0 = _max_iso(m['planned_start'], frm)
+                    b0 = _min_iso(m.get('planned_end', UNDEF), to)
+                    if not js_truthy(a0) or not js_truthy(b0) or b0 < a0:
+                        continue
+                    seg = person_range_cost(ctx, r['user_id'], pct, a0, b0) if is_person else range_cost_at_ctc(ctx, r['monthly_ctc_paise'], pct, a0, b0)
+                    ms_people[m['index']] += seg['cost']
+                    ms_man[m['index']] += seg['manDays']
+                    cost += seg['cost']
+                    md += seg['manDays']
+                md = _r1(md)
+            elif ms is not None:
+                ms_people[ms['index']] += cost
+                ms_man[ms['index']] += md
             res_total += cost
             man_days += md
-            ms_people[ms['index']] += cost  # type: ignore[index]
-            ms_man[ms['index']] += md  # type: ignore[index]
             people.add(r['user_id'] if is_person else f'role:{js_str(r["role_label"])}:{i}')
             if is_person and cpd is None:
                 st['error'] = f'{js_str(u["name"])} has no cost rate yet, so this row costs nothing.'  # type: ignore[index]
@@ -268,7 +292,7 @@ def compute_estimate(ctx: Ctx, a: dict) -> dict[str, Any]:
                 'user_id': r['user_id'],
                 'milestone_id': None,
                 'milestone_index': ms['index'] if ms else mi,
-                'ms_code': ms['code'] if ms else '—',
+                'ms_code': ms['code'] if ms else 'All' if mi is None else '—',
                 'pct': pct,
                 'from_on': frm,
                 'to_on': to,
@@ -284,6 +308,7 @@ def compute_estimate(ctx: Ctx, a: dict) -> dict[str, Any]:
                 'monthly_ctc_paise': None if is_person else r['monthly_ctc_paise'],
             }
         )
+        raw_costs.append(cost)
     additional = a['additional_costs']
     add = _sum(x['amount_paise'] for x in additional)
     maint = js_max(0, js_round(a['maintenance_paise']))
@@ -299,6 +324,19 @@ def compute_estimate(ctx: Ctx, a: dict) -> dict[str, Any]:
     below = margin is not None and total > 0 and margin < floor / 100
     if below:
         warnings.append(f'Planned margin {to_fixed(margin * 100, 1)}% is below the {js_str(floor)}% floor.')  # type: ignore[operator]
+
+    if pct_mode and milestones:
+        # milestone-wise price breakdown: each milestone bills its % of the price; when the shares add up to 100% the
+        # last one takes the rounding so the milestones bill exactly the price
+        tot_pct = _sum(m['billing_pct'] for m in a['milestones'])
+        acc: Any = 0
+        for i, m in enumerate(milestones):
+            bp = a['milestones'][i]['billing_pct']
+            amt = price - acc if i == len(milestones) - 1 and abs(tot_pct - 100) < 1e-9 else js_round(price * bp / 100)
+            acc += amt
+            milestones[i] = {**m, 'billing_amount_paise': js_max(0, amt), 'billing_pct': bp}
+        if abs(tot_pct - 100) > 1e-9:
+            warnings.append(f'Milestone shares add up to {to_fixed(tot_pct, 2).rstrip("0").rstrip(".")}% of the price, not 100%.')
 
     # cost and cash by milestone
     n = len(milestones)
@@ -370,6 +408,8 @@ def compute_estimate(ctx: Ctx, a: dict) -> dict[str, Any]:
             'man_days': _r1(man_days),
             'resource_rows': len(out),
             'people': len(people),
+            'groups': cost_groups(res_total, additional, maint),
+            'people_share': _people_share(out, raw_costs, res_total),
         },
         'additional_costs': additional,
         'maintenance_paise': maint,
@@ -396,6 +436,25 @@ def compute_estimate(ctx: Ctx, a: dict) -> dict[str, Any]:
     return {'preview': preview, 'errors': errors, 'total': base_cost, 'actual': total, 'price': price, 'resources': res_total}
 
 
+def _people_share(out_rows: list[dict], raw_costs: list, res_total: Any) -> list[dict]:
+    """Per resource (named person or role placeholder): man-days, the cost it adds and its share of the resource cost."""
+    by: dict[str, dict] = {}
+    for i, r in enumerate(out_rows):
+        k = f'u:{r["user_id"]}' if r['kind'] == 'person' else f'r:{js_str(r["role_label"])}'
+        if r['kind'] == 'person' and not r['user_id']:
+            continue
+        x = by.setdefault(k, {'key': k, 'kind': r['kind'], 'user_id': r['user_id'], 'role_label': r['role_label'], 'rows': 0, 'man_days': 0, 'cost': 0, '_raw': 0})
+        x['rows'] += 1
+        x['man_days'] = x['man_days'] + r['man_days']
+        x['cost'] = None if r['cost'] is None or x['cost'] is None else x['cost'] + r['cost']
+        x['_raw'] = x['_raw'] + (raw_costs[i] or 0)
+    out = []
+    for x in by.values():
+        raw = x.pop('_raw')
+        out.append({**x, 'man_days': _r1(x['man_days']), 'share': raw / res_total if res_total > 0 else 0})
+    return out
+
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Salary privacy
 # ---------------------------------------------------------------------------------------------------------------------
@@ -415,7 +474,18 @@ def _redact_preview(p: dict) -> dict:
     return {
         **p,
         'rows': [{**r, 'cost': None, 'cost_per_day': None, 'cost_per_hour': None} if r['kind'] == 'person' else r for r in p['rows']],
-        'totals': {**p['totals'], 'resources': None, 'contingency': None, 'total_cost': None, 'actual_cost': None, 'profit': None, 'margin': None, 'markup': None},
+        'totals': {
+            **p['totals'],
+            'resources': None,
+            'contingency': None,
+            'total_cost': None,
+            'actual_cost': None,
+            'profit': None,
+            'margin': None,
+            'markup': None,
+            'groups': [{**g, 'amount': None} if g['key'] == 'resources' else g for g in p['totals'].get('groups', [])],
+            'people_share': [{**x, 'cost': None, 'share': None} if x['kind'] == 'person' else x for x in p['totals'].get('people_share', [])],
+        },
         'markup_pct': None,
         'below_floor': False,
         'warnings': [w for w in p['warnings'] if 'floor' not in w],
@@ -436,7 +506,10 @@ def _calc_of(e: dict) -> dict[str, Any]:
     return {
         'start_on': e['start_on'],
         'end_on': e['end_on'],
-        'milestones': [{'name': m['name'], 'billing_amount_paise': m['billing_amount_paise']} for m in e['milestones']],
+        'milestones': [
+            {'name': m['name'], 'billing_amount_paise': m['billing_amount_paise'], **({'billing_pct': m['billing_pct']} if m.get('billing_pct') is not None else {})}
+            for m in e['milestones']
+        ],
         'resources': [
             {
                 'key': r['id'],
@@ -582,7 +655,14 @@ def _validate_body(ctx: Ctx, b: Any) -> dict[str, Any]:
         'start_on': start,
         'end_on': end,
         'milestones': [
-            {'key': m['code'], 'name': m['name'], 'billing_amount_paise': m['billing_amount_paise'], 'start_on': m['planned_start'], 'end_on': m.get('planned_end', UNDEF)}
+            {
+                'key': m['code'],
+                'name': m['name'],
+                'billing_amount_paise': m['billing_amount_paise'],
+                'start_on': m['planned_start'],
+                'end_on': m.get('planned_end', UNDEF),
+                **({'billing_pct': m['billing_pct']} if 'billing_pct' in m else {}),
+            }
             for m in c['preview']['milestones']
         ],
         'resources': [
@@ -591,7 +671,7 @@ def _validate_body(ctx: Ctx, b: Any) -> dict[str, Any]:
                 'user_id': r['user_id'],
                 'role_label': None if r['user_id'] else r['role_label'],
                 'monthly_ctc_paise': None if r['user_id'] else r['monthly_ctc_paise'],
-                'milestone_key': (keys[r['milestone_index']] if r['milestone_index'] is not None and 0 <= r['milestone_index'] < len(keys) else 'M1'),
+                'milestone_key': (keys[r['milestone_index']] if r['milestone_index'] is not None and 0 <= r['milestone_index'] < len(keys) else None if r['milestone_index'] is None else 'M1'),
                 'pct': js_round(coalesce(r['pct'], 0)),
                 'from_on': r['from_on'],
                 'to_on': r['to_on'],

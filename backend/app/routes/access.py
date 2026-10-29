@@ -558,6 +558,7 @@ def register(r: Any) -> None:
     r.patch('/roles/:key', patch_role)
     r.delete('/roles/:key', delete_role)
     r.get('/setup/status', setup_status)
+    register_v9(r)  # v9 (A5)
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -637,3 +638,237 @@ __all__ = [
     'register',
     'nullish',
 ]
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# v9 (A5, D10): who holds a permission, compare roles, the admin setup hub
+# ---------------------------------------------------------------------------------------------------------------------
+def permission_holders(req: Req) -> Any:
+    """everyone who holds a permission and how (their role, or an extra grant) + who lost it by a per-person removal"""
+    ctx = req.ctx
+    require_action(ctx, 'roles.view', 'Only people who can see roles can see who holds a permission.')
+    key = req.params['key']
+    p = PERMISSION_BY_KEY.get(key)
+    if p is None:
+        err(404, 'NOT_FOUND', 'Permission not found.')
+    roles = rows(ctx, 'roles')
+    with_it = {r['key'] for r in roles if r.get('active') and key in effective_permissions(r['permissions'])}
+    people, revoked = [], []
+    for u in rows(ctx, 'users'):
+        if u.get('is_super_admin') or u.get('status') == 'deactivated':
+            continue
+        rd = role_def(ctx.tenant_id, u.get('role_key'))
+        via_role = u.get('role_key') in with_it
+        extra = key in coalesce(prop(u, 'extra_permissions'), [])
+        removed = key in coalesce(prop(u, 'revoked_permissions'), [])
+        base = {
+            'id': u['id'],
+            'name': prop(u, 'name'),
+            'title': prop(u, 'title'),
+            'email': prop(u, 'email'),
+            'avatar_hue': prop(u, 'avatar_hue'),
+            'status': prop(u, 'status'),
+            'role_key': u.get('role_key'),
+            'role_name': rd['name'] if rd else None,
+        }
+        if removed and (via_role or extra):
+            revoked.append(base)
+        elif via_role or extra:
+            people.append({**base, 'via': 'role' if via_role else 'extra'})
+    people.sort(key=lambda x: locale_key(js_str(x['name'])))
+    revoked.sort(key=lambda x: locale_key(js_str(x['name'])))
+    req_by = [q['key'] for q in PERMISSIONS if key in (q.get('requires') or [])]
+    return {
+        'permission': {**p, 'module_label': MODULE_LABEL[p['module']], 'required_by': req_by},
+        'roles': [
+            {'key': r['key'], 'name': r['name'], 'active': r.get('active'), 'is_system': r.get('is_system'), 'user_count': len(_active_holders(ctx, r['key']))}
+            for r in sorted(roles, key=lambda r: (0 if r.get('is_system') else 1, locale_key(r['name'])))
+            if r['key'] in with_it
+        ],
+        'people': people,
+        'revoked': revoked,
+        'total': len(people),
+    }
+
+
+def compare_roles(req: Req) -> Any:
+    """2–6 roles side by side, permission by permission, grouped by module (with what differs)"""
+    ctx = req.ctx
+    require_action(ctx, 'roles.view')
+    raw = req.q('keys')
+    keys = [k for k in (raw.split(',') if isinstance(raw, str) else []) if k]
+    keys = list(dict.fromkeys(keys))
+    if len(keys) < 2 or len(keys) > 6:
+        err(422, 'VALIDATION', 'Pick between 2 and 6 roles to compare.', 'keys')
+    roles = [_role_or_404(ctx, k) for k in keys]
+    sets = {r['key']: set(effective_permissions(r['permissions'])) for r in roles}
+    modules = []
+    common = diff = 0
+    only = {r['key']: 0 for r in roles}
+    for m in MODULE_ORDER:
+        perms = []
+        for q in PERMISSIONS:
+            if q['module'] != m:
+                continue
+            has_ = {k: q['key'] in sets[k] for k in keys}
+            n = sum(1 for v in has_.values() if v)
+            same = n in (0, len(keys))
+            if n == len(keys):
+                common += 1
+            elif n > 0:
+                diff += 1
+                if n == 1:
+                    only[next(k for k, v in has_.items() if v)] += 1
+            perms.append({'key': q['key'], 'label': q['label'], 'description': q['description'], 'sensitive': bool(q.get('sensitive')), 'has': has_, 'same': same})
+        modules.append({'module': m, 'label': MODULE_LABEL[m], 'permissions': perms, 'differences': sum(1 for x in perms if not x['same'])})
+    return {
+        'roles': [{'key': r['key'], 'name': r['name'], 'count': len(sets[r['key']]), 'user_count': len(_active_holders(ctx, r['key'])), 'active': r.get('active')} for r in roles],
+        'modules': modules,
+        'summary': {'common': common, 'differences': diff, 'only': only},
+    }
+
+
+def _hub(ctx: Ctx) -> dict[str, Any]:
+    from app.engine import holiday_cal as hc
+    from app.engine.leave_types import is_active as leave_active
+    from app.engine.openings import current_fy, opening_row, state_of
+    from app.routes.invoices import invoice_settings
+    from app.routes.settings import _settings_touched
+
+    st = _setup_status(ctx)
+    by = {s['key']: s for s in st['steps']}
+    tid = ctx.tenant_id
+    year = ctx.today[:4]
+
+    def n(k: int, one: str, many: str | None = None) -> str:
+        return f'{k} {one if k == 1 else (many if many is not None else one + "s")}'
+
+    items: list[dict[str, Any]] = []
+
+    def add(group: str, key: str, title: str, body: str, status: str, meta: str, to: str, action: str, required: bool = True) -> None:
+        items.append({'group': group, 'key': key, 'title': title, 'body': body, 'status': status, 'meta': meta, 'to': to, 'action': action, 'required': required})
+
+    def done(b: bool, partial: bool = False) -> str:
+        return 'done' if b else ('attention' if partial else 'todo')
+
+    # Organisation
+    add('Organisation', 'org', 'Organisation profile', by['org']['body'], done(by['org']['done']), js_str(by['org']['meta']), '/setup/org', 'master.view')
+    locs = [x for x in rows(ctx, 'locations') if x.get('active')]
+    add('Organisation', 'locations', 'Locations & shifts', by['places']['body'], done(by['places']['done']), by['places']['meta'], '/setup/locations', 'master.view')
+    add('Organisation', 'structure', 'Departments, designations & grades', by['structure']['body'], done(by['structure']['done']), by['structure']['meta'], '/setup/departments', 'master.view')
+    try:
+        teams = [t for t in rows(ctx, 'teams') if t.get('active', True)]
+    except Exception:  # noqa: BLE001 — the teams table arrives with V012 (A3)
+        teams = None
+    if teams is not None:
+        add('Organisation', 'teams', 'Teams', 'Delivery teams, their leads and members (People › Team groups by team).', 'done' if teams else 'optional', n(len(teams), 'team'), '/setup/teams', 'master.view', False)
+    # People, leave & calendars
+    pol = rows(ctx, 'leave_policies')
+    act = [p for p in pol if leave_active(p)]
+    add(
+        'People & time',
+        'leave_types',
+        'Leave types & policies',
+        'Quota, accrual, carry-forward, encashment, who each type applies to and when a document is needed.',
+        done(len(act) > 0),
+        f'{n(len(act), "active leave type")}' + (f' · {len(pol) - len(act)} switched off' if len(pol) > len(act) else '') if pol else 'No leave types yet — leave has no quota',
+        '/setup/leave-types',
+        'people.manage',
+    )
+    cals = hc.calendars_of(tid)
+    def_id = hc.default_calendar_id(tid)
+    hol_year = [h for h in rows(ctx, 'holidays') if h['date'].startswith(year)]
+    by_cal: dict[str, int] = {}
+    for h in hol_year:
+        cid = hc.calendar_of_holiday(h, tid)
+        by_cal[cid] = by_cal.get(cid, 0) + 1
+    used = {hc.calendar_id_for_location(tid, loc) for loc in locs} | {def_id}
+    empty = [c['name'] for c in cals if c['id'] in used and not by_cal.get(c['id'])]
+    add(
+        'People & time',
+        'holidays',
+        'Holiday calendars',
+        'Public and optional holidays per location; working days, leave and timesheet targets follow them.',
+        'done' if not empty else ('attention' if len(empty) < len(used) else 'todo'),
+        f'{n(len(cals), "calendar")} · {n(len(hol_year), "holiday")} in {year}' + (f' · no holidays yet in {", ".join(empty[:2])}' if empty else ''),
+        '/setup/holidays',
+        'holidays.edit',
+    )
+    add('People & time', 'hours', 'Working hours & calendar', 'Minimum hours, weekly offs, Saturdays and the approval deadline.', done(_settings_touched(ctx)), 'Customised' if _settings_touched(ctx) else 'Using the defaults', '/settings/company#calendar', 'settings.edit')
+    add('People & time', 'people', 'Employees', by['people']['body'], done(by['people']['done']), by['people']['meta'], '/people', 'users.view')
+    people = [u for u in rows(ctx, 'users') if not u.get('is_super_admin') and u.get('status') == 'active']
+    rated = {x.get('user_id') for x in rows(ctx, 'cost_rates')}
+    with_rate = sum(1 for u in people if u['id'] in rated)
+    add(
+        'People & time',
+        'cost_rates',
+        'Salaries & cost rates',
+        'Monthly CTC per person — drives costing, margins and payroll.',
+        'done' if people and with_rate == len(people) else ('attention' if with_rate else 'todo'),
+        f'{with_rate} of {n(len(people), "person", "people")} have a cost rate',
+        '/settings/cost-rates',
+        'cost_rates.view',
+    )
+    # Finance
+    inv = invoice_settings(ctx)
+    bank_ok = bool(_t(prop(inv.get('bank'), 'account_number')))
+    org = prop(find_by_tenant(ctx), 'org') or {}
+    gst_ok = bool(_t(org.get('gstin'))) if isinstance(org, dict) else False
+    add(
+        'Finance',
+        'invoicing',
+        'Invoice settings',
+        'Prefix, bank account, IFSC and signatory printed on every tax invoice.',
+        'done' if bank_ok and gst_ok else ('attention' if bank_ok or gst_ok else 'todo'),
+        ('Bank account set' if bank_ok else 'Bank account missing') + (' · GSTIN set' if gst_ok else ' · GSTIN missing'),
+        '/finance/invoices?settings=1',
+        'finance.view',
+    )
+    fy = current_fy(ctx)
+    ob = opening_row(ctx, fy)
+    ost = state_of(ctx, ob, fy)
+    from app.domain.calendar import fy_label
+
+    add(
+        'Finance',
+        'openings',
+        'Opening balances',
+        'Cash, bank, receivables, payables and other ledger balances at the start of the financial year.',
+        'done' if ob and ob.get('lines') and not ost['reopened'] else ('attention' if ob else 'todo'),
+        (f'{fy_label(fy)}: {n(len(ob["lines"]), "line")}' + (' · reopened' if ost['reopened'] else ' · locked' if ost['locked'] else ' · editable')) if ob and ob.get('lines') else f'{fy_label(fy)}: not entered',
+        '/setup/opening-balances',
+        'finance.view',
+    )
+    # Access & controls
+    add('Access & controls', 'roles', 'Roles & permissions', by['roles']['body'], done(by['roles']['done']), by['roles']['meta'], '/setup/roles', 'roles.view')
+    add('Access & controls', 'controls', 'Approval workflows & maker-checker', by['controls']['body'], done(by['controls']['done']), by['controls']['meta'], '/setup/workflows', 'workflows.manage')
+    add('Access & controls', 'emails', 'Email templates', by['emails']['body'], done(by['emails']['done']), by['emails']['meta'], '/setup/emails', 'emails.view', False)
+    req_items = [i for i in items if i['required']]
+    done_n = sum(1 for i in req_items if i['status'] == 'done')
+    groups: list[dict[str, Any]] = []
+    for i in items:
+        g = next((x for x in groups if x['title'] == i['group']), None)
+        if g is None:
+            g = {'title': i['group'], 'items': []}
+            groups.append(g)
+        g['items'].append(i)
+    return {'company': st['company'], 'groups': groups, 'done': done_n, 'total': len(req_items), 'complete': done_n == len(req_items), 'attention': sum(1 for i in items if i['status'] == 'attention')}
+
+
+def find_by_tenant(ctx: Ctx) -> Any:
+    return scope().find_by('tenants', 'id', ctx.tenant_id)
+
+
+HUB_ACTIONS = ['master.view', 'roles.view', 'employees.create', 'workflows.manage', 'makerchecker.configure', 'emails.view', 'people.manage', 'holidays.edit', 'finance.view', 'settings.edit']
+
+
+def setup_hub(req: Req) -> Any:
+    ctx = req.ctx
+    require_any(ctx, HUB_ACTIONS, 'The admin setup page is for administrators.')
+    return _hub(ctx)
+
+
+def register_v9(r: Any) -> None:
+    r.get('/permissions/:key/holders', permission_holders)
+    r.get('/roles-compare', compare_roles)
+    r.get('/setup/hub', setup_hub)

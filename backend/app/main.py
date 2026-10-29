@@ -59,6 +59,11 @@ AUTH_LIMITED = frozenset(
         'GET /invites/:token',
     }
 )
+# v9 public careers page (no session): DB-backed fixed windows per client IP — (bucket, limit of the config, window s)
+PUBLIC_LIMITED: dict[str, tuple[str, Any, int]] = {
+    'POST /public/openings/:token': ('careers-apply', lambda c: c.rate_limit_careers, 600),
+    'GET /public/openings/:token': ('careers-view', lambda c: max(60, c.rate_limit_careers * 24), 60),
+}
 API_METHODS = frozenset({'GET', 'POST', 'PUT', 'PATCH', 'DELETE'})
 BODY_METHODS = frozenset({'POST', 'PUT', 'PATCH', 'DELETE'})
 
@@ -232,7 +237,7 @@ def create_app(cfg: Config | None = None, *, security: Any = None, start_workers
 
     set_concurrency(cfg.scrypt_concurrency)
     configure_logging(cfg.log_level)
-    if os.environ.get('TZ') and hasattr(time, "tzset"):
+    if os.environ.get('TZ') and hasattr(time, 'tzset'):  # time.tzset does not exist on Windows
         time.tzset()
     init_sentry(cfg.sentry_dsn, cfg.sentry_environment or cfg.env, VERSION, cfg.sentry_traces_sample_rate, component='api')
     pools = Pools(cfg.database_url, cfg.pool_max, cfg.statement_timeout_ms, open=True, prepare_threshold=cfg.pg_prepare_threshold)
@@ -506,6 +511,37 @@ def create_app(cfg: Config | None = None, *, security: Any = None, start_workers
                         )
                     )
                     return 429, error_body('RATE_LIMITED', f'Too many requests. Try again in {worst.retry_after} seconds.', rid), out_headers, None
+        if m and route_key in PUBLIC_LIMITED:
+            bucket, limit_of, window = PUBLIC_LIMITED[route_key]
+            limit_n = limit_of(cfg)
+            try:
+                rr = security.hit(bucket, ip or '', limit_n, window)
+            except Exception as e:  # noqa: BLE001 — fail open like the auth limits
+                log.warning('rate-limit store unavailable; request allowed', exc_info=e)
+                rr = None
+            if rr is not None:
+                out_headers.update(
+                    {'RateLimit-Limit': str(rr.limit), 'RateLimit-Remaining': str(max(0, rr.limit - rr.hits)), 'RateLimit-Reset': str(rr.retry_after)}
+                )
+                if not rr.allowed:
+                    out_headers['Retry-After'] = str(rr.retry_after)
+                    security.log(
+                        SecurityEvent(
+                            'ratelimit.blocked',
+                            'blocked',
+                            ip=ip,
+                            user_agent=ua or None,
+                            request_id=rid,
+                            detail={'route': route_key, 'limit': bucket, 'hits': rr.hits},
+                        )
+                    )
+                    mins = max(1, -(-rr.retry_after // 60))
+                    return (
+                        429,
+                        error_body('RATE_LIMITED', f'Too many attempts from your network. Try again in {mins} minute{"" if mins == 1 else "s"}.', rid),
+                        out_headers,
+                        None,
+                    )
         actx = audit_before(rt, security, method, path, body, headers, ip, ua, rid)
         res = rt.execute(
             ExecRequest(
