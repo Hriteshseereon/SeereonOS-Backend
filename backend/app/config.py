@@ -55,6 +55,7 @@ class Config:
     tenant_cache_max_mb: int = 512
     rate_limit_global: int = 600
     rate_limit_auth: int = 10
+    rate_limit_careers: int = 5  # v9: applications per IP per 10 minutes on the public careers page
     session_idle_hours: int = 12
     session_absolute_days: int = 30
     shutdown_grace_ms: int = 10000
@@ -235,6 +236,7 @@ def load_config(env: dict | None = None) -> Config:
         tenant_cache_max_mb=get(lambda: _int(env, 'TENANT_CACHE_MAX_MB', 512, 0, 1_000_000), 512),
         rate_limit_global=get(lambda: _int(env, 'RATE_LIMIT_GLOBAL', 600, 1), 600),
         rate_limit_auth=get(lambda: _int(env, 'RATE_LIMIT_AUTH', 10, 1), 10),
+        rate_limit_careers=get(lambda: _int(env, 'RATE_LIMIT_CAREERS', 5, 1), 5),
         session_idle_hours=get(lambda: _int(env, 'SESSION_IDLE_HOURS', 12, 1, 24 * 365), 12),
         session_absolute_days=get(lambda: _int(env, 'SESSION_ABSOLUTE_DAYS', 30, 1, 3650), 30),
         shutdown_grace_ms=get(lambda: _int(env, 'SHUTDOWN_GRACE_MS', 10000, 0, 600000), 10000),

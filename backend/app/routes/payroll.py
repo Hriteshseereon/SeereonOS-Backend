@@ -35,7 +35,7 @@ from app.domain.calendar import add_days, is_working_day, month_of, month_range,
 from app.domain.costing import rate_on, sales_compensation
 from app.domain.money import fmt_money
 from app.domain.sales import deal_value
-from app.engine.analytics import cal
+from app.engine.analytics import cal, exit_day_of
 from app.engine.maker_checker import assert_base_version, eligible_checkers, needs_checker, pending_brief, propose, register_applier
 from app.js import UNDEF, coalesce, fmt_date_en_in, js_round, js_sort, js_str, js_truthy, locale_key, to_fixed
 from app.routes.timesheets import apply_lock, resolve_approver
@@ -54,11 +54,10 @@ def _month_name(ym: str) -> str:
 
 
 def _last_day_of(ctx: Ctx, u: dict) -> str | None:
-    """A leaver's last working day: the offboarding checklist's last day, else the day they were deactivated."""
-    if u.get('status') != 'deactivated':
-        return None
-    ex = next((c for c in rows(ctx, 'lifecycle_checklists') if c.get('kind') == 'offboarding' and c.get('user_id') == u['id'] and js_truthy(c.get('last_day'))), None)
-    return coalesce(ex.get('last_day', UNDEF) if ex is not None else UNDEF, u['updated_at'][:10])
+    """A leaver's last working day: the offboarding checklist's last day, else the day they were deactivated. V9-FIX
+    (item 1): also an active person whose exit is in progress (their checklist's last day) — the shared rule
+    analytics.exit_day_of, which the P&L payroll basis and the payroll register estimates use too."""
+    return exit_day_of(ctx, u)
 
 
 def _compute_lines(ctx: Ctx, month: str) -> dict[str, Any]:
@@ -83,7 +82,7 @@ def _compute_lines(ctx: Ctx, month: str) -> dict[str, Any]:
     users = [
         u
         for u in rows(ctx, 'users')
-        if u.get('status') != 'invited' and u['joined_on'] <= to and not (u.get('status') == 'deactivated' and coalesce(_last_day_of(ctx, u), '') < frm)
+        if u.get('status') != 'invited' and u['joined_on'] <= to and not coalesce(_last_day_of(ctx, u), frm) < frm
     ]
     for u in sorted(users, key=lambda u: locale_key(u['name'])):
         rate = rate_on(rates, u['id'], to)

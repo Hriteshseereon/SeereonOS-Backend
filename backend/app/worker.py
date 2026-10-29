@@ -404,7 +404,7 @@ def main(argv: list[str] | None = None) -> int:
     if a.healthcheck:
         return healthcheck(cfg)
     configure_logging(cfg.log_level)
-    if os.environ.get('TZ') and hasattr(time, "tzset"):
+    if os.environ.get('TZ') and hasattr(time, 'tzset'):  # time.tzset does not exist on Windows
         time.tzset()
     from app.main import VERSION
 

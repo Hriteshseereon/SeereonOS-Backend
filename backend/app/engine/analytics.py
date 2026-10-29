@@ -63,6 +63,8 @@ __all__ = [
     'week_status_map',
     'costed_entries',
     'costed_task_entries_by_project',
+    'is_untasked_project_entry',
+    'untasked_project_actuals',
     'task_actuals',
     'current_rate_ph',
     'deps_of',
@@ -142,6 +144,78 @@ def _wdm(ctx: Ctx, ym: str) -> int:
     return v
 
 
+def person_cal(ctx: Ctx, user_id: Any) -> CalendarCtx:
+    """V9-FIX (item 2): the person's working-day calendar for COSTING — their location's holiday calendar (the one their
+    own timesheet target, leave days and the team views use), without leave. A tenant without holiday calendars, or a
+    call without a person, gets the company calendar (cal(ctx) without leave) — the v8 basis, unchanged."""
+    from app.engine.holiday_cal import calendar_id_for_user, has_calendars, holidays_in
+
+    tid = ctx.tenant_id
+    if not isinstance(user_id, str) or not user_id or not has_calendars(tid):
+        return _cached(ctx, 'calNoLeave', lambda: cal(ctx).without_leave())
+    m = _memo(ctx)
+    cid = m.get('pcid:' + user_id)
+    if cid is None:
+        u = scope().find_by('users', 'id', user_id)
+        cid = m['pcid:' + user_id] = calendar_id_for_user(tid, u if isinstance(u, dict) and u.get('tenant_id') == tid else None)
+    return _cached(ctx, 'pcal:' + cid, lambda: CalendarCtx(ctx.tenant.get('settings'), holidays_in(tid, cid)))
+
+
+def person_wdm(ctx: Ctx, user_id: Any, ym: str) -> int:
+    """Working days in a month on the person's calendar (person_cal) — the divisor of their cost per hour."""
+    from app.engine.holiday_cal import has_calendars
+
+    if not isinstance(user_id, str) or not user_id or not has_calendars(ctx.tenant_id):
+        return _wdm(ctx, ym)
+    c = person_cal(ctx, user_id)
+    return _cached(ctx, f'pwdm:{id(c)}:{ym}', lambda: working_days_in_month(ym, c))
+
+
+# V9-FIX (item 8): ONE definition of "approved hours". A week's entries count as approved when the week is approved OR
+# was locked by the weekly lock rule (BR-06: an open week whose Sunday has passed locks; its hours are final and count
+# as approved — the costing engine's rule since v8). Every consumer (costed entries → task / project actuals, project
+# metrics, the Costing tab's by-person table, the costing engine, T&M billing, leakage) uses this set.
+APPROVED_WEEK_STATUSES = frozenset({'approved', 'locked'})
+
+
+def counts_as_approved(week_status: Any) -> bool:
+    return week_status in APPROVED_WEEK_STATUSES
+
+
+def exit_day_of(ctx: Ctx, u: dict) -> str | None:
+    """A person's last working day, or None: a deactivated person's offboarding last day (else the day they were
+    deactivated); an active person with an exit in progress (an offboarding checklist with a last day) — that last
+    day."""
+    ex = next((c for c in rows(ctx, 'lifecycle_checklists') if c.get('kind') == 'offboarding' and c.get('user_id') == u['id'] and js_truthy(c.get('last_day'))), None)
+    if u.get('status') == 'deactivated':
+        return coalesce(ex.get('last_day', UNDEF) if ex is not None else UNDEF, u['updated_at'][:10])
+    return ex['last_day'] if ex is not None else None
+
+
+def employed_days(ctx: Ctx, u: dict, ym: str) -> dict[str, Any]:
+    """V9-FIX (item 1): {working, month, employed, start, end} — working days of `ym` the person was employed (from
+    joined_on to their exit day), on the payroll calendar (company calendar without leave, as the payroll run uses for
+    proration and unpaid days). `employed` is False when they were not employed at all in the month."""
+    first = f'{ym}-01'
+    last = add_days(month_of(add_days(first, 32)) + '-01', -1)
+    c = _cached(ctx, 'calNoLeave', lambda: cal(ctx).without_leave())
+    wdm = _wdm(ctx, ym)
+    joined = u.get('joined_on') if js_truthy(u.get('joined_on')) else first
+    ex = exit_day_of(ctx, u)
+    start = joined if joined > first else first
+    end = ex if ex is not None and ex < last else last
+    if joined > last or (ex is not None and ex < first):
+        return {'working': 0, 'month': wdm, 'employed': False, 'start': start, 'end': end}
+    return {'working': working_days_between(start, end, c) if start <= end else 0, 'month': wdm, 'employed': True, 'start': start, 'end': end}
+
+
+def prorate_month(amount: Any, working: Any, month_days: Any) -> Any:
+    """The payroll run's proration: amount ÷ working days in the month × days employed (unchanged when employed for
+    the whole month) — the same mechanism as unpaid (LWP / unapproved) days."""
+    full = month_days or 1
+    return js_round(amount / full * working) if working < full else amount
+
+
 def _rates_by_user(rates: list) -> dict[Any, list]:
     """user_id -> that user's rate rows in table order (rateOn only looks at one user's rows: same result)"""
     g: dict[Any, list] = {}
@@ -151,7 +225,9 @@ def _rates_by_user(rates: list) -> dict[Any, list]:
 
 
 # the tables costed entries / task actuals are derived from (cal(ctx) without a user = settings + holidays)
-COSTED_TABLES = ('timesheet_entries', 'timesheet_weeks', 'cost_rates', 'tenants', 'holidays')
+# V9-FIX (item 2): + users / locations — a person's cost per hour divides by the working days of THEIR location's
+# calendar (person_cal); without holiday calendars neither is read and a changed user row keeps the per-entry reuse
+COSTED_TABLES = ('timesheet_entries', 'timesheet_weeks', 'cost_rates', 'tenants', 'holidays', 'holiday_calendars', 'users', 'locations')  # v9: + calendars (A5)
 
 
 def _costed_reuse(ctx: Ctx) -> tuple[dict, dict] | None:
@@ -164,8 +240,11 @@ def _costed_reuse(ctx: Ctx) -> tuple[dict, dict] | None:
     if latest is None:
         return None
     tables, ents, base = latest
+    from app.engine.holiday_cal import has_calendars
+
+    deps = ('cost_rates', 'tenants', 'holidays', 'holiday_calendars', 'users', 'locations') if has_calendars(ctx.tenant_id) else ('cost_rates', 'tenants', 'holidays', 'holiday_calendars')
     for t, e in zip(tables, ents):
-        if t in ('cost_rates', 'tenants', 'holidays') and (s.loaded_entry(t) is not e or s.has_overlay(t)):
+        if t in deps and (s.loaded_entry(t) is not e or s.has_overlay(t)):
             return None
     by_id = s.cache.derived_get(s.tenant_id, ('an:costedById',), ents)
     if by_id is None:
@@ -180,7 +259,7 @@ def _costed_compute(ctx: Ctx) -> list[dict]:
     weeks = week_status_map(ctx)
     by_user = _rates_by_user(rows(ctx, 'cost_rates'))
     min_h = _min_hours(ctx)
-    wdm: dict[str, Any] = {}  # month -> working days (the same _wdm values, looked up once per month)
+    wdm: dict[Any, Any] = {}  # (person, month) -> working days on the person's calendar (looked up once each)
     out = []
     append = out.append
     s = scope()
@@ -197,25 +276,7 @@ def _costed_compute(ctx: Ctx) -> list[dict]:
             s.note_derived(('an:costed',), COSTED_TABLES, out, 900 * len(out))
         return out
     for e in rows(ctx, 'timesheet_entries'):
-        w = weeks.get(e['week_id'])
-        r = rate_on(by_user.get(e['user_id'], ()), e['user_id'], e['work_date'])  # type: ignore[arg-type]
-        if r:
-            ym = month_of(e['work_date'])
-            n = wdm.get(ym)
-            if n is None:
-                n = wdm[ym] = _wdm(ctx, ym)
-            rph = cost_per_hour(r['monthly_ctc_paise'], n, min_h)
-        else:
-            rph = 0
-        append(
-            {
-                **e,
-                'week_status': coalesce(w.get('status', UNDEF) if w is not None else UNDEF, 'open'),
-                'approved': (w.get('status') if w is not None else UNDEF) == 'approved',
-                'rate_ph': rph,
-                'cost': 0 if e.get('kind') == 'leave' else rph * e['hours'],
-            }
-        )
+        append(_costed_row(ctx, e, weeks, by_user, min_h, wdm))
     if any(s.has_overlay(t) for t in COSTED_TABLES):
         s.note_derived(('an:costed',), COSTED_TABLES, out, 900 * len(out))
     return out
@@ -226,17 +287,18 @@ def _costed_row(ctx: Ctx, e: dict, weeks: dict, by_user: dict, min_h: Any, wdm: 
     w = weeks.get(e['week_id'])
     r = rate_on(by_user.get(e['user_id'], ()), e['user_id'], e['work_date'])  # type: ignore[arg-type]
     if r:
-        ym = month_of(e['work_date'])
-        n = wdm.get(ym)
+        k = (e['user_id'], month_of(e['work_date']))
+        n = wdm.get(k)
         if n is None:
-            n = wdm[ym] = _wdm(ctx, ym)
+            n = wdm[k] = person_wdm(ctx, e['user_id'], k[1])  # V9-FIX (item 2): the person's location calendar
         rph = cost_per_hour(r['monthly_ctc_paise'], n, min_h)
     else:
         rph = 0
+    st = coalesce(w.get('status', UNDEF) if w is not None else UNDEF, 'open')
     return {
         **e,
-        'week_status': coalesce(w.get('status', UNDEF) if w is not None else UNDEF, 'open'),
-        'approved': (w.get('status') if w is not None else UNDEF) == 'approved',
+        'week_status': st,
+        'approved': counts_as_approved(st),  # V9-FIX (item 8): approved or locked (one definition)
         'rate_ph': rph,
         'cost': 0 if e.get('kind') == 'leave' else rph * e['hours'],
     }
@@ -281,10 +343,18 @@ def task_actuals(ctx: Ctx) -> dict[str, dict]:
     return _cached(ctx, 'taskActuals', f)
 
 
+def is_untasked_project_entry(e: dict) -> bool:
+    """v9 (decision D5): time booked to a project without a task — an activity row (kind 'internal') with a project,
+    e.g. "Project work (no task)". It is project time: it counts in the project's actual hours and cost. Activity rows
+    without a project are overhead; leave never costs."""
+    return e.get('kind') == 'internal' and not js_truthy(e.get('task_id')) and isinstance(e.get('project_id'), str) and bool(e.get('project_id'))
+
+
 def costed_task_entries_by_project(ctx: Ctx) -> dict[Any, list[dict]]:
-    """project id -> the costed task entries (kind 'task', a task id) whose task belongs to it, in costed order:
-    `costed_entries(ctx).filter(e => e.kind === 'task' && e.task_id && taskIdsOfProject.has(e.task_id))` for every
-    project at once (task ids are unique). READ-ONLY lists."""
+    """project id -> the costed entries of the project, in costed order: task entries (kind 'task', a task id) whose
+    task belongs to it — `costed_entries(ctx).filter(e => e.kind === 'task' && e.task_id && taskIdsOfProject.has(
+    e.task_id))` — plus (v9, D5) the untasked project entries booked to it (task_id null: no milestone). Every project
+    at once (task ids are unique). READ-ONLY lists."""
     costed = costed_entries(ctx)
     s = scope()
 
@@ -296,6 +366,8 @@ def costed_task_entries_by_project(ctx: Ctx) -> dict[Any, list[dict]]:
                 p = tp.get(e['task_id'], _NO_TASK)
                 if p is not _NO_TASK:
                     g.setdefault(p, []).append(e)
+            elif is_untasked_project_entry(e):
+                g.setdefault(e['project_id'], []).append(e)
         return g
 
     def shared_or_build() -> dict[Any, list[dict]]:
@@ -309,11 +381,34 @@ def costed_task_entries_by_project(ctx: Ctx) -> dict[Any, list[dict]]:
 _NO_TASK = object()
 
 
+def untasked_project_actuals(ctx: Ctx) -> dict[str, dict]:
+    """v9 (D5): project id -> {hours, approved, cost, approvedCost} of the time booked to it without a task
+    (READ-ONLY; derived from the per-project index above)."""
+
+    def f() -> dict[str, dict]:
+        out: dict[str, dict] = {}
+        for pid, es in costed_task_entries_by_project(ctx).items():
+            cur = None
+            for e in es:
+                if not is_untasked_project_entry(e):
+                    continue
+                if cur is None:
+                    cur = out[pid] = {'hours': 0, 'approved': 0, 'cost': 0, 'approvedCost': 0}
+                cur['hours'] += e['hours']
+                cur['cost'] += e['cost']
+                if e['approved']:
+                    cur['approved'] += e['hours']
+                    cur['approvedCost'] += e['cost']
+        return out
+
+    return _cached(ctx, 'untaskedActuals', f)
+
+
 def _current_rate_ph(ctx: Ctx, user_id: Any) -> Any:
     r = rate_on(rows(ctx, 'cost_rates'), user_id, ctx.today)
     if not r:
         return 0
-    return cost_per_hour(r['monthly_ctc_paise'], _wdm(ctx, month_of(ctx.today)), _min_hours(ctx))
+    return cost_per_hour(r['monthly_ctc_paise'], person_wdm(ctx, user_id, month_of(ctx.today)), _min_hours(ctx))
 
 
 def current_rate_ph(ctx: Ctx, user_id: Any) -> Any:
@@ -323,7 +418,7 @@ def current_rate_ph(ctx: Ctx, user_id: Any) -> Any:
         return 0
     if type(user_id) is not str:
         return _current_rate_ph(ctx, user_id)
-    return scope().memo_on(('an:crph', ctx, user_id), ('cost_rates', 'tenants'), lambda: _current_rate_ph(ctx, user_id))
+    return scope().memo_on(('an:crph', ctx, user_id), ('cost_rates', 'tenants', 'users', 'locations', 'holidays', 'holiday_calendars'), lambda: _current_rate_ph(ctx, user_id))
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -447,6 +542,7 @@ METRICS_TABLES = (
     'payments',
     'ledger_entries',
     'users',
+    'locations',  # v9 (A5): a person's holiday calendar comes from their location
     *COSTED_TABLES,
 )
 
@@ -513,6 +609,13 @@ def _project_metrics_base(ctx: Ctx, p: dict) -> dict[str, Any]:
             planned += t['est_hours']
         elif t['start_on'] < today:
             planned += (t['est_hours'] * js_max(0, diff_days(today, t['start_on']))) / js_max(1, diff_days(t['due_on'], t['start_on']))
+    # v9 (D5): time booked to the project without a task is project time (actual hours and cost)
+    ut = untasked_project_actuals(ctx).get(pid)
+    if ut is not None:
+        actual += ut['hours']
+        approved += ut['approved']
+        actual_cost += ut['approvedCost']
+        logged_cost += ut['cost']
     contract = p['contract_value_paise']
     invoiced: Any = 0
     collected: Any = 0
@@ -679,7 +782,12 @@ def payroll_for_month(ctx: Ctx, ym: str) -> dict[str, Any]:
     headcount = 0
     ctc: Any = 0
     for u in rows(ctx, 'users'):
-        if u.get('status') == 'deactivated' or js_truthy(u.get('is_super_admin')) or not js_truthy(u.get('joined_on')) or u['joined_on'] > last:
+        if js_truthy(u.get('is_super_admin')) or not js_truthy(u.get('joined_on')) or u['joined_on'] > last:
+            continue
+        # V9-FIX (item 1): a joiner is paid from joined_on and a leaver up to their exit day — the payroll run's
+        # proration (CTC ÷ working days in the month × days employed); leavers count in the months they worked
+        emp = employed_days(ctx, u, ym)
+        if not emp['employed']:
             continue
         mine = by_user.get(u['id'], [])
         r = rate_on(mine, u['id'], ctx.today)
@@ -688,7 +796,7 @@ def payroll_for_month(ctx: Ctx, ym: str) -> dict[str, Any]:
             r = lst[0] if lst else None
         if not r:
             continue
-        ctc += r['monthly_ctc_paise']
+        ctc += prorate_month(r['monthly_ctc_paise'], emp['working'], emp['month'])
         headcount += 1
     booked = [e for e in expand_ledger(ctx, first, last) if e['kind'] == 'expense' and e.get('category') in PAYROLL_CATEGORIES]
     if booked:

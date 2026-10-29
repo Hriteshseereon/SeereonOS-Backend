@@ -15,6 +15,11 @@ This directory is the database deliverable: the schema (migrations), the cluster
 | `migrations/V007__table_changes.sql` | `table_changes`, the flush change log for incremental cache refresh |
 | `migrations/V008__single_role_runtime.sql` | v8 production hardening: one runtime role + `SECURITY DEFINER` functions, the e-mail delivery queue, `worker_heartbeats` / `job_runs`, `payment_orders` / `payment_events`, `seereon_cleanup()` |
 | `migrations/V009__tenant_products.sql` | `tenants.products`: the per-company product master (was a fixed vendor catalogue for every company) |
+| `migrations/V010__customers_project_wizard.sql` | v9 (items 1, 2, 7; D2, D3): customers = `clients` extended (`registered_name`, `display_name`, `cin`, `registered_address`, `contacts`, `payments_profile`); `projects.client_id` → clients (existing projects linked by client name, missing customers created like the API's client sync), `projects.client_details`, `projects.escalation` (escalation matrix), `projects.create_key` (idempotent wizard create, unique per tenant); `milestones.details`; change requests sent to the team (`change_requests.sent_to`, `sent_at`, `sent_by`, `send_note`); `email_templates_key_chk` becomes a key-format rule (template `change_request_sent` is added by the API) |
+| `migrations/V011__task_assignees_untasked_time_leave_docs.sql` | v9 (D4, D5, CEO request 5): `tasks.assignee_ids` (co-assignees besides the owner); `leave_requests.attachments` (supporting-document metadata; content in `files`, entity `leave_request`). Task-independent timesheet time needs no column: activity rows (`kind` `internal`) with `internal_code` `project_work` (project + description required) or any activity booked to a project count as project time |
+| `migrations/V012__teams_public_openings.sql` | v9: `teams` (master: lead, members, department); `openings` job description + public apply link (`public_token`, `accepting_applications`, …); careers applicant fields on `candidates` (source `careers`); `seereon_opening_tenant(token)` |
+| `migrations/V013__report_types.sql` | v9 (D9): `saved_reports.report_type` + `report_config` — reports saved from the report-type catalogue (Financial, Attendance, Salary, Task, Project, Timesheet) |
+| `migrations/V014__admin_settings.sql` | v9 (D10): leave types & policies on `leave_policies` (custom codes, applicability, encashment, attachment rule, accrual `annual`; leave-type CHECK lists replaced by a code-format check on `leave`, `leave_requests`, `timesheet_entries.leave_type`); `holiday_calendars` + `holidays.calendar_id` + `locations.holiday_calendar_id`; `fy_openings` (financial-year opening balances); `change_sets.entity` + `opening_balance` |
 | `scripts/backup.sh` | encrypted `pg_dump -Fc` (age or gpg) with retention |
 | `scripts/restore.sh` | restore a backup into an EMPTY database prepared by `bootstrap.sql` (one transaction, checksum verified) |
 | `scripts/restore_test.sh` | scripted restore test: restore into a throwaway database, verify, drop (run weekly) |
@@ -76,7 +81,7 @@ transaction mode works: tenant and platform scope are `SET LOCAL` / `set_config(
 
 **Migration policy.** Files are `V<n>__<name>.sql`, applied in order, each in its own transaction, recorded with its
 sha256 in `schema_migrations`; an advisory lock serialises concurrent runners; a changed applied file makes the runner
-refuse. Never edit an applied migration: add a new file — the next one is `V009__…`. A schema change that touches a
+refuse. Never edit an applied migration: add a new file — the next one is `V015__…`. A schema change that touches a
 domain table updates its `app_column_meta` / `app_table_meta` rows in the same file and keeps the conventions below
 (RLS policies, the three version triggers, grants). Every new function is `SECURITY INVOKER` unless it must cross the
 privilege boundary; a `SECURITY DEFINER` one must `SET search_path = pg_catalog, public`, use bound parameters only,
@@ -115,7 +120,7 @@ operations that must cross the boundary are narrow functions owned by `seereon_o
 |---|---|---|
 | sign-in / session | `seereon_resolve_session(hash, idle_hours)`, `seereon_user_by_email`, `seereon_login_attempts(emails)`, `seereon_record_login_attempt` | input is a sha256 token hash or an e-mail; returns one row |
 | tenant-scoped credentials | `seereon_password_hashes(tenant, users)`, `seereon_set_password`, `seereon_delete_passwords`, `seereon_sessions`, `seereon_create_session`, `seereon_revoke_sessions`, `seereon_reset_tokens`, `seereon_create_reset_token`, `seereon_use_reset_tokens`, `seereon_delete_reset_tokens` | the user / tenant must be the tenant of the current transaction (`app.tenant_id`) or the platform scope must be active; hash formats are checked (scrypt, hex sha256) |
-| lookups across tenants | `seereon_users_by_email`, `seereon_free_slug`, `seereon_invite_tenant(token)`, `seereon_reset_token_tenant(hash)`, `seereon_mfa_owner`, `seereon_payment_tenant(provider, order_id)` | return the minimum (a tenant id, a slug, a boolean-like row) needed to enter the right tenant |
+| lookups across tenants | `seereon_users_by_email`, `seereon_free_slug`, `seereon_invite_tenant(token)`, `seereon_reset_token_tenant(hash)`, `seereon_mfa_owner`, `seereon_payment_tenant(provider, order_id)`, `seereon_opening_tenant(token)` (V012, public careers page) | return the minimum (a tenant id, a slug, a boolean-like row) needed to enter the right tenant |
 | security plumbing | `seereon_rate_limit_hit`, `seereon_log_security_event`, `seereon_idempotency_get/put` | append/increment only: the audit trail cannot be read, changed or deleted by the runtime role |
 | e-mail queue | `seereon_email_enqueue_outbox`, `seereon_email_enqueue_platform`, `seereon_email_claim`, `seereon_email_sent`, `seereon_email_failed`, `seereon_email_queue_stats` | claims are leased per worker id; a late worker cannot complete another worker's claim (fencing) |
 | jobs | `seereon_job_tenants()`, `seereon_cleanup(retention_days, keep_days)` | fixed statements, no arguments that select data |
@@ -881,6 +886,7 @@ Row type `E.Holiday[]` · PK (id) · tenant-scoped · 15 seed rows
 | date | date NOT NULL |  | ISODate |  |
 | name | text NOT NULL |  | string |  |
 | optional | boolean NOT NULL |  | boolean |  |
+| calendar_id | text (V014) | absent | ?: ID | → holiday_calendars.id (no FK: the base calendar `hcal_<tenant id>` may not be materialised yet); absent = the base calendar |
 | id | text NOT NULL |  | ID | Primary key (opaque string; generated by the server) |
 | tenant_id | text NOT NULL |  | ID | Owning tenant (RLS key) |
 | created_at | timestamptz NOT NULL |  | ISODateTime | Created (set by the app) |
@@ -931,6 +937,10 @@ Row type `E.Project[]` · PK (id) · tenant-scoped · 10 seed rows
 | baseline_end_on | date | null | ISODate \| null |  |
 | color_hue | integer NOT NULL |  | number |  |
 | costing | jsonb | absent | ?: ProjectCosting \| null | the saved project cost calculator (Feature Guide §3, §6) |
+| client_id | text | absent | ?: ID \| null | V010: the parent customer → clients.id (FK, restrict; clients are never hard-deleted); `client` is the display copy |
+| client_details | jsonb | absent | ?: ProjectClientDetails | V010: the customer's people for this project `{contact_name, contact_role, contact_email, contact_phone, po_reference, notes}` |
+| escalation | jsonb | absent | ?: EscalationMatrix | V010: `{rows: [{level, user_id, name, role, email, phone, after_value, after_unit, scope}], notes, updated_at, updated_by}` |
+| create_key | text | absent | ?: string | V010: New Project wizard request key; unique per tenant (one submission = one project) |
 | id | text NOT NULL |  | ID | Primary key (opaque string; generated by the server) |
 | tenant_id | text NOT NULL |  | ID | Owning tenant (RLS key) |
 | created_at | timestamptz NOT NULL |  | ISODateTime | Created (set by the app) |
@@ -974,6 +984,7 @@ Row type `E.Milestone[]` · PK (id) · tenant-scoped · 23 seed rows
 | achieved_on | date | null | ISODate \| null |  |
 | empty_since | date | null | ISODate \| null |  |
 | deleted_at | timestamptz | null | ISODateTime \| null |  |
+| details | text | absent | ?: string | V010: additional details (acceptance, deliverables) from the wizard |
 | id | text NOT NULL |  | ID | Primary key (opaque string; generated by the server) |
 | tenant_id | text NOT NULL |  | ID | Owning tenant (RLS key) |
 | created_at | timestamptz NOT NULL |  | ISODateTime | Created (set by the app) |
@@ -1034,6 +1045,7 @@ Row type `E.Task[]` · PK (id) · tenant-scoped · 69 seed rows
 | recurrence_of | text | absent | ?: ID \| null | the task this one repeats |
 | attachments | jsonb | absent | ?: { id: string; name: string; size: number; type: string; data_url?:  |  |
 | parent_task_id | text | absent | ?: ID \| null | sub-task / follow-up of another task; reference id (no FK) |
+| assignee_ids | text[] (V011) | absent | ?: ID[] | co-assignees besides the owner (never the owner, never the backup; ≤ 10). They see the task, are notified, log time, move its stage and comment; the owner stays accountable and submits it for review |
 | id | text NOT NULL |  | ID | Primary key (opaque string; generated by the server) |
 | tenant_id | text NOT NULL |  | ID | Owning tenant (RLS key) |
 | created_at | timestamptz NOT NULL |  | ISODateTime | Created (set by the app) |
@@ -1139,11 +1151,11 @@ Row type `E.TimesheetEntry[]` · PK (id) · tenant-scoped · 1701 seed rows
 | work_date | date NOT NULL |  | ISODate |  |
 | kind | text NOT NULL |  | EntryKind | one of: task, leave, internal |
 | task_id | text | null | ID \| null | reference id (no FK) |
-| internal_code | text | null | string \| null | e.g. 'meeting' \| 'learning' \| 'presales' \| 'admin' |
-| leave_type | text | null | LeaveType \| null | one of: casual, sick, earned, compensatory, lwp, optional_holiday |
+| internal_code | text | null | string \| null | activity code: 'project_work' (v9: time on a project without a task — project and note required), 'meeting', 'learning', 'presales', 'admin', 'support', 'other', 'interview', 'bench', 'breaks' |
+| leave_type | text | null | LeaveType \| null | a built-in (casual, sick, earned, compensatory, lwp, optional_holiday) or a custom leave-type code of leave_policies (V014: format check `^[a-z][a-z0-9_]{1,39}$`) |
 | hours | double precision NOT NULL |  | number |  |
 | note | text NOT NULL |  | string |  |
-| project_id | text | absent | ?: ID \| null | activities (internal time) may name the project they were for (v5 timesheet); → projects.id (FK, restrict) |
+| project_id | text | absent | ?: ID \| null | activities (internal time) may name the project they were for (v5 timesheet); v9: an activity with a project is project time — it counts in the project's actual hours and cost ("No milestone"); without a project it is overhead; → projects.id (FK, restrict) |
 | id | text NOT NULL |  | ID | Primary key (opaque string; generated by the server) |
 | tenant_id | text NOT NULL |  | ID | Owning tenant (RLS key) |
 | created_at | timestamptz NOT NULL |  | ISODateTime | Created (set by the app) |
@@ -1159,7 +1171,7 @@ Row type `E.Leave[]` · PK (id) · tenant-scoped · 17 seed rows
 |---|---|---|---|---|
 | user_id | text NOT NULL |  | ID | → users.id (FK, restrict) |
 | date | date NOT NULL |  | ISODate |  |
-| type | text NOT NULL |  | LeaveType | one of: casual, sick, earned, compensatory, lwp, optional_holiday |
+| type | text NOT NULL |  | LeaveType | a built-in (casual, sick, earned, compensatory, lwp, optional_holiday) or a custom leave-type code of leave_policies (V014: format check `^[a-z][a-z0-9_]{1,39}$`) |
 | portion | text NOT NULL |  | 'full' \| 'half' | one of: full, half |
 | source | text NOT NULL |  | 'timesheet' \| 'hr' | one of: timesheet, hr |
 | approved_by | text | null | ID \| null |  |
@@ -1496,6 +1508,10 @@ Row type `E.ChangeRequest[]` · PK (id) · tenant-scoped · 4 seed rows
 | note | text | absent | ?: string |  |
 | proposed_tasks | jsonb | absent | ?: { title: string; est_hours: number; owner_id: ID \| null }[] | added to the WBS on approval |
 | tasks_added_on | timestamptz | null | ?: ISODateTime \| null |  |
+| sent_to | jsonb | absent | ?: {user_id, sent_at, sent_by, seen_at}[] | V010: team members the PM sent the CR to (notification + e-mail); `seen_at` when they acknowledged |
+| sent_at | timestamptz | absent | ?: ISODateTime | V010: last send |
+| sent_by | text | absent | ?: ID | V010: who sent it last → users.id (FK) |
+| send_note | text | absent | ?: string | V010: the note of the last send |
 | id | text NOT NULL |  | ID | Primary key (opaque string; generated by the server) |
 | tenant_id | text NOT NULL |  | ID | Owning tenant (RLS key) |
 | created_at | timestamptz NOT NULL |  | ISODateTime | Created (set by the app) |
@@ -1516,6 +1532,15 @@ Row type `E.Opening[]` · PK (id) · tenant-scoped · 3 seed rows
 | owner_id | text NOT NULL |  | ID | reference id (no FK) |
 | needed_by | date | null | ISODate \| null |  |
 | notes | text NOT NULL |  | string |  |
+| public_token | text (V012) | absent | ?: string \| null | public apply link `/careers/<token>`: 43 random URL-safe characters (`^[A-Za-z0-9_-]{32,64}$`), unique across tenants (partial unique index); NULL = no link; regenerating replaces it (the old link answers 404) |
+| accepting_applications | boolean (V012) | absent | ?: boolean | false closes the link by hand; the API accepts applications only when this is not false AND status is open / interviewing AND the workspace is not suspended / read-only |
+| about, responsibilities, requirements, nice_to_have | text (V012) | absent | ?: string | job description; the three lists are one point per line (bullets on the public page) |
+| location | text (V012) | absent | ?: string |  |
+| work_mode | text (V012) | absent | ?: 'onsite' \| 'hybrid' \| 'remote' | check constraint |
+| employment_type | text (V012) | absent | ?: 'full_time' \| 'part_time' \| 'contract' \| 'internship' | check constraint |
+| experience_min, experience_max | double precision (V012) | absent | ?: number \| null | years; min ≤ max (check) |
+| salary_min_paise, salary_max_paise | bigint (V012) | absent | ?: Paise \| null | annual CTC range; min ≤ max (check) |
+| salary_visible | boolean (V012) | absent | ?: boolean | show the range on the public page |
 | id | text NOT NULL |  | ID | Primary key (opaque string; generated by the server) |
 | tenant_id | text NOT NULL |  | ID | Owning tenant (RLS key) |
 | created_at | timestamptz NOT NULL |  | ISODateTime | Created (set by the app) |
@@ -1579,6 +1604,8 @@ Row type `E.SavedReport[]` · PK (id) · tenant-scoped · 5 seed rows
 | source | text NOT NULL |  | 'builder' \| 'ai' \| 'system' | one of: builder, ai, system |
 | schedule | text NOT NULL |  | 'none' \| 'weekly' \| 'monthly' | one of: none, weekly, monthly |
 | last_run_at | timestamptz | null | ISODateTime \| null |  |
+| report_type | text (V013) | absent | ?: string \| null | v9: the report type a report was saved from (`pnl`, `receivables`, `payroll_register`, `hours`, … — app/reports/types.py); NULL = a dataset-engine / AI report (unchanged). Check `^[a-z][a-z0-9_]{1,39}$` |
+| report_config | jsonb (V013) | absent | ?: ReportTypeConfig \| null | v9: the saved configuration `{fields, period, filters{project,customer,team,person,status}, group_by, sort, chart, chart_by}`, re-validated on every run; set exactly when `report_type` is set (pair check). `spec` then holds a descriptive stub |
 | id | text NOT NULL |  | ID | Primary key (opaque string; generated by the server) |
 | tenant_id | text NOT NULL |  | ID | Owning tenant (RLS key) |
 | created_at | timestamptz NOT NULL |  | ISODateTime | Created (set by the app) |
@@ -1699,7 +1726,7 @@ Row type `B.LeaveRequest[]` · PK (id) · tenant-scoped · 7 seed rows
 | user_id | text NOT NULL |  | ID | → users.id (FK, restrict) |
 | from_on | date NOT NULL |  | ISODate |  |
 | to_on | date NOT NULL |  | ISODate |  |
-| type | text NOT NULL |  | LeaveType | one of: casual, sick, earned, compensatory, lwp, optional_holiday |
+| type | text NOT NULL |  | LeaveType | a built-in (casual, sick, earned, compensatory, lwp, optional_holiday) or a custom leave-type code of leave_policies (V014: format check `^[a-z][a-z0-9_]{1,39}$`) |
 | portion | text NOT NULL |  | 'full' \| 'half' | one of: full, half |
 | days | double precision NOT NULL |  | number |  |
 | reason | text NOT NULL |  | string |  |
@@ -1708,6 +1735,7 @@ Row type `B.LeaveRequest[]` · PK (id) · tenant-scoped · 7 seed rows
 | decided_by | text | null | ID \| null |  |
 | decided_at | timestamptz | null | ISODateTime \| null |  |
 | decision_reason | text | null | string \| null |  |
+| attachments | jsonb (V011) | absent | ?: LeaveAttachment[] | supporting documents `[{id, file_id, name, mime, size_bytes, uploaded_by, uploaded_at}]` (≤ 3, PDF/PNG/JPG/DOCX ≤ 5 MB each); the content is a `files` row (entity `leave_request`). Opened only by the applicant, the request's approvers and their delegates, and HR |
 | id | text NOT NULL |  | ID | Primary key (opaque string; generated by the server) |
 | tenant_id | text NOT NULL |  | ID | Owning tenant (RLS key) |
 | created_at | timestamptz NOT NULL |  | ISODateTime | Created (set by the app) |
@@ -1725,10 +1753,18 @@ Row type `B.LeavePolicy[]` · PK (id) · tenant-scoped · 10 seed rows
 
 | column | type | null→ | TS type | meaning |
 |---|---|---|---|---|
-| type | text NOT NULL |  | LeaveType | one of: casual, sick, earned, compensatory, lwp, optional_holiday |
-| annual_days | double precision NOT NULL |  | number |  |
-| carry_forward_max | double precision NOT NULL |  | number |  |
-| accrual | text NOT NULL |  | 'upfront' \| 'monthly' | one of: monthly, upfront |
+| type | text NOT NULL |  | LeaveType \| string | the leave-type code: a built-in (casual, sick, earned, compensatory, optional_holiday) or a custom code (V014: `^[a-z][a-z0-9_]{1,39}$`); unique per tenant (V014). `lwp` needs no policy |
+| annual_days | double precision NOT NULL |  | number | quota a year, 0–365, half days |
+| carry_forward_max | double precision NOT NULL |  | number | unused days carried into the next FY (cap) |
+| accrual | text NOT NULL |  | 'upfront' \| 'monthly' \| 'annual' | monthly = 1/12 a month; upfront = the year's quota at the FY start, pro-rated for joiners; annual (V014) = the full quota at the start of every FY, also in the year someone joins |
+| name | text (V014) | absent | ?: string | display name (absent = built-in label) |
+| description | text (V014) | absent | ?: string | shown to people when they apply |
+| active | boolean (V014) | absent | ?: boolean | false = no longer offered (applications refused: LEAVE_TYPE_INACTIVE); absent = true |
+| encashable, encash_max_days | boolean, double precision (V014) | absent | ?: boolean, ?: number \| null | unused balance may be encashed (cap a year) |
+| applicable_role_keys, applicable_location_ids, applicable_employment_types | text[] (V014) | absent | ?: string[] | who the type applies to (empty = everyone; a person must match every non-empty list): LEAVE_NOT_APPLICABLE otherwise |
+| attachment_after_days | integer (V014) | absent | ?: number \| null | a supporting document is required when a request is MORE than N days (0 = always, absent = never): LEAVE_ATTACHMENT_REQUIRED |
+| is_custom | boolean (V014) | absent | ?: boolean | tenant-defined code |
+| sort_order | integer (V014) | absent | ?: number | order in pickers |
 | id | text NOT NULL |  | ID | Primary key (opaque string; generated by the server) |
 | tenant_id | text NOT NULL |  | ID | Owning tenant (RLS key) |
 | created_at | timestamptz NOT NULL |  | ISODateTime | Created (set by the app) |
@@ -1841,7 +1877,7 @@ Row type `B.Candidate[]` · PK (id) · tenant-scoped · 6 seed rows
 | name | text NOT NULL |  | string |  |
 | email | text NOT NULL |  | string |  |
 | phone | text NOT NULL |  | string |  |
-| source | text NOT NULL |  | 'referral' \| 'job_portal' \| 'linkedin' \| 'campus' \| 'agency' \| 'w | one of: other, referral, website, job_portal, linkedin, campus, agency |
+| source | text NOT NULL |  | 'referral' \| 'job_portal' \| 'linkedin' \| 'campus' \| 'agency' \| 'w | one of: other, referral, website, job_portal, linkedin, campus, agency, careers (V012: applied through the public careers link) |
 | stage | text NOT NULL |  | CandidateStage | one of: rejected, applied, screening, interview, offer, hired, withdrawn |
 | experience_years | double precision NOT NULL |  | number |  |
 | current_ctc_paise | bigint | null | Paise \| null | money in paise |
@@ -1854,6 +1890,8 @@ Row type `B.Candidate[]` · PK (id) · tenant-scoped · 6 seed rows
 | rejected_reason | text | null | string \| null |  |
 | joining_on | date | null | ISODate \| null |  |
 | user_id | text | null | ID \| null | set when hired and converted to a user; reference id (no FK) |
+| linkedin_url, current_company, current_title, location, cover_note | text (V012) | absent | ?: string \| null | filled from the public careers form (source `careers`) |
+| consent_at | timestamptz (V012) | absent | ?: ISODateTime \| null | when the applicant agreed to the processing of their details |
 | id | text NOT NULL |  | ID | Primary key (opaque string; generated by the server) |
 | tenant_id | text NOT NULL |  | ID | Owning tenant (RLS key) |
 | created_at | timestamptz NOT NULL |  | ISODateTime | Created (set by the app) |
@@ -2108,6 +2146,12 @@ Row type `B.Client[]` · PK (id) · tenant-scoped · 11 seed rows
 | pan | text | absent | (untyped) | untyped field written by the shared code |
 | notes | text | absent | (untyped) | untyped field written by the shared code |
 | status_manual | boolean | absent | (untyped) | untyped field written by the shared code |
+| registered_name | text | absent | ?: string | V010: registered business name (legal entity); `name` stays the display name |
+| display_name | text | absent | ?: string | V010: optional short name |
+| cin | text | absent | ?: string | V010: corporate identification number (21 chars) or LLPIN |
+| registered_address | jsonb | absent | ?: CustomerAddress | V010: `{line, city, state, state_code, pincode, same_as_billing}`; the billing address keeps its own columns |
+| contacts | jsonb | absent | ?: CustomerContact[] | V010: `[{name, role, email, phone, primary}]`; the primary one mirrors into `primary_contact` / `email` / `phone` |
+| payments_profile | jsonb | absent | ?: CustomerPaymentsProfile | V010: `{bank_name, account_name, account_no, ifsc, upi, payment_terms_days, billing_email}`; the API masks `account_no` unless the reader holds `finance.edit` |
 
 #### contracts
 
@@ -2326,7 +2370,8 @@ Row type `A.Location[]` · PK (id) · tenant-scoped · 5 seed rows
 | city | text NOT NULL |  | string |  |
 | state | text NOT NULL |  | string |  |
 | timezone | text NOT NULL |  | string |  |
-| holiday_calendar | text NOT NULL |  | string | name; holidays table is tenant-wide in v1 |
+| holiday_calendar | text NOT NULL |  | string | display copy of the calendar name |
+| holiday_calendar_id | text (V014) | absent | ?: ID | → holiday_calendars.id (no FK); absent = the default calendar. People at the location follow it (working days, leave days, timesheet targets) |
 | is_head_office | boolean NOT NULL |  | boolean |  |
 | active | boolean NOT NULL |  | boolean |  |
 | id | text NOT NULL |  | ID | Primary key (opaque string; generated by the server) |
@@ -2657,4 +2702,48 @@ Row type `V7.EmployeeDocument[]` · PK (id) · tenant-scoped · 45 seed rows
 | created_by | text | null | ?: ID \| null | User who created the row (audit; no FK) |
 | version | integer NOT NULL |  | number | Optimistic-concurrency version (If-Match), +1 per update |
 
+#### teams
+
+V012 (hand-written) · Row type `Team[]` · PK (id) · tenant-scoped · no seed rows (People › Team falls back to departments)
+
+| column | type | null→ | TS type | meaning |
+|---|---|---|---|---|
+| name | text NOT NULL |  | string | 2–80 characters (check); unique per tenant case-insensitively (enforced by the API) |
+| description | text NOT NULL |  | string |  |
+| lead_id | text | null | ID \| null | → users.id (FK, restrict); always also listed in member_ids |
+| department_id | text | null | ID \| null | → departments.id (FK, restrict) |
+| member_ids | text[] NOT NULL |  | ID[] | members (user ids, display order); a person may be in several teams |
+| active | boolean NOT NULL |  | boolean | inactive teams are hidden from People › Team and Team documents |
+| id, tenant_id, created_at, updated_at, created_by, version | | | | standard columns (see above) |
+
 <!-- GENERATED:end -->
+
+#### holiday_calendars
+
+Row type `HolidayCalendar[]` (V014) · PK (id) · tenant-scoped · no seed rows (the base calendar `hcal_<tenant id>` is virtual until the first calendar write)
+
+| column | type | null→ | TS type | meaning |
+|---|---|---|---|---|
+| name | text NOT NULL |  | string | 2–60 characters (check), unique per tenant (API) |
+| description | text | absent | ?: string |  |
+| is_default | boolean NOT NULL |  | boolean | the calendar of locations without `holiday_calendar_id` and of people without a location (exactly one, kept by the API) |
+| active | boolean NOT NULL |  | boolean | an inactive calendar is skipped (its locations fall back to the default) |
+| id, tenant_id, created_at, updated_at, created_by, version | … |  |  | standard columns |
+
+#### fy_openings
+
+Row type `FyOpening[]` (V014) · PK (id) · tenant-scoped · unique (tenant_id, fy_start_year) · no seed rows
+
+| column | type | null→ | TS type | meaning |
+|---|---|---|---|---|
+| fy_start_year | integer NOT NULL |  | number | the year the FY starts in (FY26-27 = 2026), 2000–2100 |
+| lines | jsonb NOT NULL |  | OpeningLine[] | `[{id, kind: cash\|bank\|ledger\|receivable\|payable, name, side: debit\|credit, amount_paise, category?, party_id? (clients / vendors id), reference?, due_on?, note?}]` — validated by the API (receivables debit, payables credit, ≤ 500 lines) |
+| locked | boolean NOT NULL |  | boolean | locked by hand; the API also treats the balances as locked while the FY has transactions (ledger entries, issued invoices, payments) and they are not reopened |
+| locked_at, locked_by | timestamptz, text | null | ISODateTime \| null, ID \| null |  |
+| reopened_at, reopened_by, reopen_reason | timestamptz, text, text | null | … | set by a reopen (maker-checker entity `opening_balance` when enabled); cleared by Lock |
+| history | jsonb NOT NULL |  | OpeningHistory[] | `[{at, by, action: saved\|locked\|reopened, reason?, approved_by?, totals?}]` (last 200; every step is also in activity_log, entity `fy_opening`) |
+| notes | text | null | string \| null |  |
+| id, tenant_id, created_at, updated_at, created_by, version | … |  |  | standard columns |
+
+The cash + bank lines of the latest FY opening (FY ≤ today's FY) are the opening of the cash position (finance ledger, P&L runway, CEO dashboard), counted from that FY's start; without any opening rows the v8 rule applies (settings `finance.opening_cash_paise`, from the first ledger entry).
+

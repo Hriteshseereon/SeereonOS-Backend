@@ -31,6 +31,7 @@ from app.ctx import (
     warn,
 )
 from app.domain.calendar import (
+    CalendarCtx,
     add_days,
     avg_working_days_per_month,
     fy_label,
@@ -43,6 +44,7 @@ from app.domain.calendar import (
     working_days_in_month,
 )
 from app.domain.money import fmt_money
+from app.engine import holiday_cal as hc
 from app.engine.maker_checker import assert_base_version, pending_brief, propose, register_applier
 from app.js import (
     UNDEF,
@@ -328,24 +330,45 @@ def put_settings(req: Req) -> Any:
 # ---------------------------------------------------------------------------------------------------------------------
 # holidays (UI-07)
 # ---------------------------------------------------------------------------------------------------------------------
+def _calendar_param(ctx: Ctx, v: Any, field: str = 'calendar_id') -> str | None:
+    """v9 (A5): a holiday calendar id from the request (None = not given); unknown ids are a 404"""
+    if v is UNDEF or v is None or v == '':
+        return None
+    cid = js_str(v)
+    if not any(c['id'] == cid for c in hc.calendars_of(ctx.tenant_id)):
+        err(404, 'NOT_FOUND', 'Holiday calendar not found.')
+    return cid
+
+
 def list_holidays(req: Req) -> Any:
     ctx = req.ctx
     year = js_str(coalesce(req.q('year'), today_iso()[:4]))
-    cal = calendar_for(ctx)
-    hol = rows(ctx, 'holidays')
+    # v9 (A5): one calendar — ?calendar_id, else the viewer's own (their location's) calendar
+    cid = _calendar_param(ctx, req.q('calendar_id')) or hc.calendar_id_for_user(ctx.tenant_id, ctx.user)
+    hol = hc.holidays_in(ctx.tenant_id, cid)
+    cal = CalendarCtx(ctx.tenant.get('settings'), hol) if hc.has_calendars(ctx.tenant_id) else calendar_for(ctx)
     lst = sorted((h for h in hol if h['date'].startswith(year)), key=lambda h: locale_key(h['date']))
     months = []
     for i in range(12):
         ym = f'{year}-{pad_start(js_str(i + 1), 2, "0")}'
         months.append({'month': ym, 'working_days': working_days_in_month(ym, cal)})
     years = list(dict.fromkeys(h['date'][:4] for h in hol))
-    return {'year': js_number(year), 'holidays': lst, 'months': months, 'years': years}
+    c = next((x for x in hc.calendars_of(ctx.tenant_id) if x['id'] == cid), None)
+    return {
+        'year': js_number(year),
+        'holidays': lst,
+        'months': months,
+        'years': years,
+        'calendar_id': cid,
+        'calendar_name': c['name'] if c else hc.BASE_NAME,
+        'calendars': len(hc.calendars_of(ctx.tenant_id)),
+    }
 
 
 _DATE_SHAPE = re.compile(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}\Z')
 
 
-def _holiday_input(ctx: Ctx, body: dict, except_id: Any = UNDEF) -> dict[str, Any]:
+def _holiday_input(ctx: Ctx, body: dict, except_id: Any = UNDEF, calendar_id: Any = None) -> dict[str, Any]:
     date = js_str(coalesce(body.get('date', UNDEF), ''))
     name = js_trim(js_str(coalesce(body.get('name', UNDEF), '')))
     if not _DATE_SHAPE.search(date) or parse_iso(date) is None:
@@ -354,7 +377,8 @@ def _holiday_input(ctx: Ctx, body: dict, except_id: Any = UNDEF) -> dict[str, An
         err(422, 'VALIDATION', 'Enter the holiday name.', 'name')
     if js_len(name) > 60:
         err(422, 'VALIDATION', 'Keep the name under 60 characters.', 'name')
-    dup = next((h for h in rows(ctx, 'holidays') if h['date'] == date and h['id'] != except_id), None)
+    cid = calendar_id or hc.base_calendar_id(ctx.tenant_id)
+    dup = next((h for h in rows(ctx, 'holidays') if h['date'] == date and h['id'] != except_id and hc.calendar_of_holiday(h, ctx.tenant_id) == cid), None)
     if dup:
         err(409, 'HOLIDAY_EXISTS', f'{dup["name"]} is already on that date.', 'date')
     return {'date': date, 'name': name, 'optional': js_truthy(body.get('optional', UNDEF))}
@@ -363,7 +387,11 @@ def _holiday_input(ctx: Ctx, body: dict, except_id: Any = UNDEF) -> dict[str, An
 def create_holiday(req: Req) -> Any:
     ctx = req.ctx
     require_action(ctx, 'holidays.edit', 'Only admins can change holidays.')
-    v = _holiday_input(ctx, req.body if isinstance(req.body, dict) else {})
+    b = req.body if isinstance(req.body, dict) else {}
+    cid = _calendar_param(ctx, b.get('calendar_id', UNDEF))
+    v = _holiday_input(ctx, b, UNDEF, cid)
+    if cid and cid != hc.base_calendar_id(ctx.tenant_id):  # v9: holidays of the base calendar keep no calendar_id
+        v = {**v, 'calendar_id': cid}
     out = insert(ctx, 'holidays', v)
     if month_of(v['date']) in _locked_months(ctx):
         warn(ctx, 'PAYROLL_FINAL', f'Payroll for {month_of(v["date"])} is already final; this holiday will not change it.')
@@ -383,6 +411,7 @@ def patch_holiday(req: Req) -> Any:
             'optional': coalesce(req.b('optional'), h.get('optional', UNDEF)),
         },
         h['id'],
+        hc.calendar_of_holiday(h, ctx.tenant_id),
     )
     out = update(ctx, 'holidays', h['id'], v, req.if_match)
     log_activity(ctx, 'holiday', h['id'], 'update', f'Updated holiday {v["name"]}')
@@ -410,8 +439,9 @@ def import_holidays(req: Req) -> Any:
         err(422, 'VALIDATION', 'Paste at least one row: date,name[,optional].')
     if not isinstance(inp, list):
         raise TypeError('input.map is not a function')
+    cid = _calendar_param(ctx, req.b('calendar_id'))  # v9 (A5): import into one calendar (default: the base one)
     existing: dict[str, Any] = {}
-    for h in rows(ctx, 'holidays'):
+    for h in hc.holidays_in(ctx.tenant_id, cid or hc.base_calendar_id(ctx.tenant_id)):
         existing[h['date']] = h.get('name', UNDEF)  # new Map(...): the LAST duplicate wins
     seen: set[str] = set()
     out = []
@@ -443,9 +473,11 @@ def import_holidays(req: Req) -> Any:
         return {'rows': out, 'valid': len(out) - bad, 'invalid': bad, 'committed': False}
     if bad:
         err(422, 'VALIDATION', f'{bad} row{" has" if bad == 1 else "s have"} errors. Fix them and import again — nothing was added.')
+    extra = {'calendar_id': cid} if cid and cid != hc.base_calendar_id(ctx.tenant_id) else {}
     for x in out:
-        insert(ctx, 'holidays', {'date': x['date'], 'name': x['name'], 'optional': x['optional']})
-    log_activity(ctx, 'holiday', 'import', 'create', f'Imported {len(out)} holidays')
+        insert(ctx, 'holidays', {'date': x['date'], 'name': x['name'], 'optional': x['optional'], **extra})
+    cname = next((c['name'] for c in hc.calendars_of(ctx.tenant_id) if c['id'] == (cid or hc.base_calendar_id(ctx.tenant_id))), hc.BASE_NAME)
+    log_activity(ctx, 'holiday', 'import', 'create', f'Imported {len(out)} holidays' + (f' into {cname}' if hc.has_calendars(ctx.tenant_id) else ''))
     return {'rows': out, 'valid': len(out), 'invalid': 0, 'committed': True}
 
 

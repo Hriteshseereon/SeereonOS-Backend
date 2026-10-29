@@ -53,6 +53,8 @@ from app.domain.calendar import (
 from app.domain.labels import INTERNAL_CODES, LEAVE_TYPE
 from app.engine.analytics import cal, sla_due, task_actuals
 from app.engine.approval_kpi import approval_kpi, approval_kpis
+from app.engine.holiday_cal import has_calendars, holidays_for_user
+from app.engine.leave_types import leave_type_codes, offered_leave_codes
 from app.engine.workflows import advance_approval, ensure_wf, start_approval, step_label, wf_clear, wf_patch
 from app.js import (
     UNDEF,
@@ -104,6 +106,9 @@ def r2(n: Any) -> Any:
 LEAVE_TYPES = ['casual', 'sick', 'earned', 'compensatory', 'lwp', 'optional_holiday']
 # Internal activity that counts toward the daily minimum only when the company says breaks count.
 BREAKS = 'breaks'
+# v9 (decision D5): time on a project without a task — an internal row whose project is required (counts in the
+# project's actual hours and cost, like every activity booked to a project); activities without a project are overhead.
+PROJECT_WORK = 'project_work'
 _DATE_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$', re.ASCII)
 _PROOF_RE = re.compile(r'^https?://\S+\.\S+')
 
@@ -169,9 +174,10 @@ def leave_label(t: Any) -> str:
     return f'{js_str(LEAVE_TYPE.get(t, UNDEF) if isinstance(t, str) else UNDEF)} leave'
 
 
-def optional_holiday_on(ctx: Ctx, date: str) -> dict | None:
+def optional_holiday_on(ctx: Ctx, date: str, user_id: Any = None) -> dict | None:
     """Optional holidays (the tenant's list) — an optional-holiday leave day must be one of them."""
-    return next((h for h in rows(ctx, 'holidays') if js_truthy(h.get('optional')) and h['date'] == date), None)
+    hol = holidays_for_user(ctx.tenant_id, user_id) if user_id else rows(ctx, 'holidays')  # v9 (A5): the person's calendar
+    return next((h for h in hol if js_truthy(h.get('optional')) and h['date'] == date), None)
 
 
 def _assert_monday(week: str) -> None:
@@ -346,6 +352,8 @@ def _leave_of(ctx: Ctx, user_id: Any) -> list[dict]:
 def _user_cal(ctx: Ctx, user_id: Any) -> CalendarCtx:
     base = cal(ctx)
     full = {lv['date'] for lv in _leave_of(ctx, user_id) if lv.get('portion') == 'full'}
+    if has_calendars(ctx.tenant_id):  # v9 (A5): the holiday calendar of the person's location
+        return CalendarCtx(base.settings, holidays_for_user(ctx.tenant_id, user_id), full)
     c = CalendarCtx(base.settings, base.holidays, full)
     c._hs = base._hs
     return c
@@ -388,9 +396,10 @@ def _day_totals(ctx: Ctx, w: dict, entries: list[dict] | None = None) -> list[di
 def _task_allowed(ctx: Ctx, t: dict, user_id: str, monday: str, cover: dict | None = None) -> bool:
     """Task access for time entry (VAL-F09): owner, backup, or allocated to the task's milestone during the week.
     `cover` caches coveringFor() for a loop over many tasks with no write in between (same result)."""
+    from app.routes.taskflow import is_co_assignee
     from app.routes.tasks import covering_for
 
-    if t.get('owner_id') == user_id or t.get('backup_id') == user_id:
+    if t.get('owner_id') == user_id or t.get('backup_id') == user_id or is_co_assignee(t, user_id):
         return True
     sun = add_days(monday, 6)
     if cover is not None:
@@ -445,8 +454,10 @@ def _activity_projects(ctx: Ctx, user_id: Any) -> list[dict]:
     for a in rows(ctx, 'allocations'):
         if a['user_id'] == user_id:
             mine.add(a['project_id'])
+    from app.routes.taskflow import is_co_assignee
+
     for t in rows(ctx, 'tasks'):
-        if t.get('owner_id') == user_id or t.get('backup_id') == user_id:
+        if t.get('owner_id') == user_id or t.get('backup_id') == user_id or is_co_assignee(t, user_id):
             mine.add(t['project_id'])
     for p in rows(ctx, 'projects'):
         if p.get('pm_id') == user_id:
@@ -488,10 +499,10 @@ def _build_week_view(ctx: Ctx, w: dict) -> dict:
     user = find(ctx, 'users', w['user_id'], 'Person')
     entries = _entries_of(ctx, w)
     totals = _day_totals(ctx, w, entries)
-    holidays = {h['date']: h['name'] for h in rows(ctx, 'holidays') if not js_truthy(h.get('optional'))}
+    holidays = {h['date']: h['name'] for h in holidays_for_user(ctx.tenant_id, w['user_id']) if not js_truthy(h.get('optional'))}
     leaves = {lv['date']: lv for lv in _leave_of(ctx, w['user_id'])}
     editable = _is_editable(w)
-    base_no_leave = _no_leave(cal(ctx))
+    base_no_leave = _no_leave(_user_cal(ctx, w['user_id']) if has_calendars(ctx.tenant_id) else cal(ctx))
     days = []
     for d in totals:
         lv = leaves.get(d['date'])
@@ -543,7 +554,8 @@ def _build_week_view(ctx: Ctx, w: dict) -> dict:
                 sublabel = 'Leave'
             elif js_truthy(e.get('project_id')):
                 pp = projects.get(e['project_id'])
-                sublabel = js_trim(f'Activity · {js_str(coalesce(pp.get("code", UNDEF) if pp else UNDEF, ""))} {js_str(coalesce(pp.get("name", UNDEF) if pp else UNDEF, ""))}')
+                what = 'Project work' if e.get('internal_code') == PROJECT_WORK else 'Activity'
+                sublabel = js_trim(f'{what} · {js_str(coalesce(pp.get("code", UNDEF) if pp else UNDEF, ""))} {js_str(coalesce(pp.get("name", UNDEF) if pp else UNDEF, ""))}')
             else:
                 sublabel = 'Activity · no project'
             row = {
@@ -581,7 +593,11 @@ def _build_week_view(ctx: Ctx, w: dict) -> dict:
     total = r2(total)
     is_self = w['user_id'] == ctx.user_id
     wk_end = add_days(w['week_start'], 6)
-    optional = [{'date': h['date'], 'name': h['name']} for h in rows(ctx, 'holidays') if js_truthy(h.get('optional')) and h['date'] >= w['week_start'] and h['date'] <= wk_end]
+    optional = [
+        {'date': h['date'], 'name': h['name']}
+        for h in holidays_for_user(ctx.tenant_id, w['user_id'])
+        if js_truthy(h.get('optional')) and h['date'] >= w['week_start'] and h['date'] <= wk_end
+    ]
     target: Any = 0
     for d in totals:
         target = target + d['min_required']
@@ -719,10 +735,25 @@ def _save_rows(ctx: Ctx, w: dict, inp: Any, keep_empty: bool = False) -> None:
                 and not (_hashable_str(project_id_in) and project_id_in in projects)
             ):
                 err(422, 'VALIDATION', f'Row {i + 1}: that project no longer exists. Pick another or “No project”.', f'rows.{i}.project_id')
+            if internal_code == PROJECT_WORK:
+                if not js_truthy(project_id_in):
+                    err(422, 'TS_PROJECT_REQUIRED', f'Row {i + 1}: choose the project you worked on.', f'rows.{i}.project_id')
+                if any_ and js_len(note) < 3:
+                    err(422, 'TS_NOTE_REQUIRED', 'Describe the project work (at least 3 characters): it shows on the project’s cost and in reports.', f'rows.{i}.note')
+            if any_ and js_truthy(project_id_in) and _hashable_str(project_id_in):
+                pp = projects.get(project_id_in)
+                closed_on = _project_closed_on(ctx, pp) if pp is not None else None
+                if js_truthy(closed_on) and any(js_number(h) > 0 and d > closed_on for d, h in hentries):
+                    err(
+                        409,
+                        'TS_PROJECT_CLOSED',
+                        f'{js_str(pp["name"])} was {js_str(pp["status"])} on {_fmt_date(closed_on)}. Hours after that date can’t be booked to it.',  # type: ignore[index]
+                        f'rows.{i}.project_id',
+                    )
             if any_ and js_truthy(st['timesheet.internal_note_required']) and internal_code != BREAKS and js_len(note) < 3:
                 err(422, 'TS_NOTE_REQUIRED', f'Add a short note to “{js_str(label)}” saying what the time was for.', f'rows.{i}.note')
         else:
-            if not js_truthy(leave_type) or not (isinstance(leave_type, str) and leave_type in LEAVE_TYPES):
+            if not js_truthy(leave_type) or not (isinstance(leave_type, str) and leave_type in leave_type_codes(ctx)):
                 err(422, 'VALIDATION', f'Row {i + 1}: choose a leave type.', f'rows.{i}')
             label = leave_label(leave_type)
         project_id = js_or(project_id_in, None) if kind == 'internal' else None
@@ -772,7 +803,7 @@ def _save_rows(ctx: Ctx, w: dict, inp: Any, keep_empty: bool = False) -> None:
                         f'{_fmt_date(date, "day")} is {"a holiday" if k == "holiday" else "a weekly off"}, so it can’t be a leave day.',
                         f'rows.{i}',
                     )
-                if leave_type == 'optional_holiday' and optional_holiday_on(ctx, date) is None:
+                if leave_type == 'optional_holiday' and optional_holiday_on(ctx, date, w['user_id']) is None:
                     err(
                         422,
                         'LEAVE_INVALID',
@@ -1053,8 +1084,14 @@ def _work_items(ctx: Ctx, user_id: str, monday: str) -> list[dict]:
         if _task_allowed(ctx, t, user_id, monday, cover):
             tasks.append(t)
 
+    from app.routes.taskflow import is_co_assignee
+
     def kind_of(t: dict) -> str:
-        return 'mine' if t.get('owner_id') == user_id else 'backup' if t.get('backup_id') == user_id else 'allocated'
+        if t.get('owner_id') == user_id:
+            return 'mine'
+        if is_co_assignee(t, user_id):
+            return 'co'
+        return 'backup' if t.get('backup_id') == user_id else 'allocated'
 
     tasks = sorted(tasks, key=lambda t: numeric_key(js_str(projects[t['project_id']]['code']) + wbs_of(t, ms)))
     for t in tasks:
@@ -1064,7 +1101,11 @@ def _work_items(ctx: Ctx, user_id: str, monday: str) -> list[dict]:
         parts = [
             p['code'],
             f'M{js_str(m["no"])} {js_str(m["name"])}' if m is not None else None,
-            f'covering {user_name(ctx, t.get("owner_id"))}' if k == 'backup' else f'owner {user_name(ctx, t.get("owner_id"))}' if k == 'allocated' else None,
+            f'covering {user_name(ctx, t.get("owner_id"))}'
+            if k == 'backup'
+            else f'owner {user_name(ctx, t.get("owner_id"))}'
+            if k in ('allocated', 'co')
+            else None,
         ]
         out.append(
             {
@@ -1075,7 +1116,7 @@ def _work_items(ctx: Ctx, user_id: str, monday: str) -> list[dict]:
                 'leave_type': None,
                 'label': f'{wbs_of(t, ms)} {js_str(t["title"])}',
                 'hint': ' · '.join(js_str(x) for x in parts if js_truthy(x)),
-                'group': f'My tasks · {js_str(p["name"])}' if k == 'mine' else 'Tasks I’m covering' if k == 'backup' else f'Allocated · {js_str(p["name"])}',
+                'group': f'My tasks · {js_str(p["name"])}' if k in ('mine', 'co') else 'Tasks I’m covering' if k == 'backup' else f'Allocated · {js_str(p["name"])}',
                 'wbs': wbs_of(t, ms),
                 'project_code': p['code'],
             }
@@ -1084,6 +1125,8 @@ def _work_items(ctx: Ctx, user_id: str, monday: str) -> list[dict]:
     for code, label in _entries(dict(INTERNAL_CODES)):
         if code == BREAKS:
             hint = 'Counts toward the minimum' if js_truthy(st['calendar.breaks_count']) else 'Doesn’t count toward the minimum'
+        elif code == PROJECT_WORK:
+            hint = 'Time on a project without a task: pick the project and describe the work'
         else:
             hint = 'Needs a note' if js_truthy(st['timesheet.internal_note_required']) else 'Activity'
         out.append(
@@ -1095,12 +1138,12 @@ def _work_items(ctx: Ctx, user_id: str, monday: str) -> list[dict]:
                 'leave_type': None,
                 'label': label,
                 'hint': hint,
-                'group': 'Activities',
+                'group': 'Project work without a task' if code == PROJECT_WORK else 'Activities',
                 'wbs': None,
                 'project_code': None,
             }
         )
-    for lt in LEAVE_TYPES:
+    for lt in offered_leave_codes(ctx, ctx.user):  # v9 (A5): + the custom leave types that apply
         out.append(
             {
                 'key': f'leave:{lt}',
@@ -1560,8 +1603,11 @@ def team_approvals(req: Req) -> Any:
         for wk in weeks:
             w = by_key.get((u['id'], wk))
             ended = add_days(wk, 6) < ctx.today
+            joined = js_str(coalesce(u.get('joined_on'), ''))
             if w is not None:
                 status = w['status']
+            elif joined and add_days(wk, 6) < joined:
+                status = 'not_joined'  # the whole week is before they joined: nothing was due
             elif ended:
                 status = 'locked' if js_truthy(lock_on) else 'open'
             else:
@@ -1864,7 +1910,7 @@ def post_leave(req: Req) -> Any:
     if person.get('status') != 'active':
         err(422, 'VALIDATION', f'{pname} is not an active user.')
     typ = req.b('type')
-    if not (isinstance(typ, str) and typ in LEAVE_TYPES):
+    if not (isinstance(typ, str) and typ in leave_type_codes(ctx)):
         err(422, 'VALIDATION', 'Choose a leave type.', 'type')
     portion = 'half' if req.b('portion') == 'half' else 'full'
     frm = js_str(coalesce(req.b('from'), ''))
@@ -1877,7 +1923,7 @@ def post_leave(req: Req) -> Any:
         err(422, 'DATE_RANGE', 'Enter at most 60 days at a time.', 'to')
     if portion == 'half' and to != frm:
         err(422, 'LEAVE_INVALID', 'A half day covers one date. Pick a single day.', 'to')
-    c = _no_leave(cal(ctx))
+    c = _no_leave(_user_cal(ctx, user_id) if has_calendars(ctx.tenant_id) else cal(ctx))  # v9: the person's calendar
     existing = {lv['date'] for lv in _leave_of(ctx, user_id)}
     dates: list[str] = []
     offs = 0
@@ -1889,7 +1935,7 @@ def post_leave(req: Req) -> Any:
             continue
         if d in existing:
             err(422, 'LEAVE_INVALID', f'{pname} already has leave on {_fmt_date(d, "long")}.', 'from')
-        if typ == 'optional_holiday' and optional_holiday_on(ctx, d) is None:
+        if typ == 'optional_holiday' and optional_holiday_on(ctx, d, user_id) is None:
             err(
                 422,
                 'LEAVE_INVALID',
@@ -2021,7 +2067,7 @@ def holidays_lite(req: Req) -> Any:
     ctx = req.ctx
     frm = js_str(coalesce(req.q('from'), f'{ctx.today[:4]}-01-01'))
     to = js_str(coalesce(req.q('to'), f'{ctx.today[:4]}-12-31'))
-    hs = sorted((h for h in rows(ctx, 'holidays') if h['date'] >= frm and h['date'] <= to), key=lambda h: locale_key(h['date']))
+    hs = sorted((h for h in holidays_for_user(ctx.tenant_id, ctx.user) if h['date'] >= frm and h['date'] <= to), key=lambda h: locale_key(h['date']))
     return [{'date': h['date'], 'name': h['name'], 'optional': h.get('optional', UNDEF)} for h in hs]
 
 

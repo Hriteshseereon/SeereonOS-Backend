@@ -13,6 +13,7 @@ from app.domain.labels import DEAL_STAGE, STREAM
 from app.domain.money import fmt_money
 from app.domain.sales import deal_value
 from app.engine.analytics import PAYROLL_CATEGORIES, expand_ledger, payroll_for_month, revenue_between
+from app.engine.openings import cash_basis, opening_summary
 from app.js import (
     UNDEF,
     coalesce,
@@ -100,12 +101,12 @@ def _validate_ledger(b: Any, creating: bool) -> None:
 
 
 def _cash_position(ctx: Ctx) -> dict[str, Any]:
-    """Cash on hand today = opening cash + money actually received − money actually paid."""
-    opening = coalesce(prop(_settings(ctx), 'finance.opening_cash_paise'), 0)
-    start = ctx.today
-    for e in rows(ctx, 'ledger_entries'):
-        if e['date'] < start:
-            start = e['date']
+    """Cash on hand today = opening cash + money actually received − money actually paid. v9: the opening comes from
+    the latest financial-year opening balances (cash + bank) when entered, counted from that FY's start
+    (app/engine/openings.py); otherwise the v8 rule (settings opening cash, from the first ledger entry)."""
+    basis = cash_basis(ctx)
+    opening = basis['opening']
+    start = basis['start']
     inflow: Any = 0
     outflow: Any = 0
     for e in expand_ledger(ctx, start, ctx.today):
@@ -116,7 +117,10 @@ def _cash_position(ctx: Ctx) -> dict[str, Any]:
     for p in rows(ctx, 'payments'):
         if p['paid_on'] <= ctx.today:
             inflow += p['amount_paise']
-    return {'opening': opening, 'balance': opening + inflow - outflow}
+    out = {'opening': opening, 'balance': opening + inflow - outflow}
+    if basis['source'] == 'fy_opening':
+        out['opening_source'] = basis['fy_label']
+    return out
 
 
 def monthly_pnl(ctx: Ctx, ym: str) -> dict[str, Any]:
@@ -135,6 +139,27 @@ def monthly_pnl(ctx: Ctx, ym: str) -> dict[str, Any]:
         'headcount': pay['headcount'],
         'to_date': mr['to'] > ctx.today,
     }
+
+
+def _opening_with_cash(ctx: Ctx, frm: str, to: str) -> dict[str, Any] | None:
+    """v9 (A5): the opening balances of the FY containing `frm` (None when not entered) + the cash they lead to by `to`
+    (opening cash + received − paid from the FY start, milestone payments included; nothing after today)."""
+    ob = opening_summary(ctx, frm)
+    if not ob:
+        return None
+    cin: Any = 0
+    cout: Any = 0
+    for e in expand_ledger(ctx, ob['as_of'], to):
+        if e['occurrence'] > ctx.today:
+            continue
+        if e['kind'] == 'income' and not js_truthy(e.get('invoice_id')) and e.get('status') == 'received':
+            cin += e['amount_paise']
+        if e['kind'] == 'expense' and e.get('status') == 'paid':
+            cout += e['amount_paise']
+    for p in rows(ctx, 'payments'):
+        if ob['as_of'] <= p['paid_on'] <= to and p['paid_on'] <= ctx.today:
+            cin += p['amount_paise']
+    return {**ob, 'cash_in': cin, 'cash_out': cout, 'closing_cash': ob['cash_bank'] + cin - cout, 'closing_on': to if to < ctx.today else ctx.today}
 
 
 def _sales_pipeline(ctx: Ctx) -> dict[str, Any]:
@@ -219,7 +244,9 @@ def _ledger(req: Req) -> Any:
                 seen.append(c)
         return js_sort(seen)
 
+    ob = _opening_with_cash(ctx, rg['from'], rg['to'])  # v9: FY opening balances of the FY of `from` (only when entered)
     return {
+        **({'opening': ob} if ob else {}),
         'from': rg['from'],
         'to': rg['to'],
         'items': items,
@@ -293,7 +320,9 @@ def _ledger_entries(req: Req) -> Any:
             s += e['amount_paise']
         return {'key': key, 'label': label, 'count': len(xs), 'amount': s}
 
+    ob = _opening_with_cash(ctx, fr['from'], fr['to'])  # v9 (A5): only when opening balances were entered
     return {
+        **({'opening': ob} if ob else {}),
         'scope': scope_,
         'fy_label': fy_label(fy),
         'from': frm,
@@ -527,7 +556,9 @@ def _pnl(req: Req) -> Any:
 
     uninvoiced = s(m['billing_amount_paise'] for m in open_)
     pipe = _sales_pipeline(ctx)
+    ob = opening_summary(ctx, frm)  # v9: FY opening balances (only when entered — absent otherwise)
     return {
+        **({'opening_balances': ob} if ob else {}),
         'from': frm,
         'to': to,
         'prev_from': prev_from,
@@ -551,6 +582,7 @@ def _pnl(req: Req) -> Any:
             'net_burn': net_burn,
             'runway_months': runway,
             'cash_positive': net_burn <= 0,
+            **({'opening_source': cash['opening_source']} if 'opening_source' in cash else {}),
         },
         'revenue_ahead': {
             'uninvoiced': uninvoiced,

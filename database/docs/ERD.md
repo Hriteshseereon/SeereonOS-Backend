@@ -26,6 +26,7 @@ erDiagram
 
   clients ||--o{ contracts : "client_id"
   clients ||--o{ invoices : "client_id"
+  clients ||--o{ projects : "client_id (v9)"
   deals ||--o{ deal_activities : "deal_id (cascade)"
   deals ||--o{ deal_stage_history : "deal_id (cascade)"
   deals |o--o{ projects : "deal_id (set null)"
@@ -63,6 +64,11 @@ erDiagram
   doc_templates |o--o{ issued_documents : "template_id"
   users ||--o{ issued_documents : "employee_id"
   users ||--o{ employee_documents : "employee_id"
+  users |o--o{ teams : "lead_id (V012)"
+  departments |o--o{ teams : "department_id (V012)"
+  holiday_calendars |o..o{ holidays : "calendar_id (V014, absent = base)"
+  holiday_calendars |o..o{ locations : "holiday_calendar_id (V014, absent = default)"
+  tenants ||--o{ fy_openings : "tenant_id (V014, one per FY)"
 
   appraisal_cycles ||--o{ appraisals : "cycle_id"
   users ||--o{ appraisals : "user_id"

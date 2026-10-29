@@ -1275,7 +1275,10 @@ def team_roster(req: Req) -> Any:
         rd = role_def(u.get('tenant_id'), u.get('role_key'))
         rate = rate_of(u['id']) if see_ctc else None
         mgr = by_id.get(u['reports_to_id']) if js_truthy(u.get('reports_to_id')) else None
-        cph = cost_per_hour(rate['monthly_ctc_paise'], wd_this_month, min_h) if see_ctc and rate else None
+        # V9-FIX (item 2): their own (location) calendar's working days, as costing uses
+        from app.engine.analytics import person_wdm
+
+        cph = cost_per_hour(rate['monthly_ctc_paise'], person_wdm(ctx, u['id'], month), min_h) if see_ctc and rate else None
         people.append(
             {
                 'id': u['id'],

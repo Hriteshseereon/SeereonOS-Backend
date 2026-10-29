@@ -214,6 +214,66 @@ def can_submit(ctx: Ctx, t: dict) -> bool:
     return (t.get('owner_id') == me or t.get('backup_id') == me) and t.get('status') in ('todo', 'in_progress', 'blocked')
 
 
+# ---------------------------------------------------------------------------------------------------------------------
+# v9 (decision D4) — co-assignees. A task keeps ONE primary owner (accountable: submits for review, drives timeliness);
+# co-assignees (tasks.assignee_ids, never the owner) see it in My tasks / Tasks, are notified, log time, move its stage
+# and comment. Absent / empty = none (every task before v9).
+# ---------------------------------------------------------------------------------------------------------------------
+MAX_ASSIGNEES = 10
+
+
+def co_assignees_of(t: dict | None) -> list[str]:
+    """The task's co-assignees (without the owner), in the order they were added."""
+    if t is None:
+        return []
+    v = t.get('assignee_ids')
+    if not isinstance(v, (list, tuple)) or not v:
+        return []
+    owner = t.get('owner_id')
+    return [x for x in v if isinstance(x, str) and x and x != owner]
+
+
+def assignees_of(t: dict | None) -> list[str]:
+    """Owner first, then the co-assignees."""
+    if t is None:
+        return []
+    o = t.get('owner_id')
+    return ([o] if isinstance(o, str) and o else []) + co_assignees_of(t)
+
+
+def is_co_assignee(t: dict | None, user_id: Any) -> bool:
+    return isinstance(user_id, str) and user_id in co_assignees_of(t)
+
+
+def is_assignee(t: dict | None, user_id: Any) -> bool:
+    """Owner or co-assignee."""
+    return t is not None and isinstance(user_id, str) and bool(user_id) and (t.get('owner_id') == user_id or user_id in co_assignees_of(t))
+
+
+def valid_co_assignees(ctx: Ctx, raw: Any, owner_id: Any, field: str = 'assignee_ids') -> list[str]:
+    """Validate a list of co-assignee ids: active people of this company, the owner dropped, duplicates removed."""
+    if raw is UNDEF or raw is None:
+        return []
+    if not isinstance(raw, list):
+        err(422, 'VALIDATION', 'Assignees must be a list of people.', field)
+    out: list[str] = []
+    for x in raw:
+        v = js_trim(x) if isinstance(x, str) else ''
+        if not v or v == owner_id or v in out:
+            continue
+        u = _user_of(ctx, v)
+        if u is None or u.get('status') != 'active':
+            err(422, 'VALIDATION', 'Every assignee must be an active person in your company.', field)
+        out.append(v)
+    if len(out) > MAX_ASSIGNEES:
+        err(422, 'VALIDATION', f'Assign up to {MAX_ASSIGNEES} people besides the owner. Split bigger work into sub-tasks.', field)
+    return out
+
+
+def _names(ctx: Ctx, ids: list[str]) -> str:
+    return ', '.join(user_name(ctx, x) for x in ids)
+
+
 def self_review(ctx: Ctx, t: dict) -> bool:
     return t.get('owner_id') == ctx.user['id'] and not is_top(ctx, ctx.user['id'])
 
@@ -353,6 +413,12 @@ def approve_task(ctx: Ctx, t: dict, rating: Any, note: Any, direct: bool = False
                 f'/tasks/{nt["id"]}',
             )
     told = {me, coalesce(prop(t, 'owner_id'), '')}
+    for uid_ in co_assignees_of(t):
+        if uid_ not in told:
+            told.add(uid_)
+            notify(
+                ctx, uid_, 'NTF-05', 'Task approved', f'{_name(ctx)} approved {c} {js_str(out["title"])} · {js_str(q)}/5 · finished {tl}.', f'/tasks/{t["id"]}'
+            )
     for uid_ in [prop(t, 'concerned_manager_id'), *coalesce(prop(t, 'watcher_ids'), [])]:
         if js_truthy(uid_) and uid_ not in told:
             told.add(uid_)
@@ -381,7 +447,7 @@ def _move_rights(ctx: Ctx, t: dict) -> dict[str, Any]:
     return {
         'p': p,
         'editor': editor,
-        'ok': editor or delegate or t.get('owner_id') == me or t.get('backup_id') == me or can_review_task(ctx, t),
+        'ok': editor or delegate or t.get('owner_id') == me or t.get('backup_id') == me or is_co_assignee(t, me) or can_review_task(ctx, t),
     }
 
 
@@ -554,6 +620,7 @@ def _team_row(ctx: Ctx, t: dict, projects: dict, reviews: list[dict], resched: d
         'can_move': can_move_task(ctx, t),
         'can_submit': can_submit(ctx, t),
         'can_review': can_review_task(ctx, t) if st_ == 'in_review' else (can_review_task(ctx, t) and not self_review(ctx, t)),
+        **({'assignee_ids': co} if (co := co_assignees_of(t)) else {}),
     }
 
 
@@ -577,7 +644,7 @@ def _managed_tasks(ctx: Ctx) -> list[dict]:
     out = []
     for t in all_:
         owner = t.get('owner_id')
-        in_team = js_truthy(owner) and owner in team
+        in_team = (js_truthy(owner) and owner in team) or any(x in team for x in co_assignees_of(t))
         if (in_team or t.get('assigned_by') == me or reviewer_of(ctx, t) == me or t['project_id'] in my_projects or t.get('concerned_manager_id') == me) and (
             view_all or _tasks.can_see_task(ctx, t) or in_team
         ):
@@ -797,6 +864,12 @@ def create_task_core(ctx: Ctx, body: Any, opts: dict | None = None) -> dict:
     rights = create_rights(ctx, p, owner['id'])
     if not rights['ok']:
         err(403, 'FORBIDDEN', rights['why'], 'owner_id')
+    # v9 (D4): co-assignees follow the same create rule as the owner (general work: yourself or your reports)
+    co = valid_co_assignees(ctx, _b(body, 'assignee_ids'), owner['id'])
+    for x in co:
+        rx = create_rights(ctx, p, x)
+        if not rx['ok']:
+            err(403, 'FORBIDDEN', rx['why'], 'assignee_ids')
     live = [m for m in rows(ctx, 'milestones') if m['project_id'] == p['id'] and not js_truthy(m.get('deleted_at'))]
     m: dict | None = None
     b_ms = _b(body, 'milestone_id')
@@ -809,6 +882,8 @@ def create_task_core(ctx: Ctx, body: Any, opts: dict | None = None) -> dict:
     backup = _active_person(ctx, _b(body, 'backup_id'), 'backup_id', 'Backup', False)
     if backup is not None and backup['id'] == owner['id']:
         err(422, 'VALIDATION', 'The backup must be a different person from the owner.', 'backup_id')
+    if backup is not None and backup['id'] in co:
+        err(422, 'VALIDATION', f'{js_str(backup["name"])} is already assigned to the task. Choose another backup, or none.', 'backup_id')
     reviewer_id: Any = _text(_b(body, 'reviewer_id'))
     if not reviewer_id:
         if not general and js_truthy(p.get('pm_id')) and p['pm_id'] != owner['id']:
@@ -825,6 +900,13 @@ def create_task_core(ctx: Ctx, body: Any, opts: dict | None = None) -> dict:
             422,
             'TASK_SELF_REVIEW',
             'The reviewer approves completion, so it must be someone other than the owner (usually the PM or their manager).',
+            'reviewer_id',
+        )
+    if reviewer['id'] in co and not is_top(ctx, reviewer['id']):
+        err(
+            422,
+            'TASK_SELF_REVIEW',
+            f'{js_str(reviewer["name"])} is assigned to the task, so they can’t also review it. Choose another reviewer.',
             'reviewer_id',
         )
     b_cm = _b(body, 'concerned_manager_id')
@@ -951,6 +1033,7 @@ def create_task_core(ctx: Ctx, body: Any, opts: dict | None = None) -> dict:
             'recurrence_of': coalesce(recurrence_of, None),
             'attachments': attachments,
             'parent_task_id': parent['id'] if parent is not None else None,
+            **({'assignee_ids': co} if co else {}),
         },
     )
     for id_ in dep_ids:
@@ -965,12 +1048,13 @@ def create_task_core(ctx: Ctx, body: Any, opts: dict | None = None) -> dict:
     name = js_str(ctx.user.get('name', UNDEF))
     cm_s = f' · concerned manager {js_str(cm["name"])}' if cm is not None else ''
     rec_s = ' · next occurrence' if js_truthy(recurrence_of) else ''
+    co_s = f' with {_names(ctx, co)}' if co else ''
     log_activity(
         ctx,
         'task',
         t['id'],
         'task.created',
-        f'{name} created {wbs_code} {title} for {js_str(owner["name"])} ({where}), {fmt_date(start_on)} – {fmt_date(due_on)}, {js_str(est_q)}h · reviewer {js_str(reviewer["name"])}{cm_s}{rec_s}',
+        f'{name} created {wbs_code} {title} for {js_str(owner["name"])}{co_s} ({where}), {fmt_date(start_on)} – {fmt_date(due_on)}, {js_str(est_q)}h · reviewer {js_str(reviewer["name"])}{cm_s}{rec_s}',
     )
     log_activity(ctx, 'project', p['id'], 'task.created', f'Added {wbs_code} {title} → {js_str(owner["name"])}')
     if parent is not None:
@@ -987,6 +1071,8 @@ def create_task_core(ctx: Ctx, body: Any, opts: dict | None = None) -> dict:
 
         on = js_str(owner['name'])
         tell(owner['id'], 'Task assigned to you', f'{name}: {wbs_code} {title} · {where} · due {fmt_date(due_on)}{pr}')
+        for x in co:
+            tell(x, 'Task assigned to you', f'{name}: {wbs_code} {title} · {where} · due {fmt_date(due_on)}{pr} · with {on} (owner)')
         tell(backup['id'] if backup is not None else None, 'You are the backup on a task', f'{wbs_code} {title} (owner {on}) · due {fmt_date(due_on)}')
         tell(reviewer['id'], 'You review a new task', f'{wbs_code} {title} for {on} · due {fmt_date(due_on)}. You approve it when it’s submitted.')
         tell(cm['id'] if cm is not None else None, 'New task in your team', f'{on} has {wbs_code} {title} · due {fmt_date(due_on)}{pr}')
@@ -1049,10 +1135,18 @@ def spawn_next_occurrence(ctx: Ctx, t: dict) -> dict | None:
         None if move_to_general else (ms['id'] if ms is not None else None),
         start,
         due,
-        {'reviewer': live(t.get('reviewer_id')), 'cm': live(t.get('concerned_manager_id')), 'backup': live(t.get('backup_id'))},
+        {
+            'reviewer': live(t.get('reviewer_id')),
+            'cm': live(t.get('concerned_manager_id')),
+            'backup': live(t.get('backup_id')),
+            'co': [x for x in co_assignees_of(t) if live(x)],
+        },
     )
     log_activity(ctx, 'task', t['id'], 'task.recurred', f'Next {js_str(rec)} occurrence created: due {fmt_date(due)}')
     notify(ctx, owner['id'], 'NTF-14', 'Next occurrence of a recurring task', f'{js_str(out["title"])} · due {fmt_date(due)}', f'/tasks/{out["id"]}')
+    for x in co_assignees_of(out):
+        if x != ctx.user['id']:
+            notify(ctx, x, 'NTF-14', 'Next occurrence of a recurring task', f'{js_str(out["title"])} · due {fmt_date(due)}', f'/tasks/{out["id"]}')
     return out
 
 
@@ -1110,6 +1204,7 @@ def _insert_occurrence(ctx: Ctx, t: dict, pid: str, ms_id: Any, start: str, due:
             'recurrence_of': t['id'],
             'attachments': [],
             'parent_task_id': coalesce(prop(t, 'parent_task_id'), None),
+            **({'assignee_ids': who['co']} if who.get('co') else {}),
         },
     )
     if js_truthy(ms_id):
@@ -1132,6 +1227,12 @@ def submit(req: Req) -> Any:
     t = find(ctx, 'tasks', req.params['id'], 'Task')
     me = ctx.user['id']
     if t.get('owner_id') != me and t.get('backup_id') != me:
+        if is_co_assignee(t, me):
+            err(
+                403,
+                'FORBIDDEN',
+                f'{user_name(ctx, t.get("owner_id"))} owns this task and submits it for review. Comment on the task when your part is done.',
+            )
         err(403, 'FORBIDDEN', 'Only the task owner (or their backup) can submit it for review.')
     if t.get('status') == 'in_review':
         err(409, 'INVALID_STATE', 'This task is already waiting for review.')
@@ -1348,6 +1449,10 @@ def send_back(req: Req) -> Any:
         snip = _tasks._slice16(reason, 118) + '…' if js_len(reason) > 120 else reason
         nd = f' · now due {fmt_date(new_due)}' if js_truthy(new_due) else ''
         notify(ctx, t['owner_id'], 'NTF-06', 'Task sent back', f'{_name(ctx)} sent back {c} {js_str(out["title"])}: “{snip}”{nd}', f'/tasks/{t["id"]}')
+    for x in co_assignees_of(t):
+        if x != me:
+            snip2 = _tasks._slice16(reason, 118) + '…' if js_len(reason) > 120 else reason
+            notify(ctx, x, 'NTF-06', 'Task sent back', f'{_name(ctx)} sent back {c} {js_str(out["title"])}: “{snip2}”', f'/tasks/{t["id"]}')
     return out
 
 
@@ -1502,6 +1607,9 @@ def cancel(req: Req) -> Any:
     )
     if js_truthy(t.get('owner_id')) and t['owner_id'] != me:
         notify(ctx, t['owner_id'], 'NTF-14', 'Task cancelled', f'{_name(ctx)} cancelled {c} {js_str(out["title"])}: {reason}', f'/tasks/{t["id"]}')
+    for x in co_assignees_of(t):
+        if x != me:
+            notify(ctx, x, 'NTF-14', 'Task cancelled', f'{_name(ctx)} cancelled {c} {js_str(out["title"])}: {reason}', f'/tasks/{t["id"]}')
     return out
 
 

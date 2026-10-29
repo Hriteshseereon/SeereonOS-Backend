@@ -187,6 +187,18 @@ def _normalise(ctx: Ctx, typ: str, b: Any, cur: dict | None) -> dict[str, Any]:
         }
         _unique(ctx, table, 'code', out['code'], self_id, 'location')
         _unique(ctx, table, 'name', out['name'], self_id, 'location')
+        # v9 (A5): the location's holiday calendar (absent = the default calendar); holiday_calendar = its name
+        hcid = v('holiday_calendar_id')
+        if js_truthy(hcid):
+            from app.engine.holiday_cal import calendars_of
+
+            hcal = next((c for c in calendars_of(ctx.tenant_id) if c['id'] == hcid), None)
+            if hcal is None or not hcal.get('active', True):
+                err(422, 'VALIDATION', 'Choose an active holiday calendar.', 'holiday_calendar_id')
+            out['holiday_calendar_id'] = hcid
+            out['holiday_calendar'] = hcal['name']  # type: ignore[index]
+        elif cur and js_truthy(cur.get('holiday_calendar_id')):
+            out['holiday_calendar_id'] = None
         if cur and cur.get('is_head_office') and not out['is_head_office']:
             err(409, 'HEAD_OFFICE_REQUIRED', 'One location must be the head office. Mark another location as head office instead.', 'is_head_office')
         return out
@@ -471,7 +483,10 @@ def _validate_org(ctx: Ctx, b: Any, cur: Any) -> dict[str, Any]:
     if js_truthy(fv('gstin')):
         m = _RX['gstin'].search(js_str(fv('gstin')))
         if not m or js_number(m.group(1)) < 1 or js_number(m.group(1)) > 38:
-            err(422, 'VALIDATION', 'GSTIN has 15 characters: 2-digit state code, your PAN, entity number, Z and a check character.', 'gstin')
+            from app.domain.gst import gstin_problem  # V9-FIX (item 3): say what is actually wrong
+
+            gp = gstin_problem(js_str(fv('gstin')))
+            err(422, 'VALIDATION', gp or f'Your GSTIN starts with your state code (01–38); “{js_str(fv("gstin"))[:2]}” is not one.', 'gstin')
         assert m is not None
         if js_truthy(fv('pan')) and m.group(2) != fv('pan'):
             err(422, 'GSTIN_PAN_MISMATCH', f'Characters 3–12 of the GSTIN ({m.group(2)}) must match your PAN ({js_str(fv("pan"))}).', 'gstin')

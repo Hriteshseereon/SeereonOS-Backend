@@ -11,6 +11,7 @@ import pytest
 
 from app.ctx import ApiError, find, rows
 from app.routes import projects as pj
+from app.routes import recruiting as rc
 from app.routes import taskflow as tf
 from app.routes import tasks as tk
 from tests.golden.memdb import MemRuntime, load_gz
@@ -37,6 +38,7 @@ TABLES = [
 ]
 CAP = Cap()
 pj.register(CAP)
+rc.register(CAP)
 tk.register(CAP)
 tf.register(CAP)
 

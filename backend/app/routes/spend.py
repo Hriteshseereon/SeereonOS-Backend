@@ -33,6 +33,7 @@ from app.ctx import (
     warn,
 )
 from app.domain.calendar import add_days, add_months, diff_days, fy_start_year, is_real_iso_date, month_of
+from app.domain.gst import gstin_checksum_note, gstin_problem
 from app.domain.labels import STREAM
 from app.domain.money import fmt_money
 from app.engine.analytics import costed_entries, expand_ledger, revenue_between
@@ -79,7 +80,6 @@ from app.modules.spend.labels import (
     EXPENSE_CATEGORY,
     EXPENSE_CATEGORY_LABEL,
     EXPENSE_MAX_AGE_DAYS,
-    GSTIN_RE,
     LEAKAGE_KIND,
     MANUAL_LEAKAGE_KINDS,
     PAN_RE,
@@ -783,13 +783,13 @@ def _validate_vendor(ctx: Ctx, body: Any, existing: dict | None = None) -> dict[
         err(409, 'DUPLICATE_VENDOR', f'{js_str(dup["name"])} is already in the vendor list.', 'name')
     gstin = js_upper(js_trim(js_str(coalesce(bg('gstin'), ex('gstin'), ''))))
     pan = js_upper(js_trim(js_str(coalesce(bg('pan'), ex('pan'), ''))))
-    if gstin and (js_len(gstin) != 15 or not GSTIN_RE.search(gstin)):
-        err(
-            422,
-            'VAL_GSTIN',
-            'GSTIN must be 15 characters: 2-digit state code, 10-character PAN, entity number, “Z” and a check character (e.g. 21AAKFM9876Q1ZP).',
-            'gstin',
-        )
+    gp = gstin_problem(gstin) if gstin else None  # V9-FIX (item 3): say what is actually wrong
+    if gp:
+        err(422, 'VAL_GSTIN', gp, 'gstin')
+    if gstin and gstin != coalesce(ex('gstin'), None):
+        note = gstin_checksum_note(gstin)
+        if note:
+            warn(ctx, 'GSTIN_CHECK', note)
     if pan and (js_len(pan) != 10 or not PAN_RE.search(pan)):
         err(422, 'VAL_PAN', 'PAN must be 10 characters: 5 letters, 4 digits, 1 letter (e.g. AAKFM9876Q).', 'pan')
     if gstin and pan and gstin[2:12] != pan:

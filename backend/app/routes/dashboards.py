@@ -321,12 +321,11 @@ def maps(ctx: Ctx) -> dict[str, Any]:
 
 def cash_position(ctx: Ctx) -> dict[str, Any]:
     """Cash on hand = opening cash + received − paid (mirrors the finance module)."""
-    opening = coalesce(prop(_S(ctx), 'finance.opening_cash_paise'), 0)
-    all_ = rows(ctx, 'ledger_entries')
-    start = ctx.today
-    for e in all_:
-        if e['date'] < start:
-            start = e['date']
+    from app.engine.openings import cash_basis  # v9: FY opening balances when entered (same basis as the finance module)
+
+    basis = cash_basis(ctx)
+    opening = basis['opening']
+    start = basis['start']
     inflow: Any = 0
     outflow: Any = 0
     for e in expand_ledger(ctx, start, ctx.today):
@@ -522,6 +521,18 @@ def earned_pct(tasks: list[dict]) -> Any:
     return 1 if tasks and all(t['status'] == 'done' for t in tasks) else 0
 
 
+def _open_by_co_assignee(ctx: Ctx) -> dict[Any, list]:
+    """v9 (A2, D4): open tasks by co-assignee (table order)."""
+    from app.routes.taskflow import co_assignees_of
+
+    g: dict[Any, list] = {}
+    for t in rows(ctx, 'tasks'):
+        if t['status'] != 'done':
+            for x in co_assignees_of(t):
+                g.setdefault(x, []).append(t)
+    return g
+
+
 def productive_hours(ctx: Ctx, u: dict) -> Any:
     ph = u.get('productive_hours')
     if isinstance(ph, (int, float)) and not isinstance(ph, bool) and ph > 0:
@@ -531,11 +542,14 @@ def productive_hours(ctx: Ctx, u: dict) -> Any:
 
 def load_hours(ctx: Ctx, users: list[dict], days: list[str]) -> list[dict]:
     """Resource load over the given working days (see the TS doc)."""
+    from app.routes.taskflow import assignees_of
+
     c = cal(ctx)
     act = task_actuals(ctx)
     open_by_owner = _once(
         ctx, 'open_tasks_by_owner', lambda: _by([t for t in rows(ctx, 'tasks') if t['status'] != 'done' and js_truthy(t.get('owner_id'))], 'owner_id')
     )
+    open_by_co = _once(ctx, 'open_tasks_by_co_assignee', lambda: _open_by_co_assignee(ctx))  # v9 (A2, D4)
     leave_by_user = _tenant_group(ctx, 'leave', 'user_id')
     day_set = set(days)
     last = days[-1] if days else ctx.today
@@ -554,8 +568,12 @@ def load_hours(ctx: Ctx, users: list[dict], days: list[str]) -> list[dict]:
         capacity = js_max(0, prod * (len(days) - leave_days))
         per_day: dict[str, Any] = {}
         mine = open_by_owner.get(u['id'], [])
-        for t in mine:
+        co_mine = open_by_co.get(u['id'], [])
+        for t in [*mine, *co_mine] if co_mine else mine:
             rem = js_max(0, t['est_hours'] - _hours(act, t['id']))
+            n_who = len(assignees_of(t))
+            if n_who > 1:  # v9 (D4): the remaining estimate is shared equally by the owner and co-assignees
+                rem = rem / n_who
             if rem <= 0:
                 continue
             frm = t['start_on'] if t['start_on'] > today else today
@@ -587,7 +605,7 @@ def load_hours(ctx: Ctx, users: list[dict], days: list[str]) -> list[dict]:
                 'pct': pct,
                 'double_booked': pct is not None and pct > 1,
                 'leave_days': leave_days,
-                'open_tasks': len(mine),
+                'open_tasks': len(mine) + len(co_mine),
             }
         )
     return out
@@ -2238,14 +2256,20 @@ def insight(ctx: Ctx, view: str) -> dict[str, Any]:
         lst = []
         for u in people:
             h = week_history(ctx, u['id'], 8, end_mon)
+            # weeks that ended before the person joined were never due (a new company, a new joiner): not missed
+            joined = js_str(coalesce(u.get('joined_on'), ''))
+            if joined:
+                h = [{**x, 'status': 'not_joined'} if add_days(x['week_start'], 6) < joined else x for x in h]
+            due = sum(1 for x in h if x['status'] != 'not_joined')
             ok = sum(1 for x in h if x['status'] == 'approved' or x['status'] == 'submitted')
-            lst.append({'u': u, 'h': h, 'ok': ok, 'pct': ok / len(h)})
+            lst.append({'u': u, 'h': h, 'ok': ok, 'due': due, 'pct': ok / due if due else None})
         avg: Any = None
-        if lst:
+        counted = [v for v in lst if v['pct'] is not None]
+        if counted:
             s_ = 0
-            for v in lst:
+            for v in counted:
                 s_ += v['pct']
-            avg = s_ / len(lst)
+            avg = s_ / len(counted)
         kpis = [
             {
                 'label': 'Team compliance',
@@ -2253,10 +2277,10 @@ def insight(ctx: Ctx, view: str) -> dict[str, Any]:
                 'format': 'percent',
                 'tone': UNDEF if avg is None else 'success' if avg >= 0.9 else 'warning' if avg >= 0.75 else 'danger',
             },
-            {'label': 'Missing last week', 'value': sum(1 for v in lst if v['h'][-1]['status'] not in ('approved', 'submitted')), 'format': 'number'},
-            {'label': 'Fully compliant', 'value': sum(1 for v in lst if v['ok'] == 8), 'format': 'number', 'tone': 'success'},
+            {'label': 'Missing last week', 'value': sum(1 for v in lst if v['h'][-1]['status'] not in ('approved', 'submitted', 'not_joined')), 'format': 'number'},
+            {'label': 'Fully compliant', 'value': sum(1 for v in lst if v['due'] > 0 and v['ok'] == v['due']), 'format': 'number', 'tone': 'success'},
         ]
-        lst = sorted(lst, key=lambda v: (v['pct'], locale_key(v['u']['name'])))
+        lst = sorted(lst, key=lambda v: (2 if v['pct'] is None else v['pct'], locale_key(v['u']['name'])))
         return {
             **base,
             'title': 'Timesheet compliance',
@@ -2275,7 +2299,7 @@ def insight(ctx: Ctx, view: str) -> dict[str, Any]:
                     'person': v['u']['name'],
                     'person_hue': v['u']['avatar_hue'],
                     'weeks': [x['status'] for x in v['h']],
-                    'missed': 8 - v['ok'],
+                    'missed': v['due'] - v['ok'],
                     'pct': v['pct'],
                 }
                 for v in lst

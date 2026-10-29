@@ -42,7 +42,12 @@ from app.js import (
 from app.routes import projects as _projects
 from app.routes import taskflow as _taskflow
 
-TASK_RELATION_LABEL = cat('mock/routes/tasks')['TASK_RELATION_LABEL']
+# v9 (D4): + 'assignee' (a co-assignee) right after the owner; the generated catalogue is the frozen v7 list
+TASK_RELATION_LABEL = {
+    k: v
+    for kk, vv in cat('mock/routes/tasks')['TASK_RELATION_LABEL'].items()
+    for k, v in ([(kk, vv), ('assignee', 'Co-assignee')] if kk == 'owner' else [(kk, vv)])
+}
 
 _ISO_RE = re.compile(r'[0-9]{4}-[0-9]{2}-[0-9]{2}')
 # keys every JS object answers `k in obj` for (Object.prototype)
@@ -232,6 +237,8 @@ def relation_of(ctx: Ctx, t: dict) -> str | None:
     me = ctx.user_id  # = ctx.user['id'] (a row's id never changes)
     if t.get('owner_id') == me:
         return 'owner'
+    if _taskflow.is_co_assignee(t, me):
+        return 'assignee'
     c = _rel_cache(ctx)
     if t['id'] in c['cov']:
         return 'covering'
@@ -264,7 +271,7 @@ def task_access(ctx: Ctx, t: dict) -> dict[str, bool]:
     p = _project(ctx, t.get('project_id'))
     me = ctx.user['id']
     can_edit = (p is not None and _projects.can_edit(ctx, p)) or _taskflow.can_manage_general(ctx, t)
-    mine = t.get('owner_id') == me or t.get('backup_id') == me
+    mine = t.get('owner_id') == me or t.get('backup_id') == me or _taskflow.is_co_assignee(t, me)
     reviewer = _taskflow.reviewer_of(ctx, t) == me
     visible = can_edit or can_see_task(ctx, t)
 
@@ -342,7 +349,8 @@ def task_detail(ctx: Ctx, t: dict) -> dict[str, Any]:
         'downstream_ids': _downstream_of(ctx, t['id']),
         'owner_leave_days': _owner_leave_days(ctx, t),
         'covering_me': {'days': cov_me['days'], 'reason': cov_me['reason'], 'from_user_id': cov_me['from_user_id']} if cov_me is not None else None,
-        'can_log_time': t.get('status') != 'done' and (t.get('owner_id') == me or t.get('backup_id') == me or cov_me is not None),
+        'can_log_time': t.get('status') != 'done'
+        and (t.get('owner_id') == me or t.get('backup_id') == me or _taskflow.is_co_assignee(t, me) or cov_me is not None),
         'comments_count': sum(1 for c in rows(ctx, 'comments') if c['task_id'] == t['id']),
     }
     review = {
@@ -366,7 +374,7 @@ def _task_v7(ctx: Ctx, t: dict, all_: list[dict], ms: dict, access: dict) -> dic
     children = [x for x in all_ if x.get('parent_task_id') == t['id']]
     next_occ = next((x for x in all_ if x.get('recurrence_of') == t['id']), None)
     reviewer = _taskflow.reviewer_of(ctx, t)
-    involved = t.get('owner_id') == me or t.get('backup_id') == me or reviewer == me
+    involved = t.get('owner_id') == me or t.get('backup_id') == me or _taskflow.is_co_assignee(t, me) or reviewer == me
     rel = relation_of(ctx, t)
     rec_of: Any = None
     if js_truthy(t.get('recurrence_of')):
@@ -398,6 +406,8 @@ def _task_v7(ctx: Ctx, t: dict, all_: list[dict], ms: dict, access: dict) -> dic
         'can_tick_criteria': t.get('status') != 'done' and (access['can_edit'] or involved),
         'can_attach': access['can_comment'],
         'can_create_followup': access['can_edit'] or t.get('owner_id') == me or reviewer == me or has(ctx, 'tasks.assign_team'),
+        # v9 (D4): co-assignees besides the owner (absent = none)
+        **({'assignee_ids': co} if (co := _taskflow.co_assignees_of(t)) else {}),
     }
 
 
@@ -491,6 +501,8 @@ def _my_task(ctx: Ctx, t: dict, ms: dict, projects: dict, is_backup: bool) -> di
         'submitted_on': coalesce(prop(t, 'submitted_on'), None),
         'general': _taskflow.is_general(ctx, t),
         'sent_back': sent_back,
+        **({'assignee_ids': co} if (co := _taskflow.co_assignees_of(t)) else {}),
+        **({'co_assignee': True} if _taskflow.is_co_assignee(t, ctx.user_id) else {}),
     }
 
 
@@ -538,8 +550,9 @@ def create_options(req: Req) -> Any:
                 if a['project_id'] == p['id']:
                     seen.setdefault(a['user_id'], None)
             for t in all_tasks:
-                if t['project_id'] == p['id'] and js_truthy(t.get('owner_id')):
-                    seen.setdefault(t['owner_id'], None)
+                if t['project_id'] == p['id']:
+                    for x in _taskflow.assignees_of(t):
+                        seen.setdefault(x, None)
             team_ids = list(seen)
         out_projects.append(
             {
@@ -652,7 +665,7 @@ def add_attachment(req: Req) -> Any:
     t = update(ctx, 'tasks', t['id'], {'attachments': [*lst, a]})
     log_activity(ctx, 'task', t['id'], 'task.attachment', f'Attached {a["name"]}')
     me = ctx.user['id']
-    for uid_ in [t.get('owner_id'), _taskflow.reviewer_of(ctx, t)]:
+    for uid_ in dict.fromkeys([t.get('owner_id'), *_taskflow.co_assignees_of(t), _taskflow.reviewer_of(ctx, t)]):
         if js_truthy(uid_) and uid_ != me:
             notify(
                 ctx,
@@ -794,11 +807,14 @@ def list_tasks(req: Req) -> Any:
             continue
         if cx and t.get('complexity') != cx:
             continue
+        co = _taskflow.co_assignees_of(t)
         if q:
             owner_u = users.get(coalesce(prop(t, 'owner_id'), ''))
             hay = (
                 f'{wbs_of(t, ms)} {js_str(prop(t, "title"))} {js_str(prop(p, "code"))} {js_str(prop(p, "name"))} {js_str(coalesce(prop(owner_u, "name"), ""))}'
             )
+            for x in co:
+                hay += f' {js_str(coalesce(prop(users.get(x), "name"), ""))}'
             if q not in hay.lower():
                 continue
         st_ = t.get('status')
@@ -808,21 +824,26 @@ def list_tasks(req: Req) -> Any:
         deps = [x for x in (by_id.get(d['depends_on_task_id']) for d in dep_by_task.get(t['id'], ())) if x is not None]
         open_deps = [] if st_ == 'done' else [d for d in deps if d.get('status') != 'done']
         is_blocked = st_ != 'done' and (st_ == 'blocked' or len(open_deps) > 0)
-        person_ok = not person or t.get('owner_id') == person
+        # v9 (D4): the person filter matches the owner OR a co-assignee
+        person_ok = not person or t.get('owner_id') == person or person in co
         if person_ok or group:
-            key = coalesce(prop(t, 'owner_id'), '')
-            g = by_emp.get(key)
-            if g is None:
-                g = {'user_id': prop(t, 'owner_id'), 'open': 0, 'overdue': 0, 'done_week': 0, 'total': 0, 'est_open': 0}
-            g['total'] += 1
-            if st_ != 'done':
-                g['open'] += 1
-                g['est_open'] += t['est_hours']
-            if is_overdue:
-                g['overdue'] += 1
-            if st_ == 'done' and coalesce(prop(t, 'done_on'), '') >= wk_mon:
-                g['done_week'] += 1
-            by_emp[key] = g
+            # by employee: the task counts for its owner and for each co-assignee (est. hours shared equally)
+            ok_ = coalesce(prop(t, 'owner_id'), '')
+            who = ([ok_] if (not person or group or ok_ == person) else []) + [x for x in co if not person or group or x == person]
+            share = len(_taskflow.assignees_of(t)) or 1
+            for key in who:
+                g = by_emp.get(key)
+                if g is None:
+                    g = {'user_id': prop(t, 'owner_id') if key == ok_ else key, 'open': 0, 'overdue': 0, 'done_week': 0, 'total': 0, 'est_open': 0}
+                g['total'] += 1
+                if st_ != 'done':
+                    g['open'] += 1
+                    g['est_open'] += t['est_hours'] / share if co else t['est_hours']
+                if is_overdue:
+                    g['overdue'] += 1
+                if st_ == 'done' and coalesce(prop(t, 'done_on'), '') >= wk_mon:
+                    g['done_week'] += 1
+                by_emp[key] = g
         if status == 'all':
             status_ok = True
         elif status == 'open':
@@ -840,9 +861,10 @@ def list_tasks(req: Req) -> Any:
             continue
         is_cov = t['id'] in cov
         is_tagged = t['id'] in tagged
+        mine_t = t.get('owner_id') == me or me in co
         if person_ok:
             counts['all'] += 1
-        if t.get('owner_id') == me:
+        if mine_t:
             counts['mine'] += 1
         if is_cov:
             counts['covering'] += 1
@@ -853,7 +875,7 @@ def list_tasks(req: Req) -> Any:
         if person_ok and is_blocked:
             counts['blocked'] += 1
         if chip == 'mine':
-            skip = t.get('owner_id') != me
+            skip = not mine_t
         elif chip == 'covering':
             skip = not is_cov
         elif chip == 'tagged':
@@ -923,7 +945,7 @@ def list_tasks(req: Req) -> Any:
                 'owner_leave_days': leave_by.get(t['owner_id'], []) if js_truthy(t.get('owner_id')) and st_ != 'done' else [],
                 'covering': {'days': c['days'], 'reason': c['reason'], 'from_user_id': c['from_user_id']} if c is not None else None,
                 'tagged': is_tagged,
-                'can_log_time': st_ != 'done' and (t.get('owner_id') == me or t.get('backup_id') == me or is_cov),
+                'can_log_time': st_ != 'done' and (t.get('owner_id') == me or t.get('backup_id') == me or me in co or is_cov),
                 'relation': 'covering' if is_cov else relation_of(ctx, t),
                 'priority': coalesce(prop(t, 'priority'), 'normal'),
                 'concerned_manager_id': concerned_manager_of(ctx, t),
@@ -935,6 +957,7 @@ def list_tasks(req: Req) -> Any:
                 'criteria_done': sum(1 for x in coalesce(prop(t, 'acceptance_criteria'), []) if js_truthy(prop(x, 'done'))),
                 'attachments': len(coalesce(prop(t, 'attachments'), [])),
                 'owner_department': dept_label(dk) if dk else None,
+                **({'assignee_ids': co} if co else {}),
             }
         )
 
@@ -958,7 +981,7 @@ def list_tasks(req: Req) -> Any:
             for m in (ms.get(i) for i in ms_ids)
             if m is not None and not js_truthy(m.get('deleted_at'))
         ],
-        'people': list(dict.fromkeys(t['owner_id'] for t in visible if js_truthy(t.get('owner_id')))),
+        'people': list(dict.fromkeys(x for t in visible for x in _taskflow.assignees_of(t))),
         'departments': sorted(({'id': k, 'name': dept_label(k), 'count': n} for k, n in dept_facet.items()), key=lambda x: locale_key(x['name'])),
         'labels': sorted(({'name': k, 'count': n} for k, n in label_facet.items()), key=lambda x: (-x['count'], locale_key(x['name']))),
     }
@@ -1058,7 +1081,13 @@ def delivery_risks(req: Req) -> Any:
             pp = projects.get(t['project_id'])
             if coalesce(prop(pp, 'status'), '') not in ('active', 'initiated'):
                 return False
-            return _projects.can_edit(ctx, pp) or _taskflow.can_manage_general(ctx, t) or t.get('owner_id') == me or t.get('backup_id') == me  # type: ignore[arg-type]
+            return (
+                _projects.can_edit(ctx, pp)  # type: ignore[arg-type]
+                or _taskflow.can_manage_general(ctx, t)
+                or t.get('owner_id') == me
+                or t.get('backup_id') == me
+                or _taskflow.is_co_assignee(t, me)
+            )
 
         scope_ = [t for t in rows(ctx, 'tasks') if keep(t)]
     ms = milestone_map(ctx)
@@ -1068,7 +1097,9 @@ def delivery_risks(req: Req) -> Any:
         comments[c['task_id']] = comments.get(c['task_id'], 0) + 1
     all_tasks = {t['id']: t for t in rows(ctx, 'tasks')}
     deps = rows(ctx, 'task_dependencies')
-    horizon = add_working_days(ctx.today, 10, CalendarCtx(ctx.tenant['settings'], rows(ctx, 'holidays')))
+    from app.engine.holiday_cal import holidays_default  # v9 (A5): the company (default) holiday calendar
+
+    horizon = add_working_days(ctx.today, 10, CalendarCtx(ctx.tenant['settings'], holidays_default(ctx.tenant_id)))
     today = ctx.today
     out: list[dict] = []
     for t in scope_:
@@ -1255,7 +1286,7 @@ def my_tasks(req: Req) -> Any:
         return s != 'closed' and s != 'completed'
 
     all_ = [t for t in rows(ctx, 'tasks') if t.get('status') != 'done' and live_project(t)]
-    tasks = [_my_task(ctx, t, ms, projects, False) for t in all_ if t.get('owner_id') == me]
+    tasks = [_my_task(ctx, t, ms, projects, False) for t in all_ if t.get('owner_id') == me or _taskflow.is_co_assignee(t, me)]
     qw = req.q('week')
     wk = week_start(qw) if isinstance(qw, str) and _ISO_RE.fullmatch(qw) else week_start(ctx.today)
     cov = covering_for(ctx, me, wk, add_days(wk, 6))

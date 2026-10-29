@@ -42,7 +42,6 @@ from app.domain.calendar import (
     quarter_of,
     week_start,
     working_days_between,
-    working_days_in_month,
 )
 from app.domain.costing import cost_per_hour, rate_on, sales_compensation
 from app.domain.labels import DEAL_STAGE
@@ -50,10 +49,13 @@ from app.engine.analytics import (
     allocation_on,
     cal,
     costed_entries,
+    employed_days,
     expand_ledger,
     milestone_state,
+    person_wdm,
     pipeline,
     project_metrics,
+    prorate_month,
     redact_metrics,
     revenue_between,
     sla_due,
@@ -77,6 +79,7 @@ from app.js import (
     locale_key,
     prop,
 )
+from app.reports import types as rtypes
 from app.reports.datasets import DATASET_MAP, datasets_for
 from app.reports.engine import describe_spec, in_window, is_num, p, period_window, run_spec, sanitize_spec, u16slice
 from app.reports.narrative import narrate
@@ -424,7 +427,7 @@ def _b_hours(ctx: Ctx, window: tuple[Any, list[dict]] | None = None) -> list[dic
                 return True
             tid = e.get('task_id')
             if not js_truthy(tid):
-                return False
+                return isinstance(e.get('project_id'), str) and e['project_id'] in mine
             t = tasks.get(tid)
             return coalesce(t.get('project_id', UNDEF) if t else UNDEF, '') in mine
 
@@ -435,7 +438,8 @@ def _b_hours(ctx: Ctx, window: tuple[Any, list[dict]] | None = None) -> list[dic
     out = []
     for e in es:
         t = tasks.get(e['task_id']) if js_truthy(e.get('task_id')) else None
-        pr = projs.get(t['project_id']) if t is not None else None
+        # v9 (D5): an activity booked to a project without a task carries its own project
+        pr = projs.get(t['project_id']) if t is not None else (projs.get(e['project_id']) if isinstance(e.get('project_id'), str) else None)
         u = users.get(e['user_id'])
         out.append(
             {
@@ -1411,7 +1415,6 @@ def _payroll_rows(ctx: Ctx) -> list[dict]:
             )
     rates = rows(ctx, 'cost_rates')
     deals = rows(ctx, 'deals')
-    c = cal(ctx)
     fy_s = prop(S(ctx), 'company.fy_start_month')
     start = add_months(fy_range(fy_start_year(ctx.today, fy_s) - 1, fy_s)['from'], 0)
     m = start
@@ -1423,6 +1426,10 @@ def _payroll_rows(ctx: Ctx) -> list[dict]:
                 continue
             if u['joined_on'] > end:
                 continue
+            # V9-FIX (item 1): joiners from joined_on, leavers up to their exit day (the payroll run's proration)
+            emp = employed_days(ctx, u, ym)
+            if not emp['employed']:
+                continue
             r = rate_on(rates, u['id'], end)
             if r is None:
                 continue
@@ -1431,6 +1438,7 @@ def _payroll_rows(ctx: Ctx) -> list[dict]:
                 if d.get('owner_id') == u['id'] and d['stage'] == 'won' and js_truthy(d.get('won_on')) and month_of(d['won_on']) == ym:
                     achieved = achieved + d['value_paise']
             comp = sales_compensation(r['monthly_ctc_paise'], r['variable_pct'], r.get('sales_target_paise'), achieved, prop(S(ctx), 'pay.variable_threshold_pct'))
+            base = prorate_month(comp['base'], emp['working'], emp['month'])
             out.append(
                 {
                     'month': f'{ym}-01',
@@ -1438,11 +1446,11 @@ def _payroll_rows(ctx: Ctx) -> list[dict]:
                     'department': _g(u, 'department'),
                     'role': _g(u, 'role'),
                     'ctc': r['monthly_ctc_paise'],
-                    'base': comp['base'],
+                    'base': base,
                     'deduction': 0,
                     'variable': comp['variableEarned'],
-                    'net': comp['base'] + comp['variableEarned'],
-                    'working_days': working_days_in_month(ym, c),
+                    'net': base + comp['variableEarned'],
+                    'working_days': emp['working'],
                     'unapproved_days': 0,
                     'lwp_days': 0,
                     'status': 'estimate',
@@ -1502,7 +1510,6 @@ def _people_rows(ctx: Ctx) -> list[dict]:
     ent_by: dict[Any, list] = {}
     for e in entries:
         ent_by.setdefault(e['user_id'], []).append(e)
-    wd_now = working_days_in_month(month_of(ctx.today), c)
     out = []
     for u in users:
         r = rate_on(rates, u['id'], ctx.today)
@@ -1533,7 +1540,7 @@ def _people_rows(ctx: Ctx) -> list[dict]:
                 'manager': nm(_g(u, 'reports_to_id')),
                 'joined_on': _g(u, 'joined_on'),
                 'ctc': r['monthly_ctc_paise'] if sal and r is not None else None,
-                'cost_per_hour': js_round(cost_per_hour(r['monthly_ctc_paise'], wd_now, min_h)) if sal and r is not None else None,
+                'cost_per_hour': js_round(cost_per_hour(r['monthly_ctc_paise'], person_wdm(ctx, u['id'], month_of(ctx.today)), min_h)) if sal and r is not None else None,
                 'allocation_today': allocation_on(ctx, u['id'], ctx.today) / 100,
                 'allocation_next_10d': alloc10 / 10 / 100,
                 'open_tasks': sum(1 for t in mine_t if t['status'] != 'done'),
@@ -1635,11 +1642,20 @@ def _visible_reports(ctx: Ctx) -> list[dict]:
     return [
         r
         for r in rows(ctx, 'saved_reports')
-        if p(r.get('spec'), 'dataset') in ds and (r['owner_id'] == me or js_truthy(r.get('shared')) or r.get('source') == 'system' or cur)
+        if (_typed_visible(ctx, r) if js_truthy(r.get('report_type')) else p(r.get('spec'), 'dataset') in ds)
+        and (r['owner_id'] == me or js_truthy(r.get('shared')) or r.get('source') == 'system' or cur)
     ]
 
 
+def _typed_visible(ctx: Ctx, r: dict) -> bool:
+    """v9 (D9): a report saved from a report type is visible to whoever may run that type."""
+    t = rtypes.TYPE_MAP.get(r.get('report_type'))
+    return t is not None and rtypes.denial(ctx, t) is None
+
+
 def _preview_of(ctx: Ctx, r: dict) -> Any:
+    if js_truthy(r.get('report_type')):
+        return rtypes.preview(ctx, r['report_type'], r.get('report_config'))
     try:
         res = execute_spec(ctx, r['spec'])
         m = next((c for c in res['columns'] if c.get('role') == 'measure'), None)
@@ -1671,11 +1687,12 @@ def _preview_of(ctx: Ctx, r: dict) -> Any:
 def _view(ctx: Ctx, r: dict, with_preview: bool = True) -> dict[str, Any]:
     dsid = p(r.get('spec'), 'dataset')
     dm = DATASET_MAP.get(dsid) if isinstance(dsid, str) else None
+    tt = rtypes.TYPE_MAP.get(r.get('report_type')) if js_truthy(r.get('report_type')) else None
     return {
         **r,
         'owner_name': user_name(ctx, r['owner_id']),
         'can_edit': _can_edit_report(ctx, r),
-        'dataset_label': dm['label'] if dm is not None else dsid,
+        'dataset_label': (f'{rtypes.category_label(tt["category"])} · {tt["label"]}' if tt is not None else dm['label'] if dm is not None else dsid),
         'preview': _preview_of(ctx, r) if with_preview else None,
     }
 
@@ -1842,6 +1859,20 @@ def _body_get(body: Any, k: str) -> Any:
     return body.get(k, UNDEF) if isinstance(body, dict) else UNDEF
 
 
+def list_report_types(req: Req) -> Any:
+    return rtypes.catalogue(req.ctx)
+
+
+def get_report_type(req: Req) -> Any:
+    ctx = req.ctx
+    return rtypes.describe(ctx, rtypes.require_type(ctx, req.params['id']), with_options=True)
+
+
+def run_report_type(req: Req) -> Any:
+    b = req.body if isinstance(req.body, dict) else {}
+    return rtypes.run(req.ctx, req.params['id'], b.get('config', b))
+
+
 def list_datasets(req: Req) -> Any:
     return visible_datasets(req.ctx)
 
@@ -1867,11 +1898,75 @@ def get_report(req: Req) -> Any:
     return _view(ctx, rep, False)
 
 
+_TYPED_CHART = {'bar': 'hbar', 'column': 'bar', 'line': 'line', 'donut': 'pie', 'none': 'table', 'auto': 'bar'}
+
+
+def _typed_spec(t: dict, cfg: dict, name: str) -> dict[str, Any]:
+    """saved_reports.spec of a typed report: a descriptive stub (dataset + chart) so cards and old clients can label it;
+    the report itself is always recomputed from report_type + report_config."""
+    return {
+        'title': name,
+        'dataset': t['source'] if t['source'] != 'custom' else t['id'],
+        'measures': [],
+        'dimensions': [],
+        'filters': [],
+        'chart': _TYPED_CHART.get(cfg.get('chart') or 'auto', 'bar'),
+        'compare': 'none',
+    }
+
+
+def _create_typed(ctx: Ctx, body: dict) -> Any:
+    t = rtypes.require_type(ctx, body.get('report_type'))
+    v = _validate_saved({**body, 'spec': {'typed': True}})
+    cfg = rtypes.sanitize_config(ctx, t, body.get('config', UNDEF) if isinstance(body.get('config', UNDEF), dict) else {})
+    rep = insert(
+        ctx,
+        'saved_reports',
+        {
+            'name': v['name'],
+            'description': v['description'],
+            'spec': _typed_spec(t, cfg, v['name']),
+            'owner_id': ctx.user_id,
+            'shared': js_truthy(body.get('shared', UNDEF)),
+            'pinned': js_truthy(body.get('pinned', UNDEF)),
+            'source': 'builder',
+            'schedule': 'none',
+            'last_run_at': None,
+            'report_type': t['id'],
+            'report_config': cfg,
+        },
+    )
+    log_activity(ctx, 'report', rep['id'], 'create', f'Saved report “{v["name"]}” ({t["label"]})')
+    return _view(ctx, rep, False)
+
+
+def _patch_typed(ctx: Ctx, rep: dict, body: dict, if_match: Any) -> Any:
+    t = rtypes.require_type(ctx, rep['report_type'])
+    pt: dict[str, Any] = {}
+    if body.get('name', UNDEF) is not UNDEF or body.get('description', UNDEF) is not UNDEF:
+        v = _validate_saved({'name': coalesce(body.get('name', UNDEF), rep['name']), 'description': coalesce(body.get('description', UNDEF), rep['description']), 'spec': {'typed': True}})
+        pt['name'] = v['name']
+        pt['description'] = v['description']
+    if isinstance(body.get('config', UNDEF), dict):
+        pt['report_config'] = rtypes.sanitize_config(ctx, t, body['config'])
+    if pt:
+        pt['spec'] = _typed_spec(t, pt.get('report_config') or rep.get('report_config') or {}, pt.get('name') or rep['name'])
+    if body.get('shared', UNDEF) is not UNDEF:
+        pt['shared'] = js_truthy(body['shared'])
+    if body.get('pinned', UNDEF) is not UNDEF:
+        pt['pinned'] = js_truthy(body['pinned'])
+    out = update(ctx, 'saved_reports', rep['id'], pt, if_match)
+    log_activity(ctx, 'report', rep['id'], 'update', f'Updated report “{js_str(out["name"])}”')
+    return _view(ctx, out, False)
+
+
 def create_report(req: Req) -> Any:
     ctx = req.ctx
     body = req.body if isinstance(req.body, dict) else {}
     if not has(ctx, 'reports.build'):
         err(403, 'FORBIDDEN', 'Your role can’t save reports.')
+    if js_truthy(body.get('report_type', UNDEF)):
+        return _create_typed(ctx, body)
     v = _validate_saved(body)
     spec_in = body['spec']
     ds = dataset_rows(ctx, p(spec_in, 'dataset'))['ds']
@@ -1902,6 +1997,8 @@ def patch_report(req: Req) -> Any:
     rep = find(ctx, 'saved_reports', req.params['id'], 'Report')
     if not _can_edit_report(ctx, rep):
         err(403, 'FORBIDDEN', 'Only the owner or an admin can change this report. Duplicate it to make your own copy.')
+    if js_truthy(rep.get('report_type')):
+        return _patch_typed(ctx, rep, body, req.if_match)
     pt: dict[str, Any] = {}
     b_name = body.get('name', UNDEF)
     b_spec = body.get('spec', UNDEF)
@@ -1985,6 +2082,7 @@ def duplicate_report(req: Req) -> Any:
             'source': 'builder',
             'schedule': 'none',
             'last_run_at': None,
+            **({'report_type': rep['report_type'], 'report_config': rep.get('report_config') or {}} if js_truthy(rep.get('report_type')) else {}),
         },
     )
     return _view(ctx, copy, False)
@@ -1995,6 +2093,14 @@ def run_saved(req: Req) -> Any:
     rep = find(ctx, 'saved_reports', req.params['id'], 'Report')
     if not any(x['id'] == rep['id'] for x in _visible_reports(ctx)):
         err(404, 'NOT_FOUND', 'Report not found.')
+    if js_truthy(rep.get('report_type')):
+        # v9 (D9): a saved typed report re-runs its type with the saved configuration (period/filters may be overridden)
+        over = _body_get(req.body, 'config')
+        cfg = {**(rep.get('report_config') or {}), **(over if isinstance(over, dict) else {})}
+        res = rtypes.run(ctx, rep['report_type'], cfg)
+        if not ctx.view_as:
+            patch('saved_reports', rep, {'last_run_at': now_iso()})
+        return {**res, 'saved': {'id': rep['id'], 'name': rep['name'], 'description': rep['description']}}
     bp = _body_get(req.body, 'period')
     spec = {**rep['spec'], 'period': bp} if js_truthy(bp) else rep['spec']
     bc = _body_get(req.body, 'compare')
@@ -2085,6 +2191,10 @@ def ai_tool_entities(req: Req) -> Any:
 def register(r: Any) -> None:
     ro = {'allow_view_as_write': True}  # POSTs that only read
     r.get('/reports/datasets', list_datasets)
+    # v9 (D9): report types — catalogue → builder → result (server-computed), saved through POST /reports {report_type}
+    r.get('/report-types', list_report_types)
+    r.get('/report-types/:id', get_report_type)
+    r.post('/report-types/:id/run', run_report_type, **ro)
     r.post('/reports/run', run_report, **ro)
     r.get('/reports', list_reports)
     r.get('/reports/:id', get_report)

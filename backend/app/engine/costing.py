@@ -196,7 +196,9 @@ def _calc(ctx: Ctx) -> CalendarCtx:
 
 
 def _holiday_map(ctx: Ctx) -> dict:
-    return _cached(ctx, 'holmap', lambda: {h['date']: h['name'] for h in rows(ctx, 'holidays') if not js_truthy(h.get('optional'))})
+    from app.engine.holiday_cal import holidays_default  # v9 (A5): the company (default) holiday calendar
+
+    return _cached(ctx, 'holmap', lambda: {h['date']: h['name'] for h in holidays_default(ctx.tenant_id) if not js_truthy(h.get('optional'))})
 
 
 def wd(ctx: Ctx, frm: Any, to: Any) -> int:
@@ -204,6 +206,19 @@ def wd(ctx: Ctx, frm: Any, to: Any) -> int:
     if not js_truthy(frm) or not js_truthy(to) or to < frm:
         return 0
     return _cached(ctx, f'wd:{frm}:{to}', lambda: working_days_between(frm, to, _calc(ctx)))
+
+
+def wd_person(ctx: Ctx, user_id: Any, frm: Any, to: Any) -> int:
+    """V9-FIX (item 2): working days in [from, to] on the person's calendar (their location's holidays; no leave) —
+    the days an allocation of that person costs. The company calendar when the tenant has no holiday calendars."""
+    from app.engine.holiday_cal import has_calendars
+
+    if not isinstance(user_id, str) or not user_id or not has_calendars(ctx.tenant_id):
+        return wd(ctx, frm, to)
+    if not js_truthy(frm) or not js_truthy(to) or to < frm:
+        return 0
+    c = an.person_cal(ctx, user_id)
+    return _cached(ctx, f'wdp:{id(c)}:{frm}:{to}', lambda: working_days_between(frm, to, c))
 
 
 def slip_days(ctx: Ctx, deadline: str, end: str) -> int:
@@ -290,7 +305,8 @@ def cost_per_hour_for(ctx: Ctx, user_id: Any, date: str) -> Any:
         r = _rate_for(ctx, user_id, date)
         if not r:
             return None
-        return cost_per_hour(r['monthly_ctc_paise'], wd_month(ctx, month_of(date)), min_hours(ctx))
+        # V9-FIX (item 2): working days of the month on the person's own (location) calendar
+        return cost_per_hour(r['monthly_ctc_paise'], an.person_wdm(ctx, user_id, month_of(date)), min_hours(ctx))
 
     return _cached(ctx, f'cph:{js_str(user_id)}:{month_of(date)}', f)
 
@@ -315,7 +331,7 @@ def range_cost(ctx: Ctx, user_id: Any, pct: Any, frm: Any, to: Any) -> dict[str,
         while a <= to:
             ym = month_of(a)
             b = min_iso(month_range(ym)['to'], to)
-            d = wd(ctx, a, b)
+            d = wd_person(ctx, user_id, a, b)
             ph = cost_per_hour_for(ctx, user_id, a)
             if ph is None:
                 rated = False
@@ -379,6 +395,47 @@ def cost_chain(resources: Any, additional: Any, maintenance: Any, contingency_pc
     total = resources + additional + maintenance
     contingency = js_round((total * contingency_pct) / 100)
     return {'total': total, 'contingency': contingency, 'actual': total + contingency}
+
+
+# v9 (D1) Commercials categories: every additional-cost line belongs to one group of the chain. The v8 categories map
+# onto them (saved plans keep loading): software / hardware -> office & hardware, travel / training / third-party ->
+# expenses, other -> miscellaneous. Maintenance / support stays its own amount.
+COST_GROUPS = (
+    ('resources', 'Resource cost'),
+    ('office_hardware', 'Office & hardware'),
+    ('expenses', 'Expenses'),
+    ('misc', 'Miscellaneous'),
+    ('maintenance', 'Maintenance / support'),
+)
+CATEGORY_GROUP = {
+    'office_hardware': 'office_hardware',
+    'software': 'office_hardware',
+    'hardware': 'office_hardware',
+    'expenses': 'expenses',
+    'travel': 'expenses',
+    'training': 'expenses',
+    'third_party': 'expenses',
+    'misc': 'misc',
+    'other': 'misc',
+}
+
+
+def group_of(category: Any) -> str:
+    return CATEGORY_GROUP.get(category, 'misc') if isinstance(category, str) else 'misc'
+
+
+def cost_groups(resources: Any, additional: list[dict], maintenance: Any, see_money: bool = True) -> list[dict]:
+    """Total cost by Commercials category (resource cost, office & hardware, expenses, miscellaneous, maintenance):
+    the lines of the chain's Total cost. Amounts are None for a reader who can't see money."""
+    sums: dict[str, Any] = {k: 0 for k, _ in COST_GROUPS}
+    sums['resources'] = resources
+    sums['maintenance'] = maintenance
+    lines: dict[str, int] = {k: 0 for k, _ in COST_GROUPS}
+    for x in additional:
+        g = group_of(x.get('category'))
+        sums[g] = sums[g] + x['amount_paise']
+        lines[g] += 1
+    return [{'key': k, 'label': lbl, 'amount': sums[k] if see_money else None, 'lines': lines[k]} for k, lbl in COST_GROUPS]
 
 
 def price_and_markup(actual: Any, mode: str, markup_pct_: Any, price_paise: Any) -> dict[str, Any]:
@@ -493,7 +550,11 @@ def _resolve_rows(ctx: Ctx, rng: dict, milestones: list[dict], resources: list) 
                 st['error'] = msg
                 st['field'] = f'resources.{i}.{f}'
 
-        if not js_truthy(uid_):
+        role_lbl = _g(r, 'role_label')
+        if not js_truthy(uid_) and isinstance(role_lbl, str) and role_lbl.strip():
+            # V9-FIX (item 5): a role placeholder from a converted estimate keeps its role name until a person is chosen
+            fail('user_id', f'Role: {role_lbl.strip()[:80]} — assign a person (row {i + 1}).')
+        elif not js_truthy(uid_):
             fail('user_id', f'Row {i + 1}: choose the person.')
         elif not u or u.get('status') != 'active':
             fail('user_id', f'Row {i + 1}: choose an active person from your team.')
@@ -618,6 +679,7 @@ def _compute_preview(ctx: Ctx, a: dict) -> dict[str, Any]:
                 'cost_per_day': cpd if see_rates else None,
                 'cost': cost if see_rates else None,
                 'error': coalesce(r['error'], no_rate),
+                '_cost_raw': cost,
             }
         )
     add: Any = 0
@@ -648,6 +710,8 @@ def _compute_preview(ctx: Ctx, a: dict) -> dict[str, Any]:
         'resource_rows': len(out_rows),
         'people': len(people),
     }
+    totals['groups'] = cost_groups(res_total, a['additional'], maint, see_money)
+    totals['people_share'] = _people_share(ctx, out_rows, res_total, see_rates, see_money)
     warnings: list[str] = []
     below = bool(see_money and margin is not None and total > 0 and margin < floor / 100)
     if below:
@@ -677,8 +741,42 @@ def _compute_preview(ctx: Ctx, a: dict) -> dict[str, Any]:
     }
 
 
+def _people_share(ctx: Ctx, out_rows: list[dict], res_total: Any, see_rates: bool, see_money: bool) -> list[dict]:
+    """Per allocated person: man-days, the resource cost their rows add and their % share of the resource cost
+    (wizard step 3). The cost needs salary access; the share is shown with money access."""
+    by: dict[Any, dict] = {}
+    for r in out_rows:
+        u = r['user_id']
+        if not js_truthy(u):
+            continue
+        x = by.setdefault(u, {'user_id': u, 'name': user_name(ctx, u), 'rows': 0, 'pct': [], 'man_days': 0, 'hours': 0, 'cost': 0})
+        x['rows'] += 1
+        if r['pct'] is not None:
+            x['pct'].append(r['pct'])
+        x['man_days'] = x['man_days'] + r['man_days']
+        x['hours'] = x['hours'] + r['hours']
+        x['cost'] = x['cost'] + (r['cost'] or 0) if see_rates else 0
+        x['_raw'] = x.get('_raw', 0) + (r.get('_cost_raw') or 0)
+    out = []
+    for x in by.values():
+        raw = x.pop('_raw', 0)
+        out.append(
+            {
+                **x,
+                'man_days': r1(x['man_days']),
+                'hours': r1(x['hours']),
+                'cost': x['cost'] if see_rates else None,
+                'share': (raw / res_total if res_total > 0 else 0) if see_money else None,
+            }
+        )
+    return out
+
+
 def _public_preview(p: dict) -> dict:
-    return {k: v for k, v in p.items() if k not in ('_resolved', '_internal')}
+    return {
+        **{k: v for k, v in p.items() if k not in ('_resolved', '_internal', 'rows')},
+        'rows': [{k: v for k, v in r.items() if k != '_cost_raw'} for r in p['rows']],
+    }
 
 
 def _live_milestones_of(ctx: Ctx, pid: Any) -> list[dict]:
@@ -911,7 +1009,7 @@ def _project_forecast_end(ctx: Ctx, p: dict) -> Any:
     return coalesce(s.get('forecast_finish', UNDEF) if s else UNDEF, None)
 
 
-_APPROVED = frozenset({'approved', 'locked'})  # week statuses whose hours count as approved
+_APPROVED = an.APPROVED_WEEK_STATUSES  # V9-FIX (item 8): the one definition (approved or locked weeks)
 
 
 def _sum(xs: Any) -> Any:
@@ -921,6 +1019,10 @@ def _sum(xs: Any) -> Any:
     return s
 
 
+def _sweep_first(ctx: Ctx) -> None:
+    an.ensure_swept(ctx)
+
+
 def analyse(ctx: Ctx, p: dict) -> dict[str, Any]:
     """Feature Guide §6 — three margins:
     Planned   = contract value (original, before CRs) vs allocation cost (estimates × rate where a milestone has no
@@ -928,6 +1030,10 @@ def analyse(ctx: Ctx, p: dict) -> dict[str, Any]:
     Projected = contract value incl. approved CRs vs actual so far (all logged hours × rate) + what's left + extras
     Actual    = invoiced amount vs approved hours only × cost per hour
     The result carries `_perPersonPlanned` (internal; publicAnalysis drops it)."""
+    # V9-FIX (item 7): milestone deadlines follow their tasks BEFORE anything is computed — the same once-per-request
+    # sweep as project_metrics, so a list read (Finance › Profit margins, Insights, Reports) never sees stale deadlines
+    _sweep_first(ctx)
+
     def f() -> dict[str, Any]:
         pid = p['id']
         # shared across requests while every input table is unchanged — only for the stored row itself (a caller may
@@ -1056,7 +1162,7 @@ def _analyse(ctx: Ctx, p: dict) -> dict[str, Any]:
                 'user_id': a['user_id'],
                 'milestone_id': a['milestone_id'],
                 'ms_code': f'M{js_str(m["no"])}' if m else '—' if js_truthy(a['milestone_id']) else 'All',
-                'ms_name': m['name'] if m else 'Removed milestone' if js_truthy(a['milestone_id']) else 'All milestones (old row)',
+                'ms_name': m['name'] if m else 'Removed milestone' if js_truthy(a['milestone_id']) else 'All milestones',
                 'pct': a['pct'],
                 'from_on': a['from_on'],
                 'to_on': a['to_on'],
@@ -1140,10 +1246,23 @@ def _analyse(ctx: Ctx, p: dict) -> dict[str, Any]:
     ms_proj: dict[Any, Any] = {}
     ms_spent: dict[Any, Any] = {}
     ms_left: dict[Any, Any] = {}
+    # v9 (D3): "All milestones" rows (the wizard / cost calculator allow them) cover every milestone that has no
+    # allocation of its own — their cost is the plan there, never task estimates on top (the wizard priced it so)
+    all_rows = grp.get('_all')
+    covered = all_rows is not None and bool(all_rows.get('alloc'))
+    covered_spent: Any = 0  # logged on milestones the All-milestones rows cover
     for gr in groups:
         x = grp.get(gr['key'])
         sp = spent.get(gr['key'], 0)
         done = ms_end[gr['m']['id']]['done'] if gr['m'] else (all(t['status'] == 'done' for t in gr['tasks']) or closed)
+        if (x is None or not x['alloc']) and covered:
+            # planned and forecast are the All-milestones rows' (added below); what was logged here is in their past
+            ms_plan[gr['key']] = 0
+            ms_proj[gr['key']] = js_round(sp)
+            ms_spent[gr['key']] = js_round(sp)
+            ms_left[gr['key']] = 0
+            covered_spent += sp
+            continue
         if x is not None and x['alloc']:
             plan = x['past'] + x['future']
             est_left = 0 if done else est_left_of(gr['tasks'])
@@ -1167,11 +1286,12 @@ def _analyse(ctx: Ctx, p: dict) -> dict[str, Any]:
         ms_proj[gr['key']] = js_round(fc)
         ms_spent[gr['key']] = js_round(sp)
         ms_left[gr['key']] = js_round(left)
-    # legacy "All milestones" rows (older data): planned at full range, what's left follows the project's forecast end
+    # "All milestones" rows: planned at full range, what's left follows the project's forecast end
     all_ = grp.get('_all')
     if all_ is not None:
         res_plan += all_['past'] + all_['future']
-        forecast_total += all_['past'] + all_['futureEff']
+        # what was logged on the covered milestones so far + the rows' remaining allocation (like a milestone row)
+        forecast_total += (covered_spent if covered else all_['past']) + all_['futureEff']
     res_plan = js_round(res_plan)
     estimate_plan = js_round(estimate_plan)
     planned_people = res_plan + estimate_plan
@@ -1330,7 +1450,7 @@ def _analyse(ctx: Ctx, p: dict) -> dict[str, Any]:
     for uid_ in team:
         r = _rate_for(ctx, uid_, today)
         if r:
-            people.append({'user_id': uid_, 'monthly_ctc': r['monthly_ctc_paise'], 'cost_per_hour': js_round(cost_per_hour(r['monthly_ctc_paise'], wdm, mh))})
+            people.append({'user_id': uid_, 'monthly_ctc': r['monthly_ctc_paise'], 'cost_per_hour': js_round(cost_per_hour(r['monthly_ctc_paise'], an.person_wdm(ctx, uid_, ym), mh))})
     rate = {
         'min_hours': mh,
         'month': ym,
@@ -1630,7 +1750,7 @@ def cost_rate_days(ctx: Ctx) -> dict[str, Any]:
         if js_truthy(u.get('is_super_admin')):
             continue
         rate = rate_on(rates, u['id'], ctx.today)
-        ph = cost_per_hour(rate['monthly_ctc_paise'], wdm, mh) if rate else None
+        ph = cost_per_hour(rate['monthly_ctc_paise'], an.person_wdm(ctx, u['id'], ym), mh) if rate else None  # V9-FIX: their calendar
         people.append(
             {
                 'user_id': u['id'],
